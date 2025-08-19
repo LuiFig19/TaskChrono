@@ -1,0 +1,25 @@
+# Monorepo ignore rules
+
+# Dependencies and build outputs
+**/node_modules/
+**/.next/
+**/.turbo/
+**/out/
+**/dist/
+**/build/
+
+# Env files and local config
+.env*
+.vercel
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS/misc
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
