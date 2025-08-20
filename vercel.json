@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "taskchrono-app/package.json", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "taskchrono-app/$1" }
+  ]
+}
+
