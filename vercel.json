@@ -3,8 +3,8 @@
   "builds": [
     { "src": "taskchrono-app/package.json", "use": "@vercel/next" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "taskchrono-app/$1" }
+  "rewrites": [
+    { "source": "(.*)", "destination": "/taskchrono-app$1" }
   ]
 }
 
