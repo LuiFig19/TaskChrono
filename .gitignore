@@ -2,8 +2,6 @@
 
 # dependencies
 /node_modules
-quickshift-app/
-taskchrono-app/
 /.pnp
 .pnp.*
 .yarn/*
