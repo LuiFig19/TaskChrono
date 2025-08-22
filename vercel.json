@@ -1,7 +1,0 @@
-{
-  "builds": [{ "src": "taskchrono-app/package.json", "use": "@vercel/next" }],
-  "installCommand": "cd taskchrono-app && npm ci || npm install",
-  "buildCommand": "cd taskchrono-app && npm run build",
-  "routes": [{ "src": "/(.*)", "dest": "taskchrono-app/$1" }]
-}
-
