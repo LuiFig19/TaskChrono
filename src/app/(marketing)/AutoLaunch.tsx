@@ -1,0 +1,31 @@
+"use client"
+
+import React from 'react'
+
+export default function AutoLaunch() {
+  React.useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('signin') === '1') {
+      const dst = url.searchParams.get('dst') || '/dashboard'
+      const w = 520, h = 640
+      const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
+      const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+      const features = `popup=yes,width=${w},height=${h},left=${left},top=${top}`
+      const child = window.open(`/auth/popup?dst=${dst}`, 'tc-oauth', features)
+      const handler = (e: MessageEvent) => {
+        if (e.origin !== window.location.origin) return
+        if (typeof e.data === 'object' && (e.data as any)?.type === 'tc:signed-in') {
+          window.removeEventListener('message', handler)
+          try { child?.close() } catch {}
+          window.location.href = (e.data as any)?.dst || '/dashboard'
+        }
+      }
+      window.addEventListener('message', handler)
+      url.searchParams.delete('signin'); url.searchParams.delete('dst')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [])
+  return null
+}
+
+

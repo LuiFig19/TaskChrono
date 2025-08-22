@@ -1,0 +1,14 @@
+export default function Loading() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8 animate-pulse">
+      <div className="h-6 w-40 bg-slate-800 rounded" />
+      <div className="mt-4 grid lg:grid-cols-2 gap-6">
+        <div className="h-56 bg-slate-800 rounded" />
+        <div className="h-56 bg-slate-800 rounded" />
+      </div>
+    </div>
+  )
+}
+
+
+
