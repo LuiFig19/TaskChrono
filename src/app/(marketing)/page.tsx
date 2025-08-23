@@ -103,7 +103,7 @@ export default function LandingPage() {
               {/* Legacy anchor support so #demo also scrolls here */}
               <div id="demo" className="absolute -top-24" aria-hidden />
               <img
-                src="/dashboard-screenshot.png"
+                src="/dashboarddemo.png"
                 alt="TaskChrono dashboard screenshot"
                 className="w-full h-auto rounded-2xl"
                 loading="eager"

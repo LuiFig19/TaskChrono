@@ -22,13 +22,5 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true })
 }
 
-import { NextResponse } from 'next/server'
-import { stopTimer } from '@/app/(app)/dashboard/timers/actions'
-
-export async function POST() {
-  await stopTimer()
-  return NextResponse.json({ ok: true })
-}
-
 
 
