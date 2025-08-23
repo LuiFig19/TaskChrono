@@ -10,19 +10,20 @@ export default function DemoPreview() {
 
   return (
     <div className="space-y-6">
-      {/* Top action bar to mirror the real dashboard */}
+      {/* Top action bar laid out to match screenshot */}
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <button className="px-3 py-1.5 rounded-md bg-rose-600 text-white hover:bg-rose-700">Add Task</button>
         <button className="px-3 py-1.5 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Start Timer</button>
         <button className="px-3 py-1.5 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Upload File</button>
+        <span className="ml-2 hidden text-xs text-slate-400 sm:inline">Demo Preview: Off</span>
         <details className="relative ml-auto">
           <summary className="list-none cursor-pointer px-2 py-1 rounded border border-slate-700 text-slate-300 hover:bg-slate-800 flex items-center gap-1">
             <span>ℹ️</span>
             <span className="text-sm">Info</span>
           </summary>
           <div className="absolute right-0 mt-2 w-80 rounded-md border border-slate-700 bg-slate-900 shadow-2xl p-3 text-sm text-slate-200">
-            <div className="font-medium text-white mb-1">Live Demo</div>
-            <p className="text-slate-300">This is an interactive preview of the dashboard UI with mock data. Nothing is locked here.</p>
+            <div className="font-medium text-white mb-1">Customizable Dashboard</div>
+            <p className="text-slate-300">All cards are draggable and reorderable. Add or remove widgets anytime to tailor your workspace.</p>
           </div>
         </details>
       </div>
