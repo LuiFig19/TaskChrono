@@ -1,11 +1,12 @@
-"use client"
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import Image from 'next/image'
 const Header = dynamic(() => import('@/components/Header'), { ssr: false })
 const LandingPageBottom = dynamic(() => import('@/components/LandingPageBottom'), { ssr: false })
 const AutoLaunch = dynamic(() => import('./AutoLaunch'), { ssr: false })
 import { MotionDiv } from '@/components/ClientMotion'
+
+export const dynamic = 'force-static'
+export const revalidate = false as unknown as 0
 
 export default function LandingPage() {
   return (
