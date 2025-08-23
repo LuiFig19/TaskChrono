@@ -1,8 +1,8 @@
 "use client"
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import Image from 'next/image'
 const Header = dynamic(() => import('@/components/Header'), { ssr: false })
-const DemoPreview = dynamic(() => import('@/components/marketing/DemoPreview'), { ssr: false })
 const LandingPageBottom = dynamic(() => import('@/components/LandingPageBottom'), { ssr: false })
 const AutoLaunch = dynamic(() => import('./AutoLaunch'), { ssr: false })
 import { MotionDiv } from '@/components/ClientMotion'
@@ -29,8 +29,8 @@ export default function LandingPage() {
               <Link href="/get-started" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                 Get Started
               </Link>
-              <Link href="#demo" className="border-2 border-slate-600 text-slate-200 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-slate-800 transition-all duration-300">
-                View Demo
+              <Link href="#screenshot" className="border-2 border-slate-600 text-slate-200 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-slate-800 transition-all duration-300">
+                View Screenshot
               </Link>
             </MotionDiv>
             <MotionDiv className="text-sm text-gray-500">Join <strong>20,000+ businesses</strong> boosting productivity with TaskChrono.</MotionDiv>
@@ -91,45 +91,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="demo" className="py-20 bg-slate-900">
+      <section id="screenshot" className="py-20 bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Live Demo</h2>
-            <p className="text-slate-300">Explore the dashboard experience</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Dashboard Screenshot</h2>
+            <p className="text-slate-300">A static preview of the TaskChrono dashboard</p>
           </div>
-          <div className="rounded-2xl border border-slate-800 shadow-2xl">
-            {/* Use the same layout + preview to simulate live demo */}
-            <div className="bg-slate-950">
-              <div className="border-b border-slate-800 bg-slate-950/90 backdrop-blur rounded-t-2xl">
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <a href="/" className="font-semibold text-white">TaskChrono</a>
-                  <div className="hidden md:flex items-center gap-4 text-sm text-slate-200">
-                    <a href="/demo-dashboard" className="hover:text-white">Tasks</a>
-                    <a href="/demo-dashboard/projects" className="hover:text-white">Project Manager</a>
-                    <a href="/demo-dashboard/files" className="hover:text-white">Saved Files</a>
-                    <a href="/demo-dashboard/calendar" className="hover:text-white">Calendar</a>
-                  </div>
-                  <details className="relative md:hidden">
-                    <summary className="list-none cursor-pointer text-slate-200">☰</summary>
-                    <div className="absolute right-0 mt-2 w-48 rounded-md border border-slate-700 bg-slate-900 shadow-lg z-10">
-                      <nav className="grid p-2 text-sm text-slate-200">
-                        <a href="/demo-dashboard/inventory" className="px-3 py-2 rounded hover:bg-slate-800">Inventory Tracker</a>
-                        <a href="/demo-dashboard/summaries" className="px-3 py-2 rounded hover:bg-slate-800">Weekly Summaries</a>
-                        <a href="/demo-dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800">Account Settings</a>
-                        <a href="/demo-dashboard/notifications" className="px-3 py-2 rounded hover:bg-slate-800">Notifications</a>
-                        <a href="/demo-dashboard/reports" className="px-3 py-2 rounded hover:bg-slate-800">Reports</a>
-                      </nav>
-                    </div>
-                  </details>
-                </div>
-              </div>
-              <div className="px-4 py-6">
-                <DemoPreview />
-              </div>
+          <div className="rounded-2xl border border-slate-800 shadow-2xl bg-slate-950">
+            {/* Replace live demo with static image. Add a subtle overlay at bottom-left to cover any watermark. */}
+            <div className="relative">
+              <Image
+                src="/dashboard-screenshot.png"
+                alt="TaskChrono dashboard screenshot"
+                width={1920}
+                height={1080}
+                className="w-full h-auto rounded-2xl"
+                priority
+              />
+              {/* Mask bottom-left corner to hide framework watermark in the screenshot */}
+              <div className="pointer-events-none absolute left-2 bottom-2 h-12 w-28 rounded-md bg-slate-950/95" />
             </div>
-          </div>
-          <div className="text-center mt-6">
-            <a href="/demo-dashboard" className="inline-block px-5 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Open Full Demo</a>
           </div>
         </div>
       </section>
