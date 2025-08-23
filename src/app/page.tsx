@@ -1,8 +1,8 @@
 export const dynamic = 'force-static'
 export const revalidate = 0
 
-import LandingPage from './(marketing)/page'
+import LandingClient from './(marketing)/LandingClient'
 
 export default function RootIndex() {
-  return <LandingPage />
+  return <LandingClient />
 }
