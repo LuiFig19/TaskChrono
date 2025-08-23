@@ -1,6 +1,6 @@
 import '@/app/globals.css'
+// Minimal layout to avoid client refs during build
 import Link from 'next/link'
-import SignInButton from './SignInButton'
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   const quickshiftUrl = '/quickshift'
@@ -19,7 +19,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <SignInButton />
             <Link href="/get-started" className="px-4 py-2 rounded-md bg-black text-white">Get Started</Link>
           </div>
         </div>
