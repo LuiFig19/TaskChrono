@@ -335,9 +335,8 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     timer_active: 'bg-slate-900',
   }
 
+  // Always allow widgets in the demo/marketing experience; in the app we still accept all widgets
   function canUseWidget(id: string): boolean {
-    if (id === 'inventory') return plan === 'ENTERPRISE' || plan === 'CUSTOM'
-    if (id === 'analytics') return plan !== 'FREE'
     return true
   }
 
