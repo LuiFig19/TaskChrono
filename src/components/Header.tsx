@@ -17,7 +17,7 @@ export default function Header() {
             { href: '#features', label: 'Features' },
             { href: '#pricing', label: 'Pricing' },
             { href: '#comparison', label: 'Comparison' },
-            { href: '#demo', label: 'Demo' },
+            { href: '#screenshot', label: 'View Dashboard' },
           ].map((l) => (
             <a
               key={l.href}

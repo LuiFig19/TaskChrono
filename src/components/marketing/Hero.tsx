@@ -34,7 +34,7 @@ export default function Hero() {
             className="mt-10 flex items-center justify-center gap-3"
           >
             <Link href="/get-started" className="px-6 py-3 rounded-lg bg-black text-white shadow-lg shadow-indigo-200/40 hover:scale-[1.02] transition-transform">Get Started</Link>
-            <Link href="#screenshot" className="px-6 py-3 rounded-lg border hover:bg-gray-50 transition-colors">View Screenshot</Link>
+            <Link href="#screenshot" className="px-6 py-3 rounded-lg border hover:bg-gray-50 transition-colors">View Demo</Link>
           </m.div>
         </LazyMotion>
       </div>

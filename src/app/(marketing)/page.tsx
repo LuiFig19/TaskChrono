@@ -30,7 +30,7 @@ export default function LandingPage() {
                 Get Started
               </Link>
               <Link href="#screenshot" className="border-2 border-slate-600 text-slate-200 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-slate-800 transition-all duration-300">
-                View Screenshot
+                View Demo
               </Link>
             </MotionDiv>
             <MotionDiv className="text-sm text-gray-500">Join <strong>20,000+ businesses</strong> boosting productivity with TaskChrono.</MotionDiv>
@@ -100,13 +100,13 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-slate-800 shadow-2xl bg-slate-950">
             {/* Replace live demo with static image. Add a subtle overlay at bottom-left to cover any watermark. */}
             <div className="relative">
-              <Image
+              {/* Legacy anchor support so #demo also scrolls here */}
+              <div id="demo" className="absolute -top-24" aria-hidden />
+              <img
                 src="/dashboard-screenshot.png"
                 alt="TaskChrono dashboard screenshot"
-                width={1920}
-                height={1080}
                 className="w-full h-auto rounded-2xl"
-                priority
+                loading="eager"
               />
               {/* Mask bottom-left corner to hide framework watermark in the screenshot */}
               <div className="pointer-events-none absolute left-2 bottom-2 h-12 w-28 rounded-md bg-slate-950/95" />

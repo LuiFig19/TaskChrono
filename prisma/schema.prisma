@@ -36,6 +36,7 @@ model User {
   inventoryItemsCreated InventoryItem[] @relation("InventoryCreatedBy")
   inventoryItemsUpdated InventoryItem[] @relation("InventoryUpdatedBy")
   inventoryActivities   InventoryActivity[]
+  timers        Timer[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -88,6 +89,7 @@ model Organization {
   projects      Project[]
   tasks         Task[]
   timeEntries   TimeEntry[]
+  timers        Timer[]
   files         FileRecord[]
   calendar      CalendarEvent[]
   inventory     InventoryItem[]
@@ -96,6 +98,7 @@ model Organization {
   inventoryActivities InventoryActivity[]
   invoices      Invoice[]
   expenses      Expense[]
+  chatMessages  ChatMessage[]
 
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
@@ -366,16 +369,7 @@ enum InventoryActivityType {
   IMPORT
 }
 
-model Invoice {
-  id             String       @id @default(cuid())
-  organizationId String
-  number         String
-  amountCents    Int
-  status         InvoiceStatus @default(DRAFT)
-  issuedAt       DateTime      @default(now())
-  dueAt          DateTime?
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
+// Duplicate Invoice model removed - keeping the more complete one above
 
 model Expense {
   id             String       @id @default(cuid())
@@ -490,11 +484,6 @@ model ProjectActivity {
   createdAt  DateTime @default(now())
 }
 
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PAID
-  VOID
-}
+// Duplicate InvoiceStatus enum removed - keeping the one defined earlier
 
 

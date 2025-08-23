@@ -1,9 +1,8 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
-export default async function LoginPage(props: { searchParams?: { callbackUrl?: string } } | { searchParams: Promise<{ callbackUrl?: string }> }) {
-  const session = await getServerSession(authOptions)
+export default async function LoginPage(
+  props: { searchParams?: { callbackUrl?: string } } | { searchParams: Promise<{ callbackUrl?: string }> }
+) {
   let params: { callbackUrl?: string } = {}
   try {
     const maybe = (props as any).searchParams
