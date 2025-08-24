@@ -5,13 +5,12 @@ import { MotionDiv } from '@/components/ClientMotion'
 
 const Header = dynamic(() => import('@/components/Header'), { ssr: false })
 const LandingPageBottom = dynamic(() => import('@/components/LandingPageBottom'), { ssr: false })
-// AutoLaunch was previously used; keep disabled unless needed
-// const AutoLaunch = dynamic(() => import('./AutoLaunch'), { ssr: false })
+const AutoLaunch = dynamic(() => import('./AutoLaunch'), { ssr: false })
 
 export default function LandingClient() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
-      {/* <AutoLaunch /> */}
+      <AutoLaunch />
       <Header />
 
       <section className="relative overflow-hidden">
