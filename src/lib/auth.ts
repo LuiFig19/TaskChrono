@@ -6,6 +6,10 @@ import bcrypt from 'bcryptjs'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 
 export const authOptions: AuthOptions = {
+  // Let NextAuth accept callbacks from any deployed host (Vercel sets NEXTAUTH_URL)
+  // and add lightweight debug to capture future issues without affecting UI
+  trustHost: true as any,
+  debug: process.env.NODE_ENV !== 'production',
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
