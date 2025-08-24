@@ -2,14 +2,8 @@ import { withAuth } from 'next-auth/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export default withAuth(
-  function middleware(req: NextRequest) {
-    // Normalize host: redirect www --> apex to avoid NextAuth state/cookie mismatches
-    const host = req.headers.get('host') || ''
-    if (host.startsWith('www.')) {
-      const url = req.nextUrl.clone()
-      url.host = host.replace(/^www\./, '')
-      return NextResponse.redirect(url, 308)
-    }
+  function middleware(_req: NextRequest) {
+    // Do not perform host redirects here to avoid conflict with Vercel domain redirects
     return NextResponse.next()
   },
   {
@@ -26,7 +20,7 @@ export default withAuth(
 )
 
 export const config = {
-  // Run on all routes so host normalization also applies to /api/auth/*
+  // Keep middleware active site-wide for auth checks, but no host rewrites
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
 
