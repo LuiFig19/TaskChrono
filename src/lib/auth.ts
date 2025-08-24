@@ -11,6 +11,9 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Allow linking Google to existing accounts that share the same email
+      // to avoid OAuthAccountNotLinked loops when a user first registered via credentials
+      allowDangerousEmailAccountLinking: true as any,
     }),
     Credentials({
       name: 'Credentials',
