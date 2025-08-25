@@ -10,6 +10,41 @@ export const authOptions: AuthOptions = {
   // and add lightweight debug to capture future issues without affecting UI
   trustHost: true as any,
   debug: process.env.NODE_ENV !== 'production',
+  cookies: {
+    // Share OAuth transient cookies across apex and www in production
+    state: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.state' : 'next-auth.state',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        domain: process.env.NODE_ENV === 'production' ? '.taskchrono.org' : undefined,
+      },
+    },
+    pkceCodeVerifier: {
+      name:
+        process.env.NODE_ENV === 'production'
+          ? '__Secure-next-auth.pkce.code_verifier'
+          : 'next-auth.pkce.code_verifier',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        domain: process.env.NODE_ENV === 'production' ? '.taskchrono.org' : undefined,
+      },
+    },
+    callbackUrl: {
+      name: 'next-auth.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        domain: process.env.NODE_ENV === 'production' ? '.taskchrono.org' : undefined,
+      },
+    },
+  },
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
