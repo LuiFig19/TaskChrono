@@ -1,3 +1,6 @@
+-- Ensure logical schema exists
+CREATE SCHEMA IF NOT EXISTS "taskchrono";
+
 -- CreateEnum
 CREATE TYPE "taskchrono"."ProjectStatus" AS ENUM ('PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED');
 

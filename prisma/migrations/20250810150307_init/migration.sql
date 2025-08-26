@@ -1,3 +1,6 @@
+-- Ensure logical schema exists
+CREATE SCHEMA IF NOT EXISTS "taskchrono";
+
 -- CreateEnum
 CREATE TYPE "taskchrono"."UserRole" AS ENUM ('ADMIN', 'MANAGER', 'MEMBER');
 
