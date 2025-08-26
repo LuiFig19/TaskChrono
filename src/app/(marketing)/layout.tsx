@@ -19,7 +19,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="px-3 py-2 rounded-md border">Sign In</Link>
+            <Link href="/?signin=1&dst=%2Fdashboard" className="px-3 py-2 rounded-md border">Sign In</Link>
             <Link href="/get-started" className="px-4 py-2 rounded-md bg-black text-white">Get Started</Link>
           </div>
         </div>
