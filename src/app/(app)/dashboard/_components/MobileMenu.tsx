@@ -12,9 +12,9 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
       <button
         aria-label="Open menu"
         onClick={() => setOpen(true)}
-        className="px-3 py-2 rounded border border-slate-700 text-slate-200 bg-slate-900/70 hover:bg-slate-900"
+        className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800 shadow-sm"
       >
-        ☰
+        <span aria-hidden>☰</span>
       </button>
       <AnimatePresence>
         {open && (
@@ -24,7 +24,7 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm" onClick={() => setOpen(false)} />
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ x: 320 }}
               animate={{ x: 0 }}
@@ -33,17 +33,17 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
               className="absolute right-0 top-0 h-full w-72 bg-slate-950 border-l border-slate-800 shadow-2xl p-4 z-[10000]"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm text-slate-300">Account</div>
-                <button onClick={() => setOpen(false)} className="text-slate-300">✕</button>
+                <div className="text-sm text-slate-200 font-medium">Menu</div>
+                <button onClick={() => setOpen(false)} className="text-slate-300 hover:text-white" aria-label="Close">✕</button>
               </div>
-              <nav className="grid text-sm">
-                <Link href="/dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800" onClick={() => setOpen(false)}>Settings</Link>
-                <Link href="/dashboard/subscription" className="px-3 py-2 rounded hover:bg-slate-800" onClick={() => setOpen(false)}>Subscription</Link>
-                <Link href="/dashboard/help" className="px-3 py-2 rounded hover:bg-slate-800" onClick={() => setOpen(false)}>Help / Support</Link>
+              <nav className="grid text-sm text-slate-200">
+                <Link href="/dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Settings</Link>
+                <Link href="/dashboard/subscription" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Subscription</Link>
+                <Link href="/dashboard/help" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Help / Support</Link>
                 <div className="my-2 border-t border-slate-800" />
-                <a href="/api/auth/signout" className="px-3 py-2 rounded hover:bg-slate-800">Sign Out</a>
+                <a href="/api/auth/signout" className="px-3 py-2 rounded hover:bg-slate-800/80">Sign Out</a>
               </nav>
-              <div className="mt-4 text-xs text-slate-500">Plan: {plan.toLowerCase()}</div>
+              <div className="mt-4 text-xs text-slate-400">Plan: {plan.toLowerCase()}</div>
             </motion.div>
           </motion.div>
         )}

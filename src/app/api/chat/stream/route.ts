@@ -22,7 +22,9 @@ export async function GET(req: Request) {
       orderBy: { ts: 'asc' },
       take: 100,
     })
-  } catch {}
+  } catch (e) {
+    // If DB not reachable, keep streaming-only mode without history
+  }
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder()

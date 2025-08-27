@@ -91,7 +91,10 @@ export default function ChatPanel() {
               <div key={m.id} className={`rounded-md border p-2 shadow-sm ${channelId==='managers' ? 'border-rose-700 bg-rose-950/30' : 'border-slate-800 bg-slate-900'}`}>
                 <div className="text-slate-300 text-xs mb-0.5 flex items-center justify-between">
                   <span>{m.user.name} ({roleLabel})</span>
-                  <span className="opacity-80">{dateStr}</span>
+                  <span className="opacity-80 flex items-center gap-2">
+                    {dateStr}
+                    <button title="Delete" aria-label="Delete message" onClick={async()=>{ await fetch('/api/chat/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: m.id }) }); setMessagesByChannel(v=> ({ ...v, [channelId]: (v[channelId]||[]).filter(x=>x.id!==m.id) })) }} className="px-1 py-0.5 rounded border border-slate-700 hover:bg-slate-800">🗑</button>
+                  </span>
                 </div>
                 <div className="text-slate-100 leading-relaxed">{m.text}</div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
