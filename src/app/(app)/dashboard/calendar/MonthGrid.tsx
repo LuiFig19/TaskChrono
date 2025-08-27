@@ -79,7 +79,7 @@ export default function MonthGrid({ events }: { events: EventDto[] }) {
           <button
             key={`box-${idx}`}
             type="button"
-            className={`relative group block py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150`}
+            className={`relative group block py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150 cursor-pointer`}
             aria-label={meta ? `${day}: ${meta.items.map((i) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
             onClick={() => {
               const input = document.getElementById('calendar-when') as HTMLInputElement | null

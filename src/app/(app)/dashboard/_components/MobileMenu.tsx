@@ -24,13 +24,13 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={() => setOpen(false)} />
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm z-[10000]" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ x: 320 }}
               animate={{ x: 0 }}
               exit={{ x: 320 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute right-0 top-0 h-full w-72 bg-slate-950 border-l border-slate-800 shadow-2xl p-4 z-[10000]"
+              className="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-slate-950 border-l border-slate-800 shadow-2xl p-4 z-[10001]"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-200 font-medium">Menu</div>
@@ -39,6 +39,7 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
               <nav className="grid text-sm text-slate-200">
                 <Link href="/dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Settings</Link>
                 <Link href="/dashboard/subscription" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Subscription</Link>
+                <Link href="/dashboard/company" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Company</Link>
                 <Link href="/dashboard/help" className="px-3 py-2 rounded hover:bg-slate-800/80" onClick={() => setOpen(false)}>Help / Support</Link>
                 <div className="my-2 border-t border-slate-800" />
                 <a href="/api/auth/signout" className="px-3 py-2 rounded hover:bg-slate-800/80">Sign Out</a>
