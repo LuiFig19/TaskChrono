@@ -69,9 +69,9 @@ export default function ChatPanel() {
       </button>
       {open && createPortal(
         <>
-        <div className="fixed inset-0 z-[10000] bg-black/20 backdrop-blur-[2px]" onClick={()=>setOpen(false)} />
-        <div className="fixed top-0 right-0 h-full w-[420px] max-w-[92vw] bg-slate-950/98 text-slate-100 border-l border-slate-800 shadow-2xl animate-[slidein_.2s_ease-out] grid grid-rows-[auto_1fr_auto] z-[10001]" role="dialog" aria-label="Team chat">
-          <div className="p-3 border-b border-slate-800 flex items-center gap-2">
+        <div className="fixed inset-0 z-[10000] bg-black/30" onClick={()=>setOpen(false)} />
+        <div className="fixed top-0 right-0 h-full w-full sm:w-[420px] max-w-[100vw] bg-slate-950 text-slate-100 border-l border-slate-800 shadow-2xl animate-[slidein_.2s_ease-out] grid grid-rows-[auto_1fr_auto] z-[10001]" role="dialog" aria-label="Team chat">
+          <div className="p-3 md:p-3 border-b border-slate-800 flex items-center gap-2">
             <label htmlFor="chat-channel" className="sr-only">Channel</label>
             <select id="chat-channel" value={channelId} onChange={e=>setChannelId(e.target.value)} className="px-2 py-1 rounded-md border border-slate-700 bg-slate-900 text-slate-100 text-sm">
               {channels.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}

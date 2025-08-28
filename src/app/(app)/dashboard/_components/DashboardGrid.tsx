@@ -368,7 +368,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
       {/* Add widget menu moved to top action bar in DashboardPage to reduce clutter */}
       <Droppable droppableId="grid" direction="vertical">
         {(provided: DroppableProvided) => (
-          <div ref={provided.innerRef} {...provided.droppableProps} className="grid lg:grid-cols-3 gap-6">
+          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {order.map((id, idx) => (
               <Draggable draggableId={id} index={idx} key={id}>
                 {(p: DraggableProvided) => (

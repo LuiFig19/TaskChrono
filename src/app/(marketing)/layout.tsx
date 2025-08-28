@@ -7,8 +7,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-6">
             <Link href="/" className="font-bold text-xl">TaskChrono</Link>
             <Link href={quickshiftUrl} className="px-3 py-1.5 rounded-md border hidden sm:inline-block">QuickShift</Link>
             <div className="hidden md:flex items-center gap-4 text-sm text-gray-600">
@@ -18,9 +18,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
               <Link href="/demo">Demo Dashboard</Link>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Link href="/?signin=1&dst=%2Fdashboard" className="px-3 py-2 rounded-md border">Sign In</Link>
-            <Link href="/get-started" className="px-4 py-2 rounded-md bg-black text-white">Get Started</Link>
+            <Link href="/get-started" className="px-4 py-2 rounded-md bg-black text-white hidden xs:inline-block">Get Started</Link>
           </div>
         </div>
       </nav>

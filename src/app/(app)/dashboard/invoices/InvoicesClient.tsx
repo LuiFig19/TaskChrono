@@ -60,7 +60,7 @@ export default function InvoiceClient({ initialInvoices }: { initialInvoices: In
   }
 
   return (
-    <div className="mt-6 grid lg:grid-cols-[360px_1fr] gap-6">
+    <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
         <div className="font-medium text-white">New Invoice</div>
         <form onSubmit={async(e)=>{e.preventDefault(); await createInvoice(new FormData(e.currentTarget)); (e.currentTarget as HTMLFormElement).reset()}} className="mt-3 grid gap-2 text-sm">
@@ -109,8 +109,8 @@ export default function InvoiceClient({ initialInvoices }: { initialInvoices: In
             <option value="OVERDUE">Overdue</option>
           </select>
         </div>
-        <div className="overflow-hidden rounded-xl border border-slate-800">
-          <table className="w-full text-sm">
+        <div className="overflow-auto rounded-xl border border-slate-800">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-slate-950 text-slate-300">
               <tr>
                 <th className="text-left px-3 py-2">Client</th>

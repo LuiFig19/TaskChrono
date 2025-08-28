@@ -57,7 +57,7 @@ export default function MonthGrid({ events }: { events: EventDto[] }) {
   const toLocalInput = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00`
 
   return (
-    <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs">
+    <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] sm:text-xs">
       {boxes.map((_, idx) => {
         if (idx < startDay) return <div key={`box-${idx}`} className="py-3 rounded bg-slate-900 border border-slate-800" />
         const day = idx - startDay + 1
@@ -79,7 +79,7 @@ export default function MonthGrid({ events }: { events: EventDto[] }) {
           <button
             key={`box-${idx}`}
             type="button"
-            className={`relative group block py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150 cursor-pointer`}
+            className={`relative group block py-2.5 md:py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150 cursor-pointer`}
             aria-label={meta ? `${day}: ${meta.items.map((i) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
             onClick={() => {
               const input = document.getElementById('calendar-when') as HTMLInputElement | null
