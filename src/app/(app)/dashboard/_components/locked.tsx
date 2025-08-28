@@ -1,3 +1,4 @@
+"use client"
 export default function LockedFeature({ title }: { title: string }) {
   return (
     <div className="fixed inset-0 z-[100000] flex items-center justify-center">
