@@ -9,8 +9,8 @@ export default function Popup() {
       const url = new URL(window.location.href)
       const dst = url.searchParams.get('dst') || '/dashboard'
       const callback = `/auth/popup-complete?dst=${encodeURIComponent(dst)}`
-      // Go straight to Google provider within this popup
-      window.location.replace(`/api/auth/signin/google?callbackUrl=${encodeURIComponent(callback)}`)
+      // Start Google OAuth immediately (POST behind the scenes)
+      void signIn('google', { callbackUrl: callback, redirect: true })
     } catch {
       // Fallback: navigate to root
       window.location.href = '/'

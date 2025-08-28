@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react'
 
 type Invoice = {
   id: string
-  clientName: string
+  clientName?: string | null
   projectName?: string | null
   issueDate?: string | Date
   issuedAt?: string | Date
@@ -35,7 +35,9 @@ export default function InvoiceClient({ initialInvoices }: { initialInvoices: In
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'ALL'|Invoice['status']>('ALL')
   const filtered = useMemo(()=>invoices.filter(i=>{
-    const hit = !q || i.clientName?.toLowerCase().includes(q.toLowerCase()) || (i.projectName||'').toLowerCase().includes(q.toLowerCase())
+    const client = (i.clientName||'').toLowerCase()
+    const project = (i.projectName||'').toLowerCase()
+    const hit = !q || client.includes(q.toLowerCase()) || project.includes(q.toLowerCase())
     const hs = status==='ALL' || i.status===status
     return hit && hs
   }),[invoices,q,status])
