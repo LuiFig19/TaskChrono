@@ -16,15 +16,22 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
   const [members, setMembers] = React.useState<Member[]>([])
   const [loading, setLoading] = React.useState(false)
   const [toast, setToast] = React.useState<string | null>(null)
+  const [orgName, setOrgName] = React.useState('')
 
   React.useEffect(() => {
     let ignore = false
     async function load() {
       try {
-        const res = await fetch('/api/team', { cache: 'no-store' })
-        if (!res.ok) return
-        const data = await res.json()
-        if (!ignore) setMembers(data.members || [])
+        const [teamRes, orgRes] = await Promise.all([
+          fetch('/api/team', { cache: 'no-store' }),
+          organizationId ? fetch(`/api/org/${organizationId}`, { cache: 'no-store' }) : Promise.resolve(null as any)
+        ])
+        if (teamRes?.ok) {
+          const data = await teamRes.json(); if (!ignore) setMembers(data.members || [])
+        }
+        if (orgRes?.ok) {
+          const org = await orgRes.json(); if (!ignore) setOrgName(org.name || '')
+        }
       } catch {}
     }
     load()
@@ -34,6 +41,17 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
   function notify(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2200)
+  }
+
+  async function saveOrgName() {
+    if (!organizationId || !orgName.trim()) return
+    try {
+      const res = await fetch('/api/company/update', { method: 'POST', body: (()=>{ const f=new FormData(); f.set('id', organizationId); f.set('name', orgName.trim()); return f })() })
+      if (!res.ok) throw new Error('update failed')
+      notify('Company name saved')
+    } catch {
+      notify('Failed to save company name')
+    }
   }
 
   async function invite() {
@@ -87,6 +105,23 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
       )}
 
       <div className="mt-6 grid gap-6">
+        {/* Company */}
+        <section className="rounded-lg border border-slate-800 bg-slate-900/60">
+          <header className="flex items-center justify-between px-4 py-3">
+            <div>
+              <div className="font-medium">Company</div>
+              <div className="text-sm text-slate-400">Update your company info</div>
+            </div>
+          </header>
+          <div className="px-4 pb-4 grid gap-3">
+            <label className="grid gap-1 max-w-md">
+              <span className="text-sm text-slate-300">Company Name</span>
+              <input value={orgName} onChange={(e)=>setOrgName(e.target.value)} className="border border-slate-700 bg-transparent px-3 py-2 rounded text-slate-200" />
+            </label>
+            <button onClick={saveOrgName} className="w-max px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">Save</button>
+          </div>
+        </section>
+
         {/* Team */}
         <section className="rounded-lg border border-slate-800 bg-slate-900/60">
           <header className="flex items-center justify-between px-4 py-3">
