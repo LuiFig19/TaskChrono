@@ -33,7 +33,7 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="absolute inset-0 bg-slate-950/95" onClick={() => setOpen(false)} />
+            <div className="absolute inset-0 bg-slate-950" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ x: 320 }}
               animate={{ x: 0 }}
@@ -43,7 +43,13 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-200 font-medium">Menu</div>
-                <button onClick={() => setOpen(false)} className="text-slate-300 hover:text-white" aria-label="Close">✕</button>
+                <button aria-label="Close" onClick={() => setOpen(false)} className="relative h-8 w-8 grid place-items-center rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800 shadow-sm">
+                  <span aria-hidden className="block relative h-3 w-5">
+                    <span className={`absolute left-0 top-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 translate-y-1.5 rotate-45`}></span>
+                    <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-5 bg-slate-200 transition-opacity duration-200 opacity-0`}></span>
+                    <span className={`absolute left-0 bottom-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 -translate-y-1.5 -rotate-45`}></span>
+                  </span>
+                </button>
               </div>
               <nav className="grid text-sm text-slate-200">
                 <Link href="/dashboard/settings" className="group px-3 py-2 rounded hover:bg-slate-800/80 transition-colors" onClick={() => setOpen(false)}>

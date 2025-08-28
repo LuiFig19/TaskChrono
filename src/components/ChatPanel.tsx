@@ -64,8 +64,8 @@ export default function ChatPanel() {
 
   return (
     <div className="inline-block ml-2 z-[100] relative">
-      <button onClick={()=>setOpen(o=>!o)} aria-label="Open chat" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 align-middle">
-        <span>💬</span>
+      <button onClick={()=>setOpen(o=>!o)} aria-label="Open chat" className="relative h-9 w-9 grid place-items-center rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800 shadow-sm">
+        <span className="text-base" aria-hidden>💬</span>
       </button>
       {open && createPortal(
         <>
