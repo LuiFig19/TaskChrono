@@ -379,6 +379,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                     className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 ${
                       id === 'progress' || id === 'calendar' ? 'lg:col-span-2' : ''
                     }`}
+                    style={{ ...(p.draggableProps.style as any), transform: (p.draggableProps.style as any)?.transform || undefined }}
                   >
                     <div className="font-medium text-white flex items-center justify-between">
                       {widgets[id]?.title}
