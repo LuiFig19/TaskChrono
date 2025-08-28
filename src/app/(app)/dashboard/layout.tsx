@@ -68,7 +68,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
               {href:'/dashboard/invoices',label:'Invoices', lock: !(plan==='ENTERPRISE'||plan==='CUSTOM')},
               {href:'/dashboard/timers',label:'Timers', lock: false}
             ].map(i=> (
-              <Link key={i.href} href={i.href} className="group relative px-2 py-0.5 rounded-md hover:text-white transition-colors leading-none">
+              <Link key={i.href} href={i.lock ? `#locked:${encodeURIComponent(i.label)}` : i.href} className="group relative px-2 py-0.5 rounded-md hover:text-white transition-colors leading-none" onClick={(e)=>{
+                if (i.lock) {
+                  e.preventDefault()
+                  // open persuasive upgrade modal
+                  const mount = document.createElement('div')
+                  document.body.appendChild(mount)
+                  import('./_components/locked').then(mod => {
+                    const React = require('react')
+                    const { createRoot } = require('react-dom/client')
+                    const root = createRoot(mount)
+                    root.render(React.createElement(mod.default, { title: i.label }))
+                  })
+                }
+              }}>
                 <span className="transition-[filter] group-hover:drop-shadow-[0_0_6px_rgba(99,102,241,0.45)] flex items-center gap-1.5">
                   {i.label}
                   {i.lock && (
