@@ -5,7 +5,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // include ?schema=taskchrono in the URL
+  url       = env("DATABASE_URL") // pooled (PgBouncer) runtime connection
+  directUrl = env("POSTGRES_URL_NON_POOLING") // non-pooled for migrations (avoids advisory lock timeout)
 }
 
 /// NextAuth core models
