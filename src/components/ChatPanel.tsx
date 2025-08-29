@@ -73,7 +73,12 @@ export default function ChatPanel() {
         <div className="fixed top-0 right-0 h-full w-full sm:w-[420px] max-w-[100vw] bg-slate-950 text-slate-100 border-l border-slate-800 shadow-2xl animate-[slidein_.2s_ease-out] grid grid-rows-[auto_1fr_auto] z-[10001]" role="dialog" aria-label="Team chat">
           <div className="p-3 md:p-3 border-b border-slate-800 flex items-center gap-2">
             <label htmlFor="chat-channel" className="sr-only">Channel</label>
-            <select id="chat-channel" value={channelId} onChange={e=>setChannelId(e.target.value)} className="px-2 py-1 rounded-md border border-slate-700 bg-slate-900 text-slate-100 text-sm">
+            <select
+              id="chat-channel"
+              value={channelId}
+              onChange={e=>setChannelId(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900/80 text-slate-100 text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/40 hover:border-slate-600"
+            >
               {channels.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             {/* Always three channels; no add button */}
@@ -93,12 +98,25 @@ export default function ChatPanel() {
                   <span>{m.user.name} ({roleLabel})</span>
                   <span className="opacity-80 flex items-center gap-2">
                     {dateStr}
-                    <button title="Delete" aria-label="Delete message" onClick={async()=>{ await fetch('/api/chat/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: m.id }) }); setMessagesByChannel(v=> ({ ...v, [channelId]: (v[channelId]||[]).filter(x=>x.id!==m.id) })) }} className="px-1 py-0.5 rounded border border-slate-700 hover:bg-slate-800">🗑</button>
+                    <button
+                      title="Delete"
+                      aria-label="Delete message"
+                      onClick={async()=>{ await fetch('/api/chat/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: m.id }) }); setMessagesByChannel(v=> ({ ...v, [channelId]: (v[channelId]||[]).filter(x=>x.id!==m.id) })) }}
+                      className="px-1.5 py-0.5 rounded-md border border-slate-700 text-rose-300 hover:bg-rose-900/30 hover:border-rose-600 transition-colors"
+                    >
+                      🗑
+                    </button>
                   </span>
                 </div>
                 <div className="text-slate-100 leading-relaxed">{m.text}</div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
-                  <button onClick={async()=>{ await fetch('/api/chat/like', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messageId: m.id }) }) }} className="px-1.5 py-0.5 rounded border border-slate-700 hover:bg-slate-800">❤ Like</button>
+                  <button
+                    aria-label="Like message"
+                    onClick={async()=>{ await fetch('/api/chat/like', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messageId: m.id }) }) }}
+                    className="px-1.5 py-0.5 rounded-md border border-rose-700/40 text-rose-300 hover:bg-rose-900/30 hover:border-rose-600 transition-colors leading-none"
+                  >
+                    ❤
+                  </button>
                   <span className="opacity-80">{(likes[m.id]?.length||0) > 0 ? `${likes[m.id].length} like(s)` : ''}</span>
                 </div>
               </div>
