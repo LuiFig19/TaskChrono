@@ -25,7 +25,10 @@ export default async function InvoicesPage({ searchParams }: { searchParams?: { 
   if (['DRAFT','SENT','PAID','OVERDUE'].includes(status)) where.status = status
 
   const [invoices, stats] = await Promise.all([
-    prisma.invoice.findMany({ where, orderBy: { issueDate: 'desc' } as any }),
+    prisma.invoice.findMany({
+      where,
+      orderBy: { issueDate: 'desc' } as any,
+    }),
     prisma.invoice.groupBy({
       by: ['status'],
       where: { organizationId },
