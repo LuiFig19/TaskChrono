@@ -12,6 +12,25 @@ export default function ChatClientMount() {
     document.addEventListener('tc:timer:changed', handler as EventListener)
     return () => document.removeEventListener('tc:timer:changed', handler as EventListener)
   }, [])
+
+  // Open an SSE stream to receive server-side timer change events and refresh widgets instantly
+  React.useEffect(() => {
+    let es: EventSource | null = null
+    function connect() {
+      try { es && es.close() } catch {}
+      es = new EventSource('/api/time')
+      es.addEventListener('changed', () => {
+        document.dispatchEvent(new CustomEvent('tc:refresh'))
+      })
+      es.addEventListener('error', () => {
+        try { es && es.close() } catch {}
+        // retry after small delay
+        setTimeout(connect, 2000)
+      })
+    }
+    connect()
+    return () => { try { es && es.close() } catch {} }
+  }, [])
   return <ChatPanel />
 }
 
