@@ -65,6 +65,7 @@ export default async function TimersPage() {
               <thead className="bg-slate-950 text-slate-300">
                 <tr>
                   <th className="text-left px-3 py-2">Name</th>
+                  <th className="text-left px-3 py-2">Live</th>
                   <th className="text-left px-3 py-2">Start</th>
                   <th className="text-left px-3 py-2">End</th>
                   <th className="text-left px-3 py-2">Duration (min)</th>
@@ -75,6 +76,9 @@ export default async function TimersPage() {
                 {entries.map((e) => (
                   <tr key={e.id} className="hover:bg-slate-900">
                     <td className="px-3 py-2">{e.name}</td>
+                    <td className="px-3 py-2">
+                      {!e.endedAt ? <span className="inline-flex items-center gap-1 text-emerald-400"><span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> running</span> : '—'}
+                    </td>
                     <td className="px-3 py-2">{new Date(e.startedAt).toLocaleString()}</td>
                     <td className="px-3 py-2">{e.endedAt ? new Date(e.endedAt).toLocaleString() : '—'}</td>
                     <td className="px-3 py-2">{e.durationMin}</td>

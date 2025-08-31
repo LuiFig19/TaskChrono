@@ -67,6 +67,20 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   }, [order])
 
   useEffect(() => {
+    function refresh() { setCalEvents(v=>v.slice()) }
+    document.addEventListener('tc:refresh', refresh as EventListener)
+    return () => document.removeEventListener('tc:refresh', refresh as EventListener)
+  }, [])
+
+  useEffect(() => {
+    // lightweight ticking for visible timers (~20s)
+    const id = setInterval(() => {
+      document.dispatchEvent(new CustomEvent('tc:refresh'))
+    }, 20000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
     if (!pin) return
     if (!canUseWidget(pin)) return
     setOrder((cur) => (cur.includes(pin) ? cur : [...cur, pin]))
