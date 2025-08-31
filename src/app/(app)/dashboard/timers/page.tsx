@@ -15,6 +15,21 @@ export default async function TimersPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold">Timers</h1>
+      {/* Client-side SSE listener to refresh instantly when timers change */}
+      <script dangerouslySetInnerHTML={{ __html: `
+        ;(() => {
+          if (typeof window === 'undefined') return
+          let es
+          function connect(){
+            try { es && es.close() } catch {}
+            es = new EventSource('/api/time')
+            es.addEventListener('changed', () => document.dispatchEvent(new CustomEvent('tc:refresh')))
+            es.addEventListener('error', () => { try { es.close() } catch {}; setTimeout(connect, 2000) })
+          }
+          connect()
+          document.addEventListener('visibilitychange', () => { if (!document.hidden) connect() })
+        })();
+      ` }} />
       <div className="mt-4 grid md:grid-cols-[1fr,380px] items-start gap-4">
         <div className="flex gap-2 flex-wrap">
           <StartTimerButton />
