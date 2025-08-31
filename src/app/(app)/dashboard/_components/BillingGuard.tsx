@@ -66,6 +66,17 @@ export default function BillingGuard() {
     }
   }
 
+  async function openPortal() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST' })
+      const data = await res.json() as { url?: string }
+      if (data.url && typeof window !== 'undefined') window.location.href = data.url
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!open) return null
 
   return (
@@ -101,7 +112,8 @@ export default function BillingGuard() {
             {error && <div className="text-rose-400 text-sm">{error}</div>}
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button type="submit" disabled={loading} className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50">{loading ? 'Processing…' : 'Pay and Continue'}</button>
+              <button type="submit" disabled={loading} className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50">{loading ? 'Processing…' : 'Continue to Checkout'}</button>
+              <button type="button" onClick={openPortal} disabled={loading} className="px-4 py-2 rounded-md border border-slate-700 hover:bg-slate-800 text-slate-200 disabled:opacity-50">Open Customer Portal</button>
             </div>
             <div className="text-xs text-slate-500">Payments are billed monthly. You can change seats at any time in Subscription settings.</div>
           </form>
