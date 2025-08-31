@@ -10,16 +10,25 @@ export default async function TimersPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
   const { organizationId, userId } = await getCurrentUserAndOrg()
-  const active = organizationId && userId ? await prisma.timeEntry.findFirst({ where: { organizationId, userId, endedAt: null } }) : null
+  const activeList = organizationId && userId ? await prisma.timeEntry.findMany({ where: { organizationId, userId, endedAt: null }, orderBy: { startedAt: 'desc' } }) : []
   const entries = organizationId && userId ? await prisma.timeEntry.findMany({ where: { organizationId, userId }, orderBy: { startedAt: 'desc' } }) : []
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold">Timers</h1>
       <div className="mt-4 grid md:grid-cols-[1fr,380px] items-start gap-4">
         <div className="flex gap-2 flex-wrap">
-          <StartTimerButton disabled={!!active} />
+          <StartTimerButton />
           <form action={stopTimer}>
-            <button className="px-3 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700" disabled={!active}>Stop Timer</button>
+            <button className="px-3 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700" disabled={activeList.length===0}>Stop Any Active</button>
+          </form>
+          {/* Pin active timer dropdown */}
+          <form action="/api/pin/timer" method="post" className="flex items-center gap-2">
+            <select name="timerId" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200">
+              {activeList.map(a => (
+                <option key={a.id} value={a.timerId || ''}>{a.name} • {new Date(a.startedAt).toLocaleTimeString()}</option>
+              ))}
+            </select>
+            <button type="submit" className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Pin Active Timer</button>
           </form>
           <a href="/api/timers/export" className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Export CSV</a>
           <form action="/api/pin/timer" method="post">
