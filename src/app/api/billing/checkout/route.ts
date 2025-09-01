@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
   if (!membership?.organization) return NextResponse.json({ error: 'Missing organization' }, { status: 400 })
   const org = membership.organization
-  const body = await request.json().catch(() => ({})) as { tier: 'BUSINESS' | 'ENTERPRISE'; seats: number; successUrl?: string; cancelUrl?: string }
+  const body = await request.json().catch(() => ({})) as { tier: 'BUSINESS' | 'ENTERPRISE'; seats: number; successUrl?: string; cancelUrl?: string; trialDays?: number }
   const seats = Math.max(1, Math.min(1000, Number(body.seats || 1)))
   if (body.tier !== 'BUSINESS' && body.tier !== 'ENTERPRISE') return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
 
@@ -56,6 +56,8 @@ export async function POST(request: Request) {
     success_url: body.successUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?paid=1`,
     cancel_url: body.cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?canceled=1`,
     subscription_data: {
+      // If a trial is requested, apply it here so Checkout creates the subscription with a trial period
+      trial_period_days: typeof body.trialDays === 'number' && body.trialDays > 0 ? Math.min(30, Math.max(1, Math.floor(body.trialDays))) : undefined,
       metadata: { organizationId: org.id, tier: body.tier, seats: String(seats) },
     },
     metadata: { organizationId: org.id, tier: body.tier, seats: String(seats) },

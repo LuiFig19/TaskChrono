@@ -11,7 +11,7 @@ function Hamburger() {
       <summary className="list-none cursor-pointer px-3 py-2 rounded border border-slate-700 text-slate-200">☰</summary>
       {/* Backdrop to improve contrast when menu is open; clicking it closes the menu */}
       <div
-        className="tc-overlay fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[95]"
+        className="tc-overlay fixed inset-0 bg-black/60 z-[95]"
         onClick={(e) => {
           const el = (e.currentTarget.parentElement as HTMLDetailsElement | null)
           if (el) el.removeAttribute('open')
@@ -24,7 +24,16 @@ function Hamburger() {
         </div>
         <nav className="grid p-2 text-sm">
           <Link href="/dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800">Settings</Link>
-          <Link href="/dashboard/subscription" className="px-3 py-2 rounded hover:bg-slate-800">Subscription</Link>
+          <button
+            className="px-3 py-2 rounded hover:bg-slate-800"
+            onClick={async ()=>{
+              try {
+                const res = await fetch('/api/billing/portal', { method: 'POST' })
+                const data = await res.json() as { url?: string }
+                if (data.url && typeof window !== 'undefined') window.location.href = data.url
+              } catch {}
+            }}
+          >Subscription</button>
           <Link href="/dashboard/help" className="px-3 py-2 rounded hover:bg-slate-800">Help / Support</Link>
           <div className="my-2 border-t border-slate-800" />
           <button

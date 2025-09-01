@@ -81,9 +81,9 @@ export default function BillingGuard() {
 
   return (
     <div className="fixed inset-0 z-[9999]">
-      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60" />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl">
+        <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 text-slate-200 shadow-2xl">
           <div className="px-6 py-4 border-b border-slate-800">
             <div className="text-xl font-semibold">Activate your workspace</div>
             <div className="text-sm text-slate-400 mt-1">Your 14-day trial has ended. Enter card details to continue.</div>

@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     const userName = (session.user as any)?.name as string | undefined
     const workspaceName = userName ? `${userName.split(' ')[0]}'s Workspace` : 'My Workspace'
     const org = await prisma.organization.create({
-      data: { name: workspaceName, planTier: 'FREE' as any, createdById: userId },
+      data: { name: workspaceName, planTier: 'FREE' as any, createdById: userId, trialEndsAt: new Date(Date.now() + 14*24*60*60*1000) },
     })
     await prisma.organizationMember.create({
       data: { organizationId: org.id, userId, role: 'OWNER' as any },

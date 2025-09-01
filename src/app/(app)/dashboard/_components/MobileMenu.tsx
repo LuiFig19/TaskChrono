@@ -28,13 +28,13 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100000]"
+            className="fixed inset-0 z-[200000]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div
-              className="absolute inset-0 bg-gradient-to-br from-slate-950 to-blue-950"
+              className="absolute inset-0 bg-black/60"
               onClick={() => setOpen(false)}
             />
             <motion.div
@@ -42,7 +42,7 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
               animate={{ x: 0 }}
               exit={{ x: 320 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-gradient-to-b from-slate-950 to-slate-900 border-l border-slate-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] p-4 z-[100001]"
+              className="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-slate-950 border-l border-slate-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] p-4 z-[200001]"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm text-slate-200 font-medium">Menu</div>
@@ -55,13 +55,13 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
                 </button>
               </div>
               <nav className="grid text-sm text-slate-200">
-                <Link href="/dashboard/settings" className="group px-3 py-2 rounded hover:bg-slate-800/80 transition-colors" onClick={() => setOpen(false)}>
+                <Link href="/dashboard/settings" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
                   <span className="inline-block transition-transform group-hover:translate-x-0.5">Settings →</span>
                 </Link>
-                <Link href="/dashboard/subscription" className="group px-3 py-2 rounded hover:bg-slate-800/80 transition-colors" onClick={() => setOpen(false)}>
+                <Link href="/dashboard/subscription" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
                   <span className="inline-block transition-transform group-hover:translate-x-0.5">Subscription →</span>
                 </Link>
-                <Link href="/dashboard/help" className="group px-3 py-2 rounded hover:bg-slate-800/80 transition-colors" onClick={() => setOpen(false)}>
+                <Link href="/dashboard/help" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
                   <span className="inline-block transition-transform group-hover:translate-x-0.5">Help / Support →</span>
                 </Link>
                 <div className="my-2 border-t border-slate-800" />
