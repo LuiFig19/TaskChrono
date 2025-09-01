@@ -1,7 +1,8 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import type { DropResult, DraggableProvided, DroppableProvided } from '@hello-pangea/dnd'
+import type { DropResult, DraggableProvided, DroppableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd'
+import { MotionConfig, motion } from 'framer-motion'
 import ProjectProgressWidget from './ProjectProgressWidget'
 
 const DragDropContext: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.DragDropContext), { ssr: false })
@@ -356,12 +357,20 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     return true
   }
 
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+
+  function onDragStart() {
+    // small delay prevents initial snap; helps GPU warm-up
+    requestAnimationFrame(() => setDraggingId((window as any).__tcDragging || null))
+  }
+
   function onDragEnd(res: DropResult) {
     if (!res.destination) return
     const next = Array.from(order)
     const [removed] = next.splice(res.source.index, 1)
     next.splice(res.destination.index, 0, removed)
     setOrder(next)
+    setDraggingId(null)
   }
 
   function addWidget(id: string) {
@@ -376,24 +385,33 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <MotionConfig transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.6 }}>
+    <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
       {/* Listen for top-bar add requests */}
       <WidgetAddListener onAdd={addWidget} />
       {/* Add widget menu moved to top action bar in DashboardPage to reduce clutter */}
       <Droppable droppableId="grid" direction="vertical">
         {(provided: DroppableProvided) => (
-          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 will-change-transform">
             {order.map((id, idx) => (
               <Draggable draggableId={id} index={idx} key={id}>
-                {(p: DraggableProvided) => (
-                  <div
+                {(p: DraggableProvided, s: DraggableStateSnapshot) => (
+                  <motion.div
+                    layout
                     ref={p.innerRef as unknown as (element: HTMLElement | null) => void}
                     {...p.draggableProps}
                     {...p.dragHandleProps}
                     className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 ${
                       id === 'progress' || id === 'calendar' ? 'lg:col-span-2' : ''
-                    }`}
-                    style={{ ...(p.draggableProps.style as any), transform: (p.draggableProps.style as any)?.transform || undefined }}
+                    } ${s.isDragging ? 'ring-1 ring-indigo-400/40 shadow-2xl' : 'shadow'} transition-colors`}
+                    style={{
+                      ...(p.draggableProps.style as any),
+                      transform: (p.draggableProps.style as any)?.transform || undefined,
+                      willChange: 'transform',
+                      zIndex: s.isDragging ? 1000 : 'auto',
+                    }}
+                    whileHover={{ scale: s.isDragging ? 1 : 1.01 }}
+                    animate={{ scale: s.isDragging ? 1.02 : 1 }}
                   >
                     <div className="font-medium text-white flex items-center justify-between">
                       {widgets[id]?.title}
@@ -424,7 +442,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                       )}
                     </div>
                     <div data-widget-id={id}>{widgets[id]?.render()}</div>
-                  </div>
+                  </motion.div>
                 )}
               </Draggable>
             ))}
@@ -433,6 +451,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         )}
       </Droppable>
     </DragDropContext>
+    </MotionConfig>
   )
 }
 
