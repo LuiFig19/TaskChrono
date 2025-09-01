@@ -13,6 +13,7 @@ export async function startTimer(formData: FormData) {
     timerId = timer.id
   }
   await prisma.timeEntry.create({ data: { organizationId, userId, startedAt: now, name, timerId } as any })
+  // notify clients via pin Sse or revalidate path (simple client event for now)
 }
 
 export async function stopTimer() {

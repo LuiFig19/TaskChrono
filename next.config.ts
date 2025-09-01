@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   },
   modularizeImports: {
     'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{member}}',
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
     },
   },
   compiler: {

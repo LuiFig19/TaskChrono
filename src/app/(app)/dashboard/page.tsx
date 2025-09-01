@@ -17,8 +17,18 @@ export default async function DashboardPage() {
     include: { organization: true },
   })
   if (!membership?.organization) {
-    // If the membership or org is missing (race condition after signup), send to onboarding
-    redirect('/get-started')
+    // Auto-provision a FREE personal workspace for first‑time sign-ins
+    const userId = (session.user as unknown as { id: string }).id
+    const userName = (session.user as any)?.name as string | undefined
+    const workspaceName = userName ? `${userName.split(' ')[0]}'s Workspace` : 'My Workspace'
+    const org = await prisma.organization.create({
+      data: { name: workspaceName, planTier: 'FREE' as any, createdById: userId },
+    })
+    await prisma.organizationMember.create({
+      data: { organizationId: org.id, userId, role: 'OWNER' as any },
+    })
+    // Reload dashboard now that membership exists
+    redirect('/dashboard')
   }
   const plan = membership.organization.planTier
   return (

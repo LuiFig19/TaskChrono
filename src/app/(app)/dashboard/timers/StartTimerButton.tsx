@@ -21,7 +21,7 @@ export default function StartTimerButton({ disabled }: { disabled?: boolean }) {
           className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
           onClick={() => { setName(''); setOpen(true) }}
         >
-          + Start Timer
+          + Add Timer
         </button>
       </form>
       {open && (

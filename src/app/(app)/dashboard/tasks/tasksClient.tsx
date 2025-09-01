@@ -37,8 +37,9 @@ export default function TasksClient() {
 
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
-  const [editingDescId, setEditingDescId] = useState<string | null>(null)
-  const [editingDesc, setEditingDesc] = useState("")
+  // Description editing is handled in a modal to avoid scroll jumps inside the list
+  const [descModalTask, setDescModalTask] = useState<Task | null>(null)
+  const [descDraft, setDescDraft] = useState("")
 
   type Toast = { id: string; text: string }
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -163,14 +164,14 @@ export default function TasksClient() {
     }
   }
   function beginEditDesc(t: Task) {
-    setEditingDescId(t.id)
-    setEditingDesc(t.description || '')
+    setDescModalTask(t)
+    setDescDraft(t.description || '')
   }
-  async function commitEditDesc(t: Task) {
-    if (!editingDescId) return
-    const val = editingDesc.trim()
-    setEditingDescId(null)
-    await updateTask(t.id, { description: val || null })
+  async function commitModalDesc() {
+    if (!descModalTask) return
+    const val = descDraft.trim()
+    await updateTask(descModalTask.id, { description: val || null })
+    setDescModalTask(null)
   }
 
   function onDragEnd(result: DropResult) {
@@ -231,17 +232,13 @@ export default function TasksClient() {
                             <button aria-label="Edit title" title="Edit title" onClick={()=>beginEditTitle(t)} className="ml-2 text-xs px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
                           </div>
                         )}
-                        {editingDescId === t.id ? (
-                          <textarea
-                            title="Edit description"
-                            className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-2 py-1 text-slate-200"
-                            value={editingDesc}
-                            onChange={(e)=>setEditingDesc(e.target.value)}
-                            onBlur={()=>commitEditDesc(t)}
-                            rows={2}
-                          />
+                        {t.description ? (
+                          <div className="text-xs text-slate-400 mt-1 break-words">
+                            {t.description}
+                            <button aria-label="Edit description" title="Edit description" onClick={()=>beginEditDesc(t)} className="ml-1 text-[10px] px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
+                          </div>
                         ) : (
-                          t.description ? <div className="text-xs text-slate-400 mt-1 break-words">{t.description} <button aria-label="Edit description" title="Edit description" onClick={()=>beginEditDesc(t)} className="ml-1 text-[10px] px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button></div> : <button onClick={()=>beginEditDesc(t)} className="text-xs text-slate-400 hover:text-slate-300">+ Add description</button>
+                          <button onClick={()=>beginEditDesc(t)} className="text-xs text-slate-400 hover:text-slate-300">+ Add description</button>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs">
@@ -347,7 +344,7 @@ export default function TasksClient() {
             <div className="font-medium text-white">Live Tasks</div>
             <button onClick={fetchData} className="text-xs px-2 py-1 rounded border border-slate-700 hover:bg-slate-800">Refresh</button>
           </div>
-          <div className="mt-3 space-y-3 max-h-[60vh] overflow-auto">
+          <div className="mt-3 space-y-3 max-h-[60vh] overflow-auto tc-scroll">
             {grouped.length === 0 ? (
               <div className="text-sm text-slate-400">No tasks yet. Add your first task.</div>
             ) : (
@@ -361,7 +358,7 @@ export default function TasksClient() {
       <section className="lg:hidden">
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 mt-4">
           <div className="font-medium text-white">Your Tasks</div>
-          <div className="mt-3 space-y-3 max-h-[50vh] overflow-auto">
+          <div className="mt-3 space-y-3 max-h-[50vh] overflow-auto tc-scroll">
             {grouped.length === 0 ? (
               <div className="text-sm text-slate-400">No tasks yet.</div>
             ) : (
@@ -371,6 +368,36 @@ export default function TasksClient() {
         </div>
       </section>
       </div>
+      {descModalTask ? (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
+            <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+              <div className="text-white font-medium">Edit Task</div>
+              <button onClick={()=>setDescModalTask(null)} className="text-slate-400 hover:text-slate-200 px-2 py-1">Close</button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <div className="text-sm text-slate-400">Title</div>
+                <div className="text-slate-200 font-medium break-words">{descModalTask.title}</div>
+              </div>
+              <div>
+                <label className="text-sm text-slate-400">Description</label>
+                <textarea
+                  value={descDraft}
+                  onChange={(e)=>setDescDraft(e.target.value)}
+                  rows={10}
+                  className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200"
+                  placeholder="Add details"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-800">
+              <button onClick={()=>setDescModalTask(null)} className="px-3 py-2 rounded-md border border-slate-700 text-slate-300 hover:bg-slate-800">Cancel</button>
+              <button onClick={commitModalDesc} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Save</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </DragDropContext>
   )
 }

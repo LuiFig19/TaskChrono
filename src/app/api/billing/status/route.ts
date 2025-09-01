@@ -23,7 +23,8 @@ export async function GET() {
   const created = org.createdAt
   const trialEnd = org.trialEndsAt ?? addDays(created, 14)
   const now = new Date()
-  const locked = org.planTier === 'FREE' && now > trialEnd
+  // Free tier should NEVER be locked. Only non-free plans get the trial lock.
+  const locked = org.planTier !== 'FREE' && now > trialEnd
 
   const membersCount = await prisma.organizationMember.count({ where: { organizationId: org.id } })
 
