@@ -23,6 +23,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   }, [plan])
 
   const [order, setOrder] = useState<string[]>(initial)
+  const [mounted, setMounted] = useState(false)
   const [layouts, setLayouts] = useState<Layouts>(() => {
     if (typeof window === 'undefined') return { lg: [] }
     try {
@@ -72,6 +73,8 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
       } catch {}
     })()
   }, [order])
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     try { if (typeof window !== 'undefined') localStorage.setItem('tc_dash_layouts', JSON.stringify(layouts)) } catch {}
@@ -421,6 +424,11 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     setOrder((cur) => cur.filter((x) => x !== id))
   }
 
+  if (!mounted) {
+    // Avoid SSR/client hydration mismatches by rendering a tiny placeholder first
+    return <div className="select-none" style={{ minHeight: 1 }} />
+  }
+
   return (
     <div>
       <ResponsiveGridLayout
@@ -437,10 +445,15 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         draggableHandle=".drag-handle"
         draggableCancel=".non-draggable"
         isResizable
+        measureBeforeMount
         onLayoutChange={onLayoutChange}
       >
-        {order.map((id) => (
-          <div key={id} data-grid={undefined} className="rg-item">
+        {order.map((id) => {
+          const existing = (layouts.lg || []).find(l => l.i === id)
+          // Provide a deterministic grid item for SSR to avoid hydration diff
+          const fallback = existing || { i: id, x: 0, y: 0, w: getDefaultItemSize(id).w, h: getDefaultItemSize(id).h }
+          return (
+          <div key={id} data-grid={fallback as any} className="rg-item">
             <div className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 transition-all duration-200 ease-in-out`} style={{ willChange: 'transform' }}>
               <div className="font-medium text-white flex items-center justify-between drag-handle cursor-grab active:cursor-grabbing">
                 {widgets[id]?.title}
@@ -473,7 +486,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
               <div data-widget-id={id}>{widgets[id]?.render()}</div>
             </div>
           </div>
-        ))}
+        )})}
       </ResponsiveGridLayout>
     </div>
   )
