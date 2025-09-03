@@ -1,9 +1,6 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import RGL, { WidthProvider, Layout } from 'react-grid-layout'
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
 import dynamic from 'next/dynamic'
 import type { DropResult, DraggableProvided, DroppableProvided } from '@hello-pangea/dnd'
 import ProjectProgressWidget from './ProjectProgressWidget'
@@ -19,8 +16,6 @@ type Widget = {
   title: string
   render: () => React.ReactNode
 }
-
-const ResponsiveGridLayout = WidthProvider(RGL as any)
 
 export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string }) {
   const initial = useMemo(() => {
@@ -382,68 +377,72 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   }
 
   return (
-    <div>
+    <DragDropContext onDragEnd={onDragEnd}>
+      {/* Listen for top-bar add requests */}
       <WidgetAddListener onAdd={addWidget} />
-      <ResponsiveGridLayout
-        className="layout"
-        isBounded
-        compactType="vertical"
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        rowHeight={10}
-        margin={[16, 16] as any}
-        containerPadding={[0, 0] as any}
-        useCSSTransforms
-        transformScale={1}
-        draggableHandle=".drag-handle"
-        draggableCancel=".non-draggable"
-        isResizable={false}
-        preventCollision={false}
-        onLayoutChange={() => {}}
-      >
-        {order.map((id, idx) => {
-          const w = (id === 'progress' || id === 'calendar') ? 8 : 4
-          const h = id === 'activity' ? 28 : 22
-          const x = (idx * 4) % 12
-          const y = Infinity
-          return (
-            <div key={id} data-grid={{ i: id, x, y, w, h }} className="select-none">
-              <div className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 transition-all duration-200 ease-in-out`}
-                   style={{ willChange: 'transform' }}>
-                <div className="font-medium text-white flex items-center justify-between drag-handle cursor-grab active:cursor-grabbing">
-                  {widgets[id]?.title}
-                  {id !== 'activity' && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => {
-                          const el = document.querySelector(`[data-widget-id="${id}"]`) as HTMLElement | null
-                          if (el) {
-                            el.animate([
-                              { transform: 'scale(1)', opacity: 1 },
-                              { transform: 'scale(0.95)', opacity: 0 }],
-                              { duration: 150, easing: 'ease-out' }
-                            ).onfinish = () => removeWidget(id)
-                          } else {
-                            removeWidget(id)
-                          }
-                        }}
-                        className="p-1.5 rounded hover:bg-rose-700/20 text-slate-300 hover:text-rose-400 transition-colors"
-                        aria-label="Remove widget"
-                        title="Remove"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                          <path fillRule="evenodd" d="M9.75 3a.75.75 0 00-.75.75V5H6a.75.75 0 000 1.5h12A.75.75 0 0018 5h-3V3.75a.75.75 0 00-.75-.75h-4.5zM7.5 7.25A.75.75 0 018.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zM12 7.25a.75.75 0 01.75.75v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zm4.5 0A.75.75 0 0117.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
+      {/* Draggable grid; reorder via list index. Framer Motion animates reflow smoothly. */}
+      <Droppable droppableId="grid" direction="vertical">
+        {(provided: DroppableProvided) => (
+          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 select-none">
+            <AnimatePresence initial={false}>
+              {order.map((id, idx) => (
+                <Draggable draggableId={id} index={idx} key={id}>
+                  {(p: DraggableProvided, s) => (
+                    <motion.div
+                      layout
+                      transition={{ type: 'spring', stiffness: 560, damping: 40, mass: 0.9 }}
+                      ref={p.innerRef as unknown as (element: HTMLElement | null) => void}
+                      {...p.draggableProps}
+                      className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 ${
+                        id === 'progress' || id === 'calendar' ? 'lg:col-span-2' : ''
+                      } ${s.isDragging ? 'cursor-grabbing' : 'cursor-grab'} transform-gpu`}
+                      style={{
+                        ...(p.draggableProps.style as any),
+                        transform: (p.draggableProps.style as any)?.transform || undefined,
+                        willChange: 'transform',
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'none'
+                      }}
+                    >
+                      <div className="font-medium text-white flex items-center justify-between" {...p.dragHandleProps}>
+                        {widgets[id]?.title}
+                        {id !== 'activity' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                const el = document.querySelector(`[data-widget-id="${id}"]`) as HTMLElement | null
+                                if (el) {
+                                  el.animate([
+                                    { transform: 'scale(1)', opacity: 1 },
+                                    { transform: 'scale(0.95)', opacity: 0 }],
+                                    { duration: 150, easing: 'ease-out' }
+                                  ).onfinish = () => removeWidget(id)
+                                } else {
+                                  removeWidget(id)
+                                }
+                              }}
+                              className="p-1.5 rounded hover:bg-rose-700/20 text-slate-300 hover:text-rose-400 transition-colors"
+                              aria-label="Remove widget"
+                              title="Remove"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path fillRule="evenodd" d="M9.75 3a.75.75 0 00-.75.75V5H6a.75.75 0 000 1.5h12A.75.75 0 0018 5h-3V3.75a.75.75 0 00-.75-.75h-4.5zM7.5 7.25A.75.75 0 018.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zM12 7.25a.75.75 0 01.75.75v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zm4.5 0A.75.75 0 0117.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div data-widget-id={id}>{widgets[id]?.render()}</div>
+                    </motion.div>
                   )}
-                </div>
-                <div data-widget-id={id}>{widgets[id]?.render()}</div>
-              </div>
-            </div>
-          )
-        })}
-      </ResponsiveGridLayout>
-    </div>
+                </Draggable>
+              ))}
+            </AnimatePresence>
+            <div className="col-span-full pointer-events-none" style={{ minHeight: 1 }}>{provided.placeholder}</div>
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   )
 }
 
