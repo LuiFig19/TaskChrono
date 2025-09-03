@@ -7,22 +7,54 @@ import { prisma } from '@/lib/prisma'
 import { createCalendarEvent, deleteCalendarEvent } from './actions'
 import MonthGrid from './MonthGrid'
 
-export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ d?: string }> }) {
+export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ d?: string; month?: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
   const plan = await getUserPlanServer()
   const { organizationId } = await getCurrentUserAndOrg()
-  const events = organizationId ? await prisma.calendarEvent.findMany({ where: { organizationId }, orderBy: { startsAt: 'asc' } }) : []
   const sp = await searchParams
-  const defaultWhen = typeof sp?.d === 'string' ? sp.d : ''
+  const monthParam = typeof sp?.month === 'string' ? sp.month : ''
+  const defaultWhen = typeof (sp as any)?.d === 'string' ? (sp as any).d : ''
+  // Compute current month range for server filtering (improves load and prevents cross-month confusion)
+  const base = monthParam ? new Date(monthParam) : new Date()
+  const start = new Date(base.getFullYear(), base.getMonth(), 1)
+  const end = new Date(base.getFullYear(), base.getMonth() + 1, 1)
+  const events = organizationId
+    ? await prisma.calendarEvent.findMany({
+        where: { organizationId, startsAt: { gte: start, lt: end } },
+        orderBy: { startsAt: 'asc' },
+      })
+    : []
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-0">
       <h1 className="text-2xl font-semibold">Calendar</h1>
-      <div className="mt-4 grid lg:grid-cols-2 gap-6">
+      <div className="mt-3 grid lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <div className="font-medium text-white">Monthly View</div>
-          <MonthGrid events={events as any} />
+          <div className="flex items-center justify-between">
+            <div className="font-medium text-white">Monthly View</div>
+            <div className="flex items-center gap-3">
+              <a 
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-red-600 bg-red-800 text-red-200 hover:bg-red-700 hover:border-red-500 hover:text-white transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md" 
+                href={`/dashboard/calendar?month=${new Date(start.getFullYear(), start.getMonth()-1, 1).toISOString()}`}
+                title="Previous Month"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </a>
+              <a 
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-green-600 bg-green-800 text-green-200 hover:bg-green-700 hover:border-green-500 hover:text-white transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md" 
+                href={`/dashboard/calendar?month=${new Date(start.getFullYear(), start.getMonth()+1, 1).toISOString()}`}
+                title="Next Month"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <MonthGrid events={events as any} baseDate={start.toISOString()} />
           <ul className="mt-4 grid gap-2 text-sm text-slate-300">
             {events.map(e => (
               <li key={e.id} className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-950 px-3 py-2">

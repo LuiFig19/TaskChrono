@@ -236,7 +236,7 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
 
   // UI
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-0">
       <h1 className="text-2xl font-semibold">Timers</h1>
       <div className="mt-2 text-slate-300">Total Time Tracked: <span className="font-medium" suppressHydrationWarning>{formatDuration(totalEndedMin)}</span></div>
 
