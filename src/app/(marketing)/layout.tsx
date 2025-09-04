@@ -7,7 +7,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="border-b bg-gradient-to-b from-slate-950/95 to-slate-950/95 supports-[backdrop-filter]:bg-slate-950/95">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-6">
             <Link href="/" className="font-bold text-xl">TaskChrono</Link>
             <Link href={quickshiftUrl} className="px-3 py-1.5 rounded-md border hidden sm:inline-block">QuickShift</Link>
@@ -26,7 +26,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       </nav>
       <main className="flex-1">{children}</main>
       <footer className="border-t text-sm text-gray-500">
-        <div className="max-w-7xl mx-auto px-4 py-6">© {new Date().getFullYear()} TaskChrono</div>
+        <div className="max-w-screen-2xl mx-auto px-4 py-6">© {new Date().getFullYear()} TaskChrono</div>
       </footer>
     </div>
   )

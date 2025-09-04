@@ -1,9 +1,12 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
+import type { DropResult, DraggableProvided, DroppableProvided } from '@hello-pangea/dnd'
 import ProjectProgressWidget from './ProjectProgressWidget'
-import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
+
+const DragDropContext: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.DragDropContext), { ssr: false })
+const Droppable: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.Droppable), { ssr: false })
+const Draggable: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.Draggable), { ssr: false })
 
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
@@ -13,8 +16,6 @@ type Widget = {
   render: () => React.ReactNode
 }
 
-const ResponsiveGridLayout = WidthProvider(Responsive)
-
 export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string }) {
   const initial = useMemo(() => {
     // Ensure Calendar is first, then the rest in a sensible order
@@ -23,15 +24,6 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   }, [plan])
 
   const [order, setOrder] = useState<string[]>(initial)
-  const [mounted, setMounted] = useState(false)
-  const [layouts, setLayouts] = useState<Layouts>(() => {
-    if (typeof window === 'undefined') return { lg: [] }
-    try {
-      const raw = localStorage.getItem('tc_dash_layouts')
-      if (raw) return JSON.parse(raw)
-    } catch {}
-    return { lg: [] }
-  })
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -73,12 +65,6 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
       } catch {}
     })()
   }, [order])
-
-  useEffect(() => { setMounted(true) }, [])
-
-  useEffect(() => {
-    try { if (typeof window !== 'undefined') localStorage.setItem('tc_dash_layouts', JSON.stringify(layouts)) } catch {}
-  }, [layouts])
 
   useEffect(() => {
     function refresh() { setCalEvents(v=>v.slice()) }
@@ -370,47 +356,24 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     return true
   }
 
-  function getDefaultItemSize(id: string): { w: number; h: number } {
-    if (id === 'activity') return { w: 8, h: 28 }
-    if (id === 'progress' || id === 'calendar') return { w: 8, h: 26 }
-    return { w: 4, h: 22 }
-  }
+  // Smooth settle for siblings using a lightweight FLIP
+  const itemNodeMapRef = React.useRef<Map<string, HTMLElement>>(new Map())
+  const pendingRectsRef = React.useRef<Map<string, DOMRect> | null>(null)
 
-  function buildDefaultLayouts(ids: string[]): Layouts {
-    const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'] as const
-    const colsByBp: Record<typeof breakpoints[number], number> = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }
-    const result: Layouts = {}
-    for (const bp of breakpoints) {
-      const cols = colsByBp[bp]
-      let x = 0
-      let y = 0
-      const rowH = 4
-      const list: Layout[] = []
-      for (const id of ids) {
-        const base = getDefaultItemSize(id)
-        const w = Math.min(base.w, cols)
-        if (x + w > cols) { x = 0; y += rowH }
-        list.push({ i: id, x, y, w, h: base.h, static: false })
-        x += w
-        if (x >= cols) { x = 0; y += rowH }
-      }
-      result[bp] = list
+  function onDragEnd(res: DropResult) {
+    if (!res.destination) return
+    if (res.source.index === res.destination.index) return
+    // Capture current positions before reorder
+    const before = new Map<string, DOMRect>()
+    for (const id of order) {
+      const el = itemNodeMapRef.current.get(id)
+      if (el) before.set(id, el.getBoundingClientRect())
     }
-    return result
-  }
-
-  useEffect(() => {
-    // Initialize layouts once if empty
-    const empty = !layouts || Object.keys(layouts).length === 0 || (Array.isArray(layouts.lg) && layouts.lg.length === 0)
-    if (empty) setLayouts(buildDefaultLayouts(order))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function onLayoutChange(current: Layout[], all: Layouts) {
-    setLayouts(all)
-    // derive order from lg layout sorting by y then x
-    const lg = (all.lg || current).slice().sort((a, b) => (a.y - b.y) || (a.x - b.x))
-    setOrder(lg.map(l => l.i))
+    pendingRectsRef.current = before
+    const next = Array.from(order)
+    const [removed] = next.splice(res.source.index, 1)
+    next.splice(res.destination.index, 0, removed)
+    setOrder(next)
   }
 
   function addWidget(id: string) {
@@ -424,71 +387,103 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     setOrder((cur) => cur.filter((x) => x !== id))
   }
 
-  if (!mounted) {
-    // Avoid SSR/client hydration mismatches by rendering a tiny placeholder first
-    return <div className="select-none" style={{ minHeight: 1 }} />
-  }
+  // Run FLIP animation after order updates
+  useEffect(() => {
+    const before = pendingRectsRef.current
+    if (!before) return
+    pendingRectsRef.current = null
+    // Wait one frame for DOM to reflect new order
+    if (typeof window === 'undefined') return
+    requestAnimationFrame(() => {
+      for (const id of order) {
+        const el = itemNodeMapRef.current.get(id)
+        if (!el) continue
+        const prev = before.get(id)
+        const now = el.getBoundingClientRect()
+        if (!prev) continue
+        const dx = prev.left - now.left
+        const dy = prev.top - now.top
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue
+        el.style.willChange = 'transform'
+        el.style.transform = `translate(${dx}px, ${dy}px)`
+        // Ensure styles apply before animating back to 0
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 180ms ease-out'
+          el.style.transform = 'translate(0, 0)'
+          const cleanup = () => {
+            el.style.transition = ''
+            el.style.transform = ''
+            el.style.willChange = ''
+            el.removeEventListener('transitionend', cleanup)
+          }
+          el.addEventListener('transitionend', cleanup)
+        })
+      }
+    })
+  }, [order])
 
   return (
-    <div>
-      <ResponsiveGridLayout
-        className="select-none"
-        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        layouts={layouts}
-        isBounded
-        compactType="vertical"
-        margin={[16, 16] as any}
-        containerPadding={[0, 0] as any}
-        rowHeight={8}
-        useCSSTransforms
-        draggableHandle=".drag-handle"
-        draggableCancel=".non-draggable"
-        isResizable
-        measureBeforeMount
-        onLayoutChange={onLayoutChange}
-      >
-        {order.map((id) => {
-          const existing = (layouts.lg || []).find(l => l.i === id)
-          // Provide a deterministic grid item for SSR to avoid hydration diff
-          const fallback = existing || { i: id, x: 0, y: 0, w: getDefaultItemSize(id).w, h: getDefaultItemSize(id).h }
-          return (
-          <div key={id} data-grid={fallback as any} className="rg-item">
-            <div className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 transition-all duration-200 ease-in-out`} style={{ willChange: 'transform' }}>
-              <div className="font-medium text-white flex items-center justify-between drag-handle cursor-grab active:cursor-grabbing">
-                {widgets[id]?.title}
-                {id !== 'activity' && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        const el = document.querySelector(`[data-widget-id="${id}"]`) as HTMLElement | null
-                        if (el) {
-                          el.animate([
-                            { transform: 'scale(1)', opacity: 1 },
-                            { transform: 'scale(0.95)', opacity: 0 }],
-                            { duration: 150, easing: 'ease-out' }
-                          ).onfinish = () => removeWidget(id)
-                        } else {
-                          removeWidget(id)
-                        }
-                      }}
-                      className="p-1.5 rounded hover:bg-rose-700/20 text-slate-300 hover:text-rose-400 transition-colors"
-                      aria-label="Remove widget"
-                      title="Remove"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                        <path fillRule="evenodd" d="M9.75 3a.75.75 0 00-.75.75V5H6a.75.75 0 000 1.5h12A.75.75 0 0018 5h-3V3.75a.75.75 0 00-.75-.75h-4.5zM7.5 7.25A.75.75 0 018.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zM12 7.25a.75.75 0 01.75.75v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zm4.5 0A.75.75 0 0117.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75z" clipRule="evenodd" />
-                      </svg>
-                    </button>
+    <DragDropContext onDragEnd={onDragEnd}>
+      {/* Listen for top-bar add requests */}
+      <WidgetAddListener onAdd={addWidget} />
+      {/* Add widget menu moved to top action bar in DashboardPage to reduce clutter */}
+      <Droppable droppableId="grid" direction="vertical">
+        {(provided: DroppableProvided) => (
+          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-flow-dense gap-6">
+            {order.map((id, idx) => (
+              <Draggable draggableId={id} index={idx} key={id}>
+                {(p: DraggableProvided, s) => (
+                  <div
+                    ref={(node) => {
+                      (p.innerRef as unknown as (el: HTMLElement | null) => void)(node)
+                      if (node) itemNodeMapRef.current.set(id, node)
+                      else itemNodeMapRef.current.delete(id)
+                    }}
+                    {...p.draggableProps}
+                    {...p.dragHandleProps}
+                    className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 ${
+                      id === 'progress' || id === 'calendar' ? 'lg:col-span-2' : ''
+                    } ${s.isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'}`}
+                    style={{ ...(p.draggableProps.style as any), transform: (p.draggableProps.style as any)?.transform || undefined }}
+                  >
+                    <div className="font-medium text-white flex items-center justify-between">
+                      {widgets[id]?.title}
+                      {id !== 'activity' && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              const el = document.querySelector(`[data-widget-id="${id}"]`) as HTMLElement | null
+                              if (el) {
+                                el.animate([
+                                  { transform: 'scale(1)', opacity: 1 },
+                                  { transform: 'scale(0.95)', opacity: 0 }],
+                                  { duration: 150, easing: 'ease-out' }
+                                ).onfinish = () => removeWidget(id)
+                              } else {
+                                removeWidget(id)
+                              }
+                            }}
+                            className="p-1.5 rounded hover:bg-rose-700/20 text-slate-300 hover:text-rose-400 transition-colors"
+                            aria-label="Remove widget"
+                            title="Remove"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                              <path fillRule="evenodd" d="M9.75 3a.75.75 0 00-.75.75V5H6a.75.75 0 000 1.5h12A.75.75 0 0018 5h-3V3.75a.75.75 0 00-.75-.75h-4.5zM7.5 7.25A.75.75 0 018.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zM12 7.25a.75.75 0 01.75.75v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zm4.5 0A.75.75 0 0117.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div data-widget-id={id}>{widgets[id]?.render()}</div>
                   </div>
                 )}
-              </div>
-              <div data-widget-id={id}>{widgets[id]?.render()}</div>
-            </div>
+              </Draggable>
+            ))}
+            <div className="col-span-full pointer-events-none" style={{ minHeight: 1 }}>{provided.placeholder}</div>
           </div>
-        )})}
-      </ResponsiveGridLayout>
-    </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   )
 }
 

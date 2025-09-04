@@ -5,7 +5,7 @@ import { MotionDiv } from './ClientMotion'
 export default function LandingPageBottom() {
   return (
     <section id="pricing" className="py-20 bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white">Simple, transparent pricing</h2>
           <p className="text-slate-300 mt-2">14-day free trial on all paid tiers</p>

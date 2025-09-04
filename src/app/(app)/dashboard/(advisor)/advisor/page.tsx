@@ -8,7 +8,7 @@ export default async function AIAdvisorPage() {
     redirect('/login')
   }
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-screen-md mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold">AI Productivity Advisor</h1>
       <p className="text-gray-600 mt-2">Suggested priorities and optimal work schedules will appear here.</p>
       <div className="mt-6 border rounded-lg p-4 text-sm text-gray-600">

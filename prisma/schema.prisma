@@ -37,6 +37,8 @@ model User {
   inventoryItemsUpdated InventoryItem[] @relation("InventoryUpdatedBy")
   inventoryActivities   InventoryActivity[]
   timers        Timer[]
+  teamDocsCreated TeamDoc[] @relation("TeamDocCreatedBy")
+  teamDocsUpdated TeamDoc[] @relation("TeamDocUpdatedBy")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -99,6 +101,7 @@ model Organization {
   invoices      Invoice[]
   expenses      Expense[]
   chatMessages  ChatMessage[]
+  teamDocs      TeamDoc[]
 
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
@@ -486,5 +489,24 @@ model ProjectActivity {
 }
 
 // Duplicate InvoiceStatus enum removed - keeping the one defined earlier
+
+// Teams knowledge base (Notion-like docs)
+model TeamDoc {
+  id              String        @id @default(cuid())
+  organizationId  String
+  title           String        @default("Untitled")
+  content         String        @db.Text
+  createdById     String
+  updatedById     String?
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy       User          @relation("TeamDocCreatedBy", fields: [createdById], references: [id])
+  updatedBy       User?         @relation("TeamDocUpdatedBy", fields: [updatedById], references: [id])
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([organizationId, updatedAt])
+}
 
 

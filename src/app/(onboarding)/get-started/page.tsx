@@ -91,7 +91,7 @@ const item = {
 export default function GetStartedPage() {
   return (
     <div className="min-h-[90vh] bg-gradient-to-b from-slate-950 to-slate-900">
-      <div className="max-w-7xl mx-auto px-4 py-14">
+      <div className="max-w-screen-2xl mx-auto px-4 py-14">
         <LazyMotion features={() => import('framer-motion').then((m)=>m.domAnimation)}>
           <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
             <h1 className="text-3xl md:text-4xl font-bold text-white">Choose your plan</h1>

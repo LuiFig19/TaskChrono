@@ -97,7 +97,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-screen-md mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold">Settings</h1>
 
       {toast && (
@@ -185,16 +185,9 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
               <div className="text-sm text-slate-300">Plan: <span className="font-medium uppercase">{plan}</span></div>
               <div className="text-xs text-slate-400">Status: active</div>
               <div className="flex gap-2 mt-1">
-                <button onClick={async ()=>{
-                  if (typeof window === 'undefined') return
-                  try {
-                    const res = await fetch('/api/billing/portal', { method: 'POST' })
-                    const data = await res.json() as { url?: string }
-                    if (data.url) window.location.href = data.url
-                  } catch {}
-                }} className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Manage Subscription</button>
+                <button onClick={()=>{ if (typeof window !== 'undefined') window.location.href='/dashboard/subscription' }} className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Manage Subscription</button>
                 {plan === 'FREE' && (
-                  <button onClick={()=>alert('Pricing modal coming soon')} className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">Upgrade Plan</button>
+                  <button onClick={()=>{ if (typeof window !== 'undefined') window.location.href='/dashboard/subscription?upgrade=1' }} className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">Upgrade Plan</button>
                 )}
               </div>
             </div>

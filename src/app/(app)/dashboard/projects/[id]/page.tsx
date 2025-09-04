@@ -10,7 +10,7 @@ export default async function ProjectBoardPage({ params }: { params: { id: strin
   // fetch basic project info for header
   const project = await prisma.project.findUnique({ where: { id: params.id } })
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-4 py-6">
       {project && (
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-white">{project.name}</h1>

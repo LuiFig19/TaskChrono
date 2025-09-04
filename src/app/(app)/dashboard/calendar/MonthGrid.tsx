@@ -9,10 +9,10 @@ type EventDto = {
   description?: string | null
 }
 
-export default function MonthGrid({ events }: { events: EventDto[] }) {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = today.getMonth()
+export default function MonthGrid({ events, baseDate }: { events: EventDto[]; baseDate?: string }) {
+  const base = baseDate ? new Date(baseDate) : new Date()
+  const year = base.getFullYear()
+  const month = base.getMonth()
 
   const catHex: Record<string, string> = {
     meeting: '#007BFF',

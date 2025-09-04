@@ -2,14 +2,38 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUserAndOrg } from '@/lib/org'
+import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org'
 import InvoiceClient from './InvoicesClient'
+import LockedFeature from '../_components/locked'
 
 function cents(n: number) { return (n/100).toFixed(2) }
 
 export default async function InvoicesPage({ searchParams }: { searchParams?: { q?: string, status?: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
+  
+  const plan = await getUserPlanServer()
+  if (plan === 'FREE') {
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-6">
+        <LockedFeature 
+          title="Invoices & Billing Management"
+          description="Track client invoices, manage payments, and streamline your billing process with our professional invoicing system."
+          features={[
+            "Create and send professional invoices",
+            "Track payment status and overdue amounts",
+            "Generate financial reports and analytics",
+            "Integrate with popular payment gateways",
+            "Automated payment reminders",
+            "Client payment portal"
+          ]}
+          planName="Business"
+          upgradeUrl="/dashboard/settings"
+        />
+      </div>
+    )
+  }
+
   const { organizationId } = await getCurrentUserAndOrg()
   if (!organizationId) redirect('/login')
 
@@ -44,7 +68,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams?: { 
   const overdue = invoices.filter((i:any)=> i.status!=='PAID' && i.dueAt && new Date(i.dueAt as any).getTime() < now).length
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold">Invoices</h1>
       <div className="mt-4 grid md:grid-cols-4 gap-3">
         <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Total Issued</div><div className="text-white text-xl">{totalIssued}</div></div>

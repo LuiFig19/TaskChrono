@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { stripe } from '@/lib/stripe'
 
 export async function createOrganizationAction(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -24,6 +25,7 @@ export async function createOrganizationAction(formData: FormData) {
     data: {
       name,
       planTier: plan,
+      trialEndsAt: plan === 'FREE' ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       createdById: userId,
       members: {
         create: {
@@ -49,8 +51,73 @@ export async function createOrganizationAction(formData: FormData) {
     })
   }
 
-  // After successful setup, go to dashboard
-  redirect(`/dashboard`)
+  // If plan is FREE (or CUSTOM for now), skip Stripe and go straight to dashboard
+  if (plan === 'FREE' || plan === 'CUSTOM') {
+    redirect(`/dashboard`)
+  }
+
+  // For paid tiers, create or reuse Stripe customer and redirect to Checkout with 14‑day trial
+  if (!stripe) {
+    // Fallback: go to subscription page for manual upgrade if Stripe isn't configured
+    redirect('/dashboard/subscription')
+  }
+
+  // Ensure Stripe customer exists for this organization
+  let customerId = (org as any).stripeCustomerId as string | undefined
+  if (!customerId) {
+    const customer = await stripe.customers.create({ name: org.name, metadata: { organizationId: org.id } })
+    customerId = customer.id
+    await prisma.organization.update({ where: { id: org.id }, data: { /* @ts-ignore */ stripeCustomerId: customerId } as any })
+  }
+
+  // Resolve the price id based on selected tier
+  const priceId = plan === 'BUSINESS' ? (process.env.STRIPE_PRICE_BUSINESS || '') : (process.env.STRIPE_PRICE_ENTERPRISE || '')
+  if (!priceId) {
+    // If prices not configured, land on subscription page
+    redirect('/dashboard/subscription')
+  }
+
+  // Seats default: owner + invited emails (adjustable in Checkout)
+  const seats = Math.max(1, invites.length + 1)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const sessionCheckout = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price: priceId, quantity: seats, adjustable_quantity: { enabled: true, minimum: 1, maximum: 100 } }],
+    allow_promotion_codes: true,
+    success_url: `${appUrl}/onboarding/activation?plan=${plan}`,
+    cancel_url: `${appUrl}/onboarding?plan=${plan}`,
+    subscription_data: {
+      trial_period_days: 14,
+      metadata: { organizationId: org.id, tier: plan, seats: String(seats) },
+    },
+    metadata: { organizationId: org.id, tier: plan, seats: String(seats) },
+  })
+
+  redirect(sessionCheckout.url || '/dashboard')
+}
+
+export async function finalizeOrganizationAction(formData: FormData) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    redirect('/login')
+  }
+  const userId = session.user.id
+  const name = String(formData.get('name') || '').trim()
+  // Find the most recent organization for this owner
+  const membership = await prisma.organizationMember.findFirst({
+    where: { userId },
+    include: { organization: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  const org = membership?.organization
+  if (org) {
+    const nextName = name || org.name
+    if (nextName && nextName !== org.name) {
+      await prisma.organization.update({ where: { id: org.id }, data: { name: nextName } })
+    }
+  }
+  redirect('/dashboard')
 }
 
 

@@ -11,8 +11,26 @@ export async function POST(request: Request) {
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
   if (!membership?.organization) return NextResponse.json({ error: 'Missing organization' }, { status: 400 })
   const org = membership.organization
-  const body = await request.json().catch(() => ({})) as { tier: 'BUSINESS' | 'ENTERPRISE'; seats: number; successUrl?: string; cancelUrl?: string; trialDays?: number }
-  const seats = Math.max(1, Math.min(1000, Number(body.seats || 1)))
+  // Accept JSON or form submissions
+  let body = {} as { tier: 'BUSINESS' | 'ENTERPRISE'; seats: number; successUrl?: string; cancelUrl?: string; trialDays?: number }
+  const ct = request.headers.get('content-type') || ''
+  if (ct.includes('application/json')) {
+    body = await request.json().catch(() => ({}))
+  } else {
+    try {
+      const form = await request.formData()
+      body = {
+        tier: (String(form.get('tier') || 'BUSINESS').toUpperCase() as any),
+        seats: Number(form.get('seats') || 1),
+        successUrl: form.get('successUrl') ? String(form.get('successUrl')) : undefined,
+        cancelUrl: form.get('cancelUrl') ? String(form.get('cancelUrl')) : undefined,
+        trialDays: form.get('trialDays') ? Number(form.get('trialDays')) : undefined,
+      }
+    } catch {}
+  }
+  // Seat quantity defaults to current org member count if not provided
+  const memberCount = await prisma.organizationMember.count({ where: { organizationId: org.id } })
+  const seats = Math.max(1, Math.min(1000, Number(body.seats || memberCount || 1)))
   if (body.tier !== 'BUSINESS' && body.tier !== 'ENTERPRISE') return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
 
   if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
@@ -51,7 +69,7 @@ export async function POST(request: Request) {
   const sessionCheckout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: priceId, quantity: seats }],
+    line_items: [{ price: priceId, quantity: seats, adjustable_quantity: { enabled: true, minimum: 1, maximum: 100 } }],
     allow_promotion_codes: true,
     success_url: body.successUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?paid=1`,
     cancel_url: body.cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?canceled=1`,

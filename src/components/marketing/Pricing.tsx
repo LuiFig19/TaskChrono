@@ -76,7 +76,7 @@ const tiers: Tier[] = [
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="max-w-7xl mx-auto px-4 py-16">
+    <section id="pricing" className="max-w-screen-2xl mx-auto px-4 py-16">
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold">Pricing</h2>
         <p className="text-gray-600 mt-2">14-day free trial on all paid tiers</p>

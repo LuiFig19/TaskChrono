@@ -15,7 +15,7 @@ export default function LandingClient() {
 
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.15),transparent_60%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <MotionDiv>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
@@ -39,7 +39,7 @@ export default function LandingClient() {
       </section>
 
       <section id="features" className="py-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Everything you need to manage your team</h2>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">From time tracking to project management, we provide all the tools your business needs to stay organized and profitable.</p>
@@ -66,7 +66,7 @@ export default function LandingClient() {
       <LandingPageBottom />
 
       <section id="comparison" className="py-20 bg-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white">Why TaskChrono beats the competition</h2>
             <p className="text-slate-300 mt-2">More power, better insights, less cost.</p>
@@ -90,7 +90,7 @@ export default function LandingClient() {
       </section>
 
       <section id="screenshot" className="py-20 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-white">Dashboard Screenshot</h2>
             <p className="text-slate-300">A static preview of the TaskChrono dashboard</p>

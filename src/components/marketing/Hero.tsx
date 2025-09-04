@@ -6,7 +6,7 @@ export default function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)]" />
-      <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 text-center relative">
+      <div className="max-w-screen-2xl mx-auto px-4 py-20 md:py-28 text-center relative">
         <LazyMotion features={() => import('framer-motion').then((m) => m.domAnimation)}>
           <m.h1
             initial={{ opacity: 0, y: 20 }}

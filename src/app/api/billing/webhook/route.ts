@@ -22,9 +22,18 @@ export async function POST(request: Request) {
         const sess = event.data.object as any
         const orgId = sess.metadata?.organizationId || sess.subscription_metadata?.organizationId
         if (orgId) {
-          // Mark plan based on price mapping
           const tier = (sess.metadata?.tier || 'BUSINESS') as 'BUSINESS'|'ENTERPRISE'
-          await prisma.organization.update({ where: { id: orgId }, data: { planTier: tier, trialEndsAt: new Date() } })
+          // If a trial is present on the created subscription, set trialEndsAt accordingly; otherwise set to now
+          let trialEnd: Date | null = null
+          try {
+            if (sess.subscription) {
+              const subId = typeof sess.subscription === 'string' ? sess.subscription : sess.subscription.id
+              // @ts-ignore
+              const sub = await stripeSdk.subscriptions.retrieve(subId)
+              if (sub?.trial_end) trialEnd = new Date((sub.trial_end as number) * 1000)
+            }
+          } catch {}
+          await prisma.organization.update({ where: { id: orgId }, data: { planTier: tier, trialEndsAt: trialEnd || new Date() } })
         }
         break
       }
@@ -34,7 +43,10 @@ export async function POST(request: Request) {
         const orgId = sub.metadata?.organizationId
         if (orgId) {
           const tier = (sub.metadata?.tier || 'BUSINESS') as 'BUSINESS'|'ENTERPRISE'
+          // Persist seat quantity to metadata for visibility
+          const quantity = Number(sub.items?.data?.[0]?.quantity || 1)
           await prisma.organization.update({ where: { id: orgId }, data: { planTier: tier } })
+          // Optionally: store seat count in a future column; for now, no schema change
         }
         break
       }

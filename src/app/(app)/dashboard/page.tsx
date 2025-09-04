@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   }
   const plan = membership.organization.planTier
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-4 py-6">
       {/* Billing guard blocks dashboard usage beyond 14-day trial until subscription */}
       <BillingGuard />
       <div className="mb-6 flex flex-wrap items-center gap-2">

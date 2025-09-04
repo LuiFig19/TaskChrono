@@ -60,7 +60,7 @@ export default function DemoDashboardLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-[700px] bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
           <Link href="/" className="font-semibold text-white">TaskChrono</Link>
           <nav className="hidden md:flex items-center justify-center gap-6 text-sm text-slate-200">
             <Link href="/demo-dashboard" className="hover:text-white">Tasks</Link>
@@ -73,7 +73,7 @@ export default function DemoDashboardLayout({ children }: { children: React.Reac
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-screen-2xl mx-auto px-4 py-6">{children}</main>
     </div>
   )
 }

@@ -9,7 +9,7 @@ export default function QuickShiftComingSoon() {
         <div className="size-full bg-[radial-gradient(60%_60%_at_50%_50%,rgba(99,102,241,0.20),transparent_60%)]" />
       </div>
 
-      <main className="relative max-w-6xl mx-auto px-4 py-16 sm:py-24">
+      <main className="relative max-w-screen-xl mx-auto px-4 py-16 sm:py-24">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

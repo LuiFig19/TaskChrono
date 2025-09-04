@@ -1,6 +1,6 @@
 export default function DemoDashboard() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-screen-2xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-semibold">TaskChrono Demo Dashboard</h1>
       <p className="mt-2 text-gray-600">Read-only mock widgets showcasing key insights.</p>
       <div className="mt-6 grid lg:grid-cols-3 gap-6">
