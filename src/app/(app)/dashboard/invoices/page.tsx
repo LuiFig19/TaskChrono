@@ -68,7 +68,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams?: { 
   const overdue = invoices.filter((i:any)=> i.status!=='PAID' && i.dueAt && new Date(i.dueAt as any).getTime() < now).length
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-6">
+    <div className="max-w-screen-2xl mx-auto px-4 pt-0 pb-6 -mt-10 md:-mt-14 -translate-y-10 md:-translate-y-14">
       <h1 className="text-2xl font-semibold">Invoices</h1>
       <div className="mt-4 grid md:grid-cols-4 gap-3">
         <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Total Issued</div><div className="text-white text-xl">{totalIssued}</div></div>

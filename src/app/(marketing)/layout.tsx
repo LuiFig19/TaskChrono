@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   const quickshiftUrl = '/quickshift'
+  const signInHref = '/login'
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="border-b bg-gradient-to-b from-slate-950/95 to-slate-950/95 supports-[backdrop-filter]:bg-slate-950/95">
@@ -19,7 +20,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/?signin=1&dst=%2Fdashboard" className="px-3 py-2 rounded-md border">Sign In</Link>
+            <Link href={signInHref} className="px-3 py-2 rounded-md border">Sign In</Link>
             <Link href="/get-started" className="px-4 py-2 rounded-md bg-black text-white hidden xs:inline-block">Get Started</Link>
           </div>
         </div>

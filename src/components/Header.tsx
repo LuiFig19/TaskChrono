@@ -42,7 +42,29 @@ export default function Header() {
             QuickShift
             <span className="absolute -inset-px rounded-md ring-1 ring-white/10" aria-hidden />
           </Link>
-          <Link href="/login" className="px-3 py-2 rounded-md text-slate-200 hover:text-white">Sign In</Link>
+          <button
+            onClick={() => {
+              const dst = '/dashboard'
+              const url = `/auth/popup?dst=${encodeURIComponent(dst)}`
+              const w = 420, h = 560
+              const left = Math.round(window.screenX + (window.outerWidth - w) / 2)
+              const top = Math.round(window.screenY + (window.outerHeight - h) / 2)
+              const features = `popup=yes,width=${w},height=${h},left=${left},top=${top}`
+              const child = window.open(url, 'tc-oauth', features)
+              const handler = (e: MessageEvent) => {
+                if (e.origin !== window.location.origin) return
+                if (typeof e.data === 'object' && (e.data as any)?.type === 'tc:signed-in') {
+                  window.removeEventListener('message', handler)
+                  try { child?.close() } catch {}
+                  window.location.href = (e.data as any)?.dst || dst
+                }
+              }
+              window.addEventListener('message', handler)
+            }}
+            className="px-3 py-2 rounded-md text-slate-200 hover:text-white"
+          >
+            Sign In
+          </button>
           <Link href="/get-started" className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Get Started</Link>
         </div>
       </div>

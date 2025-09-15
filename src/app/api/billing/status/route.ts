@@ -17,7 +17,13 @@ export async function GET() {
     where: { userId },
     include: { organization: true },
   })
-  if (!membership?.organization) return NextResponse.json({ locked: false })
+  if (!membership?.organization) {
+    const prices = {
+      BUSINESS: Number(process.env.NEXT_PUBLIC_PRICE_BUSINESS_CENTS || '500'),
+      ENTERPRISE: Number(process.env.NEXT_PUBLIC_PRICE_ENTERPRISE_CENTS || '1200'),
+    }
+    return NextResponse.json({ locked: false, plan: 'FREE', trialEndsAt: new Date().toISOString(), membersCount: 1, prices })
+  }
   const org = membership.organization
 
   const created = org.createdAt

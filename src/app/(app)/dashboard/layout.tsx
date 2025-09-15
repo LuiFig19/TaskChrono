@@ -68,10 +68,11 @@ function Hamburger() {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const plan = await getUserPlan()
+
   return (
-    <div className="min-h-screen grid grid-rows-[auto,1fr] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
-        <div className="max-w-screen-2xl mx-auto px-2.5 h-14 grid grid-cols-[auto_1fr_auto] items-center gap-2.5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
+      <header data-app-nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
+        <div className="tc-nav-inner max-w-screen-2xl mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-2.5">
           <Link href="/dashboard" className="text-lg font-extrabold bg-gradient-to-r from-white via-indigo-300 to-violet-400 bg-clip-text text-transparent tracking-tight leading-none">
             TaskChrono <span className={`ml-2 text-xs align-top ${plan==='FREE'?'text-emerald-400':plan==='BUSINESS'?'text-rose-400':plan==='ENTERPRISE'?'text-violet-400':'text-indigo-300'}`}>{plan.toLowerCase()}</span>
           </Link>
@@ -107,7 +108,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
       </header>
-      <main className="max-w-screen-2xl mx-auto w-full">{children}</main>
+      <main id="page-root" className="max-w-screen-2xl mx-auto w-full">{children}</main>
     </div>
   )
 }

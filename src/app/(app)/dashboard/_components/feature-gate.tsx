@@ -7,11 +7,16 @@ type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 export async function getUserPlan(): Promise<Plan> {
   const session = await getServerSession(authOptions)
   if (!session?.user) return 'FREE'
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: (session.user as unknown as { id: string }).id },
-    include: { organization: true },
-  })
-  return (membership?.organization.planTier as Plan) ?? 'FREE'
+  // In demo mode or when database is unavailable, fall back to FREE plan
+  try {
+    const membership = await prisma.organizationMember.findFirst({
+      where: { userId: (session.user as unknown as { id: string }).id },
+      include: { organization: true },
+    })
+    return (membership?.organization.planTier as Plan) ?? 'FREE'
+  } catch {
+    return 'FREE'
+  }
 }
 
 export function isFeatureEnabled(

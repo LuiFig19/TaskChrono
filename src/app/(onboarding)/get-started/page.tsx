@@ -125,15 +125,16 @@ export default function GetStartedPage() {
                   </div>
 
                   <div className="mt-1 text-2xl font-semibold text-white">{t.price}</div>
-                  {t.key !== 'FREE' && t.key !== 'CUSTOM' && (
-                    <div className="mt-1 inline-flex rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
-                      14‑day free trial
-                    </div>
-                  )}
-
-                  {t.highlight && (
-                    <div className="mt-4 inline-flex items-center gap-1 rounded-md border border-indigo-700/40 bg-indigo-950/30 px-2 py-1 text-[11px] text-indigo-200">
-                      <Sparkles className="h-3 w-3" /> {t.highlight}
+                  {(t.key !== 'FREE' && t.key !== 'CUSTOM') && (
+                    <div className="mt-1 flex flex-col gap-2 items-start">
+                      <div className="inline-flex rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
+                        14‑day free trial
+                      </div>
+                      {t.highlight && (
+                        <div className="inline-flex items-center gap-1 rounded-md border border-indigo-700/40 bg-indigo-950/30 px-2 py-1 text-[11px] text-indigo-200">
+                          <Sparkles className="h-3 w-3" /> {t.highlight}
+                        </div>
+                      )}
                     </div>
                   )}
 

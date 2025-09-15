@@ -10,6 +10,8 @@ type Status = {
 }
 
 export default function BillingGuard() {
+  // Re-enable upgrade modal
+
   const [status, setStatus] = useState<Status | null>(null)
   const [open, setOpen] = useState(false)
   const [tier, setTier] = useState<'BUSINESS'|'ENTERPRISE'>('BUSINESS')
@@ -38,7 +40,8 @@ export default function BillingGuard() {
 
   const price = useMemo(() => {
     if (!status) return 0
-    const unit = tier === 'BUSINESS' ? status.prices.BUSINESS : status.prices.ENTERPRISE
+    const prices = status.prices || { BUSINESS: 500, ENTERPRISE: 1200 }
+    const unit = tier === 'BUSINESS' ? prices.BUSINESS : prices.ENTERPRISE
     return unit * Math.max(1, seats || 1)
   }, [status, seats, tier])
 

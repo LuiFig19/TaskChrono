@@ -119,7 +119,7 @@ export default function InventoryClient() {
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4 pt-0 md:pt-1">
 			<div className="flex flex-col md:flex-row gap-2 md:items-center justify-between">
 				<h1 className="text-xl font-semibold">Inventory</h1>
 				<div className="flex gap-2">

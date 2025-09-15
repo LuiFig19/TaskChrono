@@ -13,7 +13,7 @@ export default async function InventoryPage() {
 	const plan = await getUserPlanServer()
 	if (plan === 'FREE') return <LockedFeature title="Inventory Tracking" />
 	return (
-		<div className="max-w-screen-2xl mx-auto px-4 py-6">
+		<div className="max-w-screen-2xl mx-auto px-4 pt-0 pb-6 -mt-10 md:-mt-14 -translate-y-10 md:-translate-y-14">
 			<InventoryClient />
 		</div>
 	)

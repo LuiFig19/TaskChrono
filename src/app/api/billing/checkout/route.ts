@@ -43,7 +43,11 @@ export async function POST(request: Request) {
       metadata: { organizationId: org.id },
     })
     customerId = customer.id
-    await prisma.organization.update({ where: { id: org.id }, data: { /* @ts-ignore */ stripeCustomerId: customerId } as any })
+    try {
+      await prisma.organization.update({ where: { id: org.id }, data: { /* @ts-ignore */ stripeCustomerId: customerId } as any })
+    } catch {
+      // schema may be out of sync locally; proceed without persisting
+    }
   }
 
   // Resolve a Stripe Price ID. Prefer STRIPE_PRICE_*, but allow STRIPE_PRODUCT_* fallback (grab default or first active recurring price)

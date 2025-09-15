@@ -7,7 +7,7 @@ export default async function TasksPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-6">
+    <div className="max-w-screen-2xl mx-auto px-4 pt-0 pb-6 -mt-8 md:-mt-12 -translate-y-8 md:-translate-y-12">
       <TasksClient />
     </div>
   )

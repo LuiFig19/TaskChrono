@@ -4,14 +4,21 @@ import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { createOrganizationAction } from './actions'
 
-export default async function OnboardingPage({ searchParams }: { searchParams?: { plan?: string } }) {
-  const planParam = searchParams?.plan
+export default async function OnboardingPage(
+  props: { searchParams?: { plan?: string } } | { searchParams: Promise<{ plan?: string }> }
+) {
+  let planParam: string | undefined
+  try {
+    const maybe = (props as any).searchParams
+    const sp = typeof maybe?.then === 'function' ? await maybe : (maybe || {})
+    planParam = sp?.plan
+  } catch {}
   const session = await getServerSession(authOptions)
   if (!session?.user) {
+    // Route to our login page instead of direct Google to avoid adapter issues in local dev
     const plan = planParam || 'FREE'
     const cb = encodeURIComponent(`/onboarding?plan=${plan}`)
-    // Skip interim login screen; go straight to Google account picker
-    redirect(`/api/auth/signin/google?callbackUrl=${cb}`)
+    redirect(`/login?callbackUrl=${cb}`)
   }
   const plan = planParam || 'FREE'
   const planLabel = (() => {
