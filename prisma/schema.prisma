@@ -405,13 +405,15 @@ model TeamDoc {
 
 model WidgetLayout {
   id         String   @id @default(cuid())
-  userId     String   @index
-  dashboard  String   @default("main") @index
+  userId     String
+  dashboard  String   @default("main")
   layout     Json
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   @@unique([userId, dashboard])
+  @@index([userId])
+  @@index([dashboard])
 }
 
 enum InvoiceStatus {
