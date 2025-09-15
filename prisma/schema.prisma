@@ -406,6 +406,7 @@ model TeamDoc {
 model WidgetLayout {
   id         String   @id @default(cuid())
   userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   dashboard  String   @default("main")
   layout     Json
   createdAt  DateTime @default(now())
