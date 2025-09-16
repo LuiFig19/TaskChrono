@@ -121,7 +121,7 @@ export default function InventoryClient() {
 	return (
 		<div className="space-y-4 pt-0 md:pt-1">
 			<div className="flex flex-col md:flex-row gap-2 md:items-center justify-between">
-				<h1 className="text-xl font-semibold">Inventory</h1>
+				<h1 className="text-2xl font-semibold">Inventory Tracking</h1>
 				<div className="flex gap-2">
 					<button className="px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-800" onClick={load}>Refresh</button>
 					<a href={`/api/inventory/export?${new URLSearchParams({ computed: '1', q: query, category: categoryFilter, supplier: supplierFilter, status: statusFilter }).toString()}`} className="px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-800">Export CSV</a>
@@ -193,7 +193,7 @@ export default function InventoryClient() {
 								{ key: 'actions', label: '' },
 							].map(col => (
 								<th key={col.key} className="px-3 py-2 select-none">
-									<button className={`inline-flex items-center gap-1 hover:text-slate-200 ${col.key!=='actions'?'':'cursor-default'}`} disabled={col.key==='actions'} onClick={()=>{
+									<button className={`inline-flex items-center gap-1 hover:text-slate-200 ${col.key!=='actions'?'':'cursor-default'}`} disabled={col.key==='actions' || col.key==='status' || col.key==='stockValue' || col.key==='potential'} onClick={()=>{
 										if (col.key==='actions' || col.key==='status' || col.key==='stockValue' || col.key==='potential') return
 											const next: 'asc'|'desc' = sort.field===col.key && sort.order==='asc' ? 'desc' : 'asc'
 											setSort({ field: col.key, order: next })

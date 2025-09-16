@@ -236,7 +236,7 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
 
   // UI
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 pt-0 pb-6 -mt-10 md:-mt-14 -translate-y-10 md:-translate-y-14">
+    <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <h1 className="text-2xl font-semibold">Timers</h1>
       <div className="mt-2 text-slate-300">Total Time Tracked: <span className="font-medium" suppressHydrationWarning>{formatDuration(totalEndedMin)}</span></div>
 
