@@ -148,7 +148,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
       >
         {defaultOrder.map((id) => (
           <div key={id} className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5`}>
-            <div className="tc-widget-handle cursor-move select-none font-medium text-white flex items-center justify-between">
+            <div className="tc-widget-handle cursor-move select-none font-bold text-white flex items-center justify-between">
               {widgets[id]?.title}
             </div>
             <div data-widget-id={id}>{widgets[id]?.render()}</div>

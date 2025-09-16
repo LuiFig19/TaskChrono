@@ -2,13 +2,16 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Chart from '../_components/Chart'
+import { getUserPlanServer } from '@/lib/org'
+import LockedFeature from '../_components/locked'
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     redirect('/login')
   }
-  // Temporarily allow access regardless of plan for layout review
+  const plan = await getUserPlanServer()
+  if (plan === 'FREE') return <LockedFeature title="Analytics" />
   return (
     <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <h1 className="text-2xl font-semibold">Analytics</h1>

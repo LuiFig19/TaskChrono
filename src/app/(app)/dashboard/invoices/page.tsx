@@ -2,14 +2,21 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUserAndOrg } from '@/lib/org'
+import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org'
 import InvoiceClient from './InvoicesClient'
+import LockedFeature from '../_components/locked'
 
 function cents(n: number) { return (n/100).toFixed(2) }
 
 export default async function InvoicesPage({ searchParams }: { searchParams?: { q?: string, status?: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
+  const plan = await getUserPlanServer()
+  if (plan === 'FREE') return (
+    <div className="max-w-screen-2xl mx-auto px-4 py-6">
+      <LockedFeature title="Invoices & Billing Management" />
+    </div>
+  )
 
   const { organizationId } = await getCurrentUserAndOrg()
   if (!organizationId) redirect('/login')

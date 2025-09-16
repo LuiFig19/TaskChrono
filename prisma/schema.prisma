@@ -38,6 +38,7 @@ model User {
   timers                Timer[]
   preference            UserPreference?
   widgetLayouts         WidgetLayout[]
+  teamMemberships       TeamMembership[]
 }
 
 model Account {
@@ -478,6 +479,156 @@ enum ProjectRole {
   OWNER
   EDITOR
   VIEWER
+}
+
+// Teams module
+enum TeamRole {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMembership[]
+  notes       TeamNote[]
+  goals       TeamGoal[]
+  activities  TeamActivity[]
+  invites     TeamInvite[]
+
+  @@index([createdById])
+}
+
+model TeamMembership {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+model TeamInvite {
+  id        String   @id @default(cuid())
+  teamId    String
+  token     String   @unique
+  role      TeamRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+model TeamNote {
+  id         String   @id @default(cuid())
+  teamId     String
+  authorId   String
+  title      String
+  contentMd  String
+  pinned     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  version    Int      @default(1)
+  previousId String?
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([authorId])
+}
+
+enum GoalStatus {
+  PLANNED
+  IN_PROGRESS
+  AT_RISK
+  COMPLETE
+  PAUSED
+}
+
+enum KRDirection {
+  INCREASE
+  DECREASE
+  AT_LEAST
+  AT_MOST
+  EXACT
+}
+
+model TeamGoal {
+  id          String     @id @default(cuid())
+  teamId      String
+  ownerId     String
+  title       String
+  description String?
+  startDate   DateTime?
+  dueDate     DateTime?
+  status      GoalStatus @default(PLANNED)
+  progress    Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  keyResults TeamKeyResult[]
+  updates    TeamGoalUpdate[]
+  team       Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([ownerId])
+}
+
+model TeamKeyResult {
+  id            String      @id @default(cuid())
+  goalId        String
+  title         String
+  targetNumber  Float?
+  currentNumber Float?      @default(0)
+  unit          String?
+  direction     KRDirection @default(INCREASE)
+  linkedQuery   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  goal TeamGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model TeamGoalUpdate {
+  id        String   @id @default(cuid())
+  goalId    String
+  authorId  String
+  note      String?
+  progress  Float?
+  createdAt DateTime @default(now())
+
+  goal TeamGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@index([authorId])
+}
+
+model TeamActivity {
+  id        String   @id @default(cuid())
+  teamId    String
+  type      String
+  actorId   String?
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
 }
 
 enum MilestoneStatus {

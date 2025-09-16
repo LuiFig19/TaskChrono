@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   }
   const plan = (membership?.organization?.planTier as any) ?? 'FREE'
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 pt-0 pb-6 -mt-10 md:-mt-14 -translate-y-10 md:-translate-y-14">
+    <div className="max-w-screen-2xl mx-auto px-4 pt-6 pb-6">
       {/* Billing guard blocks dashboard usage beyond 14-day trial until subscription */}
       <BillingGuard />
 
