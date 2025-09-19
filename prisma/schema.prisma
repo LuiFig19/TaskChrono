@@ -512,6 +512,7 @@ model TeamRoleLabel {
   createdAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  memberships TeamMembership[]
 
   @@unique([teamId, name])
   @@index([teamId])
