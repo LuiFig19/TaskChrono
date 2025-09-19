@@ -501,8 +501,20 @@ model Team {
   goals       TeamGoal[]
   activities  TeamActivity[]
   invites     TeamInvite[]
+  roleLabels  TeamRoleLabel[]
 
   @@index([createdById])
+}
+model TeamRoleLabel {
+  id        String   @id @default(cuid())
+  teamId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, name])
+  @@index([teamId])
 }
 
 model TeamMembership {
@@ -510,14 +522,17 @@ model TeamMembership {
   teamId   String
   userId   String
   role     TeamRole
+  roleLabelId String?
   joinedAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleLabel TeamRoleLabel? @relation(fields: [roleLabelId], references: [id])
 
   @@unique([teamId, userId])
   @@index([teamId])
   @@index([userId])
+  @@index([roleLabelId])
 }
 
 model TeamInvite {

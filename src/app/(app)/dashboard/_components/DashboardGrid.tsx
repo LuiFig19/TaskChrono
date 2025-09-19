@@ -21,12 +21,30 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     inventory:  { i: 'inventory',   x: 4,  y: 14, w: 4, h: 6 },
     timer_active:{ i: 'timer_active',x: 8,  y: 16, w: 4, h: 3 },
   }
-  const defaultOrder = useMemo(() => Object.keys(curated), [])
-  const DEFAULT_LAYOUT = useMemo(() => defaultOrder.map((id) => curated[id]), [defaultOrder])
+  const initialOrder = useMemo(() => Object.keys(curated), [])
+  const [order, setOrder] = useState<string[]>(initialOrder)
+  const DEFAULT_LAYOUT = useMemo(() => order.map((id) => curated[id]).filter(Boolean), [order])
 
   const { layout, saveLayout, reset, loading } = useWidgetLayout(DEFAULT_LAYOUT, 'main')
 
-  useEffect(() => { if (pin && !defaultOrder.includes(pin)) defaultOrder.push(pin) }, [pin, defaultOrder])
+  useEffect(() => { if (pin && !order.includes(pin)) setOrder((o)=> o.includes(pin) ? o : [...o, pin]) }, [pin, order])
+
+  // Listen for Add Widget events and append the widget to the grid without navigation
+  useEffect(() => {
+    function onAdd(e: Event) {
+      const id = (e as any)?.detail?.id as string | undefined
+      if (!id) return
+      setOrder(prev => prev.includes(id) ? prev : [...prev, id])
+      // If current layout doesn't have a position for this widget, add one at the end
+      const has = Array.isArray(layout) && (layout as any[]).some((l) => l.i === id)
+      if (!has) {
+        const pos = (curated as any)[id] || { i: id, x: 0, y: Infinity, w: 4, h: 4 }
+        saveLayout([...(layout as any[] || []), pos] as any)
+      }
+    }
+    document.addEventListener('tc:add-widget' as any, onAdd)
+    return () => document.removeEventListener('tc:add-widget' as any, onAdd)
+  }, [layout, saveLayout])
 
   // Fetch calendar events for the month so MonthGrid can render
   const [calEvents, setCalEvents] = useState<any[]>([])
@@ -146,7 +164,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         onDragStop={(l) => saveLayout(l as any)}
         onResizeStop={(l) => saveLayout(l as any)}
       >
-        {defaultOrder.map((id) => (
+        {order.map((id) => (
           <div key={id} className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5`}>
             <div className="tc-widget-handle cursor-move select-none font-bold text-white flex items-center justify-between">
               {widgets[id]?.title}

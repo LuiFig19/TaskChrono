@@ -15,15 +15,7 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   useEffect(() => { setMounted(true) }, [])
-  useEffect(() => {
-    const root = document.documentElement
-    if (open) {
-      root.style.overflow = 'hidden'
-    } else {
-      root.style.overflow = ''
-    }
-    return () => { root.style.overflow = '' }
-  }, [open])
+  // Avoid toggling root overflow to prevent scrollbar stutter/layout shift
   return (
     <div>
       <button

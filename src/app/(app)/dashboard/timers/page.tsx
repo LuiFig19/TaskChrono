@@ -27,6 +27,7 @@ export default async function TimersPage() {
         name: t.name,
         tags: t.tags || [],
         createdAt: t.createdAt.toISOString(),
+        finalizedAt: t.finalizedAt ? t.finalizedAt.toISOString() : null,
       }))}
     />
   )
