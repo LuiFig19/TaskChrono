@@ -4,7 +4,7 @@ import ProjectProgressWidget from './ProjectProgressWidget'
 import ResponsiveGridLayout from './RGLResponsiveClient'
 import { useWidgetLayout, type RglItem } from './useWidgetLayout'
 import MonthGrid from '../calendar/MonthGrid'
-import React, { useEffect, useMemo, useState } from 'react'
+// duplicate import removed
 import useSWR from 'swr'
 
 function formatDuration(min: number) {
