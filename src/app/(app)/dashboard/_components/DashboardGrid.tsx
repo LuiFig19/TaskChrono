@@ -150,9 +150,9 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     analytics: { id: 'analytics', title: 'Analytics', render: () => (<div className="mt-2 text-sm text-slate-400">Charts will appear here as you add data.</div>) },
     calendar: { id: 'calendar', title: 'Calendar', render: () => (
       <div className="mt-3 text-sm text-slate-400">
-        <div className="flex items-center justify-between">
-          <div>Quick view of this month. Create detailed events in Calendar.</div>
-          <div className="flex gap-1">
+        <div className="flex items-start justify-between">
+          <div className="pt-0.5">Quick view of this month. Create detailed events in Calendar.</div>
+          <div className="flex gap-1 -mt-1">
             <a href="/dashboard/calendar?month=prev" className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</a>
             <a href="/dashboard/calendar?month=next" className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</a>
           </div>
