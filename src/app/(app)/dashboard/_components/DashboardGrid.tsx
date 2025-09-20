@@ -4,6 +4,74 @@ import ProjectProgressWidget from './ProjectProgressWidget'
 import ResponsiveGridLayout from './RGLResponsiveClient'
 import { useWidgetLayout, type RglItem } from './useWidgetLayout'
 import MonthGrid from '../calendar/MonthGrid'
+import React, { useEffect, useMemo, useState } from 'react'
+import useSWR from 'swr'
+
+function formatDuration(min: number) {
+  const h = Math.floor(min / 60)
+  const m = Math.floor(min % 60)
+  return `${h}h ${m}m`
+}
+
+function TimeOverviewWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const totals = useMemo(() => {
+    const entries = (data?.entries ?? []) as { startedAt: string; endedAt: string | null; durationMin: number }[]
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfWeek = new Date(startOfDay)
+    startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay())
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const within = (d: Date, from: Date) => d >= from
+    const sum = (from: Date) => entries.reduce((acc, e) => {
+      const end = e.endedAt ? new Date(e.endedAt) : null
+      const start = new Date(e.startedAt)
+      if (!end) return acc
+      if (within(end, from)) return acc + (e.durationMin || 0)
+      return acc
+    }, 0)
+    return {
+      today: sum(startOfDay),
+      week: sum(startOfWeek),
+      month: sum(startOfMonth),
+    }
+  }, [data])
+  return (
+    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+      {[{ key: 'today', label: 'Today' }, { key: 'week', label: 'This Week' }, { key: 'month', label: 'This Month' }].map((s:any) => (
+        <div key={s.key} className="rounded-md border border-slate-700 p-3">
+          <div className="text-xs text-slate-400">{s.label}</div>
+          <div className="text-xl font-semibold text-white">{formatDuration((totals as any)?.[s.key] ?? 0)}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TaskCompletionWidget() {
+  const [projectId, setProjectId] = useState<string | 'all'>('all')
+  const { data } = useSWR('/api/tasks', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const options = (data?.projects ?? []) as { id: string; name: string; tasks: { status: string }[] }[]
+  const { percent } = useMemo(() => {
+    const list = projectId === 'all' ? options.flatMap(p=>p.tasks) : (options.find(p=>p.id===projectId)?.tasks ?? [])
+    if (list.length === 0) return { percent: 0 }
+    const done = list.filter(t => String(t.status).toUpperCase() === 'DONE').length
+    return { percent: Math.round((done / list.length) * 100) }
+  }, [options, projectId])
+  return (
+    <div>
+      <div className="mt-2 flex items-center gap-2">
+        <label className="text-xs text-slate-400">Project</label>
+        <select aria-label="Select project" value={projectId} onChange={(e)=>setProjectId(e.target.value as any)} className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-100">
+          <option value="all">All</option>
+          {options.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+      <div className="mt-3 text-3xl text-white">{percent}%</div>
+      <div className="text-xs text-slate-400">Completion</div>
+    </div>
+  )
+}
 
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
@@ -70,29 +138,25 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   // Data for widgets
   const widgets: Record<string, Widget> = {
     overview: { id: 'overview', title: 'Time Tracking Overview', render: () => (
-      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-        {[{ label: 'Today' }, { label: 'This Week' }, { label: 'This Month' }].map((s) => (
-          <div key={s.label} className="rounded-md border border-slate-700 p-3">
-            <div className="text-xs text-slate-400">{s.label}</div>
-            <div className="text-xl font-semibold text-white">0h 0m</div>
-          </div>
-        ))}
-      </div>
+      <TimeOverviewWidget />
     ) },
     activity: { id: 'activity', title: 'Team Activity Feed', render: () => (
       <div className="mt-4 text-sm text-slate-300">No activity yet. Start a chat or create a task to get started.</div>
     ) },
     progress: { id: 'progress', title: 'Project Progress', render: () => <ProjectProgressWidget /> },
     completion: { id: 'completion', title: 'Task Completion', render: () => (
-      <div>
-        <div className="mt-4 text-3xl text-white">0%</div>
-        <div className="text-xs text-slate-400">Last 7 days</div>
-      </div>
+      <TaskCompletionWidget />
     ) },
     analytics: { id: 'analytics', title: 'Analytics', render: () => (<div className="mt-2 text-sm text-slate-400">Charts will appear here as you add data.</div>) },
     calendar: { id: 'calendar', title: 'Calendar', render: () => (
       <div className="mt-3 text-sm text-slate-400">
-        Quick view of this month. Create detailed events in Calendar.
+        <div className="flex items-center justify-between">
+          <div>Quick view of this month. Create detailed events in Calendar.</div>
+          <div className="flex gap-1">
+            <a href="/dashboard/calendar?month=prev" className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</a>
+            <a href="/dashboard/calendar?month=next" className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</a>
+          </div>
+        </div>
         {(() => {
           const now = new Date()
           const year = now.getFullYear()
