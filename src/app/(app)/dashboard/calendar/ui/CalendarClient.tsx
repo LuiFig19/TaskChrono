@@ -40,6 +40,8 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
       const res = await fetch('/api/calendar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: optimistic.title, startsAt: optimistic.startsAt, description: optimistic.description }) })
       if (!res.ok) throw new Error('create failed')
       await refresh()
+      // notify other pages (e.g., dashboard widget) to refresh
+      try { document.dispatchEvent(new CustomEvent('tc:calendar-changed', { detail: { action: 'created' } })) } catch {}
       setTitle(''); setNotes('')
     } catch {
       setEvents((prev) => prev.filter((e) => e.id !== optimistic.id))

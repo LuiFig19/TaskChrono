@@ -87,8 +87,9 @@ export default function ProjectProgressWidget() {
   }
 
   return (
-    <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
-      {selectedIds.map((selectedId, idx) => {
+    <div className="mt-2 text-sm h-full flex flex-col">
+      <div className="grid gap-4 md:grid-cols-3 flex-1 min-h-0 overflow-y-auto pr-1">
+        {selectedIds.map((selectedId, idx) => {
         const progress = progressById[selectedId] ?? 0
         return (
           <div key={`ppw-${idx}`} className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
@@ -129,11 +130,14 @@ export default function ProjectProgressWidget() {
             </div>
           </div>
         )
-      })}
-      <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-3 flex items-center justify-center">
-        <button onClick={addBar} className="px-3 py-1.5 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">
-          + Add Progress Bar
-        </button>
+        })}
+      </div>
+      <div className="pt-3">
+        <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-3 flex items-center justify-center">
+          <button onClick={addBar} className="px-3 py-1.5 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">
+            + Add Progress Bar
+          </button>
+        </div>
       </div>
     </div>
   )

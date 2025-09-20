@@ -2,61 +2,47 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getCurrentUserAndOrg } from '@/lib/org'
 
-function parseDate(value: string | null): Date | null {
-  if (!value) return null
-  const d = new Date(value)
-  return isNaN(d.getTime()) ? null : d
-}
-
-async function getOrgId(userId: string) {
-  const m = await prisma.organizationMember.findFirst({ where: { userId } })
-  return m?.organizationId ?? null
-}
-
-export async function GET(req: Request) {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
-  const organizationId = await getOrgId(userId)
-  if (!organizationId) return NextResponse.json({ events: [] })
-
-  const { searchParams } = new URL(req.url)
-  const startParam = searchParams.get('start')
-  const endParam = searchParams.get('end')
-  const start = parseDate(startParam)
-  const end = parseDate(endParam)
-  const where: any = { organizationId }
-  if (start && end) {
-    where.OR = [
-      { startsAt: { gte: start, lt: end } },
-      { endsAt: { gt: start, lte: end } },
-    ]
-  }
-  const events = await prisma.calendarEvent.findMany({ where, orderBy: { startsAt: 'asc' } })
+  if (!session?.user) return NextResponse.json({ events: [] }, { status: 200 })
+  const { organizationId } = await getCurrentUserAndOrg()
+  if (!organizationId) return NextResponse.json({ events: [] }, { status: 200 })
+  const url = new URL(request.url)
+  const startStr = url.searchParams.get('start')
+  const endStr = url.searchParams.get('end')
+  const start = startStr ? new Date(startStr) : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  const end = endStr ? new Date(endStr) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+  const events = await prisma.calendarEvent.findMany({
+    where: { organizationId, startsAt: { gte: start, lt: end } },
+    orderBy: { startsAt: 'asc' },
+    select: { id: true, title: true, startsAt: true, description: true },
+  })
   return NextResponse.json({ events })
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
-  const organizationId = await getOrgId(userId)
+  const { organizationId } = await getCurrentUserAndOrg()
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
-  const body = await req.json().catch(() => ({})) as any
-  if (!body.title || !body.startsAt) return NextResponse.json({ error: 'Missing title or startsAt' }, { status: 400 })
-  const created = await prisma.calendarEvent.create({
+  const body = await request.json().catch(() => ({})) as { title?: string; startsAt?: string; endsAt?: string | null; description?: string | null }
+  const title = String(body.title || '').trim()
+  const startsAt = body.startsAt ? new Date(body.startsAt) : null
+  if (!title || !startsAt) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+  const defaultEnd = new Date(startsAt.getTime() + 60 * 60 * 1000)
+  const evt = await prisma.calendarEvent.create({
     data: {
       organizationId,
-      title: String(body.title),
-      description: body.description ? String(body.description) : null,
-      startsAt: new Date(body.startsAt),
-      endsAt: body.endsAt ? new Date(body.endsAt) : new Date(new Date(body.startsAt).getTime() + 60 * 60 * 1000),
-      allDay: !!body.allDay,
+      title,
+      description: body.description || null,
+      startsAt,
+      endsAt: body.endsAt ? new Date(body.endsAt) : defaultEnd,
     },
     select: { id: true },
   })
-  return NextResponse.json({ id: created.id })
+  return NextResponse.json({ id: evt.id })
 }
 
 

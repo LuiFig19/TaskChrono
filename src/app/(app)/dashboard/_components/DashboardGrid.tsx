@@ -52,7 +52,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
     const now = new Date()
     const start = new Date(now.getFullYear(), now.getMonth(), 1)
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    ;(async () => {
+    async function fetchMonth() {
       try {
         const res = await fetch(`/api/calendar?start=${start.toISOString()}&end=${end.toISOString()}`, { cache: 'no-store' })
         if (res.ok) {
@@ -60,7 +60,11 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           setCalEvents(Array.isArray(json.events) ? json.events : [])
         }
       } catch {}
-    })()
+    }
+    fetchMonth()
+    function onChanged() { fetchMonth() }
+    document.addEventListener('tc:calendar-changed' as any, onChanged)
+    return () => document.removeEventListener('tc:calendar-changed' as any, onChanged)
   }, [])
 
   // Data for widgets
