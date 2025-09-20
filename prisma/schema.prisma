@@ -5,11 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // Use a direct (non-pooled) connection for schema migrations to avoid
-  // pgBouncer/connection-pool advisory lock issues in production builds.
-  // Set DATABASE_DIRECT_URL in the hosting environment (e.g., Vercel) to the
-  // provider's direct connection string. At runtime, Prisma will still use url.
-  directUrl = env("DATABASE_DIRECT_URL")
 }
 
 /// NextAuth core models
