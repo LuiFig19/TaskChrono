@@ -100,15 +100,15 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           const daysInMonth = new Date(year, month + 1, 0).getDate()
           const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
           const clsMap: Record<string, { bg: string; ring: string }> = {
-            meeting: { bg: 'bg-blue-500/20', ring: 'ring-blue-400/40' },
-            release: { bg: 'bg-lime-500/20', ring: 'ring-lime-400/40' },
-            invoice: { bg: 'bg-rose-500/20', ring: 'ring-rose-400/40' },
-            review: { bg: 'bg-violet-500/20', ring: 'ring-violet-400/40' },
-            demo: { bg: 'bg-teal-500/20', ring: 'ring-teal-400/40' },
-            deadline: { bg: 'bg-amber-500/20', ring: 'ring-amber-400/40' },
-            personal: { bg: 'bg-emerald-500/20', ring: 'ring-emerald-400/40' },
-            urgent: { bg: 'bg-red-600/20', ring: 'ring-red-500/40' },
-            general: { bg: 'bg-fuchsia-500/20', ring: 'ring-fuchsia-400/40' },
+            meeting: { bg: 'bg-blue-500/30', ring: 'ring-blue-400/60' },
+            release: { bg: 'bg-lime-500/30', ring: 'ring-lime-400/60' },
+            invoice: { bg: 'bg-rose-500/30', ring: 'ring-rose-400/60' },
+            review: { bg: 'bg-violet-500/30', ring: 'ring-violet-400/60' },
+            demo: { bg: 'bg-teal-500/30', ring: 'ring-teal-400/60' },
+            deadline: { bg: 'bg-amber-500/30', ring: 'ring-amber-400/60' },
+            personal: { bg: 'bg-emerald-500/30', ring: 'ring-emerald-400/60' },
+            urgent: { bg: 'bg-red-600/30', ring: 'ring-red-500/60' },
+            general: { bg: 'bg-fuchsia-500/30', ring: 'ring-fuchsia-400/60' },
           }
           const getMeta = (day: number) => {
             const dateStr = new Date(year, month, day).toDateString()
