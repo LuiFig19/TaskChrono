@@ -89,7 +89,7 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
           </div>
           <MonthGrid
             events={events as any}
-            baseDate={monthStart}
+            baseDate={cursor.toISOString()}
             onSelect={(val) => setWhen(val)}
           />
           <ul className="mt-4 grid gap-2 text-sm text-slate-300">
