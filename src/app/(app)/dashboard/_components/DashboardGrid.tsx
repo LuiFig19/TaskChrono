@@ -99,6 +99,17 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           const month = now.getMonth()
           const daysInMonth = new Date(year, month + 1, 0).getDate()
           const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
+          const clsMap: Record<string, { bg: string; ring: string }> = {
+            meeting: { bg: 'bg-blue-500/20', ring: 'ring-blue-400/40' },
+            release: { bg: 'bg-lime-500/20', ring: 'ring-lime-400/40' },
+            invoice: { bg: 'bg-rose-500/20', ring: 'ring-rose-400/40' },
+            review: { bg: 'bg-violet-500/20', ring: 'ring-violet-400/40' },
+            demo: { bg: 'bg-teal-500/20', ring: 'ring-teal-400/40' },
+            deadline: { bg: 'bg-amber-500/20', ring: 'ring-amber-400/40' },
+            personal: { bg: 'bg-emerald-500/20', ring: 'ring-emerald-400/40' },
+            urgent: { bg: 'bg-red-600/20', ring: 'ring-red-500/40' },
+            general: { bg: 'bg-fuchsia-500/20', ring: 'ring-fuchsia-400/40' },
+          }
           const getMeta = (day: number) => {
             const dateStr = new Date(year, month, day).toDateString()
             const dayEvents = (calEvents || []).filter((e: any) => new Date(e.startsAt).toDateString() === dateStr)
@@ -110,7 +121,9 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
               const time = new Date(e.startsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               return { title: e.title, time, category }
             })
-            return { items, hex: '#4F46E5' }
+            // choose category of first event for color coding
+            const primaryCategory = items[0]?.category || 'general'
+            return { items, category: primaryCategory }
           }
           return (
             <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
@@ -122,7 +135,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                   <a
                     key={`wday-${day}`}
                     href={href}
-                    className={`relative group block py-2 rounded border border-slate-700 ${meta ? 'text-white ring-1 bg-indigo-500/20 ring-indigo-400/40' : 'bg-slate-800/60 text-slate-300'} transition-colors`}
+                    className={`relative group block py-2 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} transition-colors`}
                     aria-label={meta ? `${day}: ${meta.items.map((i:any) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
                   >
                     {day}

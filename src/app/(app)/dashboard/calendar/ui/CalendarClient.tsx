@@ -58,7 +58,11 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
           <div className="flex items-center justify-between">
             <div className="font-medium text-white">Monthly View</div>
           </div>
-          <MonthGrid events={events as any} baseDate={monthStart} />
+          <MonthGrid
+            events={events as any}
+            baseDate={monthStart}
+            onSelect={(val) => setWhen(val)}
+          />
           <ul className="mt-4 grid gap-2 text-sm text-slate-300">
             {events.map(e => (
               <li key={e.id} className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
@@ -66,6 +70,19 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
                   <div>{e.title}</div>
                   <div className="text-xs text-slate-400">{new Date(e.startsAt).toLocaleString()}</div>
                 </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/calendar/${e.id}`, { method: 'DELETE' })
+                      setEvents((prev)=>prev.filter(x=>x.id!==e.id))
+                      document.dispatchEvent(new CustomEvent('tc:calendar-changed', { detail: { action: 'deleted' } }))
+                    } catch {}
+                  }}
+                  className="px-2 py-1 text-xs rounded bg-rose-600 hover:bg-rose-700"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>

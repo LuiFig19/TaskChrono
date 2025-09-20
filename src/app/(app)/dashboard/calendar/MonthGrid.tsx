@@ -9,7 +9,7 @@ type EventDto = {
   description?: string | null
 }
 
-export default function MonthGrid({ events, baseDate }: { events: EventDto[]; baseDate?: string }) {
+export default function MonthGrid({ events, baseDate, onSelect }: { events: EventDto[]; baseDate?: string; onSelect?: (localInputValue: string) => void }) {
   const base = baseDate ? new Date(baseDate) : new Date()
   const year = base.getFullYear()
   const month = base.getMonth()
@@ -82,10 +82,15 @@ export default function MonthGrid({ events, baseDate }: { events: EventDto[]; ba
             className={`relative group block py-2.5 md:py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150 cursor-pointer`}
             aria-label={meta ? `${day}: ${meta.items.map((i) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
             onClick={() => {
-              const input = document.getElementById('calendar-when') as HTMLInputElement | null
-              if (input) {
-                input.value = toLocalInput(d)
-                input.dispatchEvent(new Event('input', { bubbles: true }))
+              const val = toLocalInput(d)
+              if (onSelect) {
+                onSelect(val)
+              } else {
+                const input = document.getElementById('calendar-when') as HTMLInputElement | null
+                if (input) {
+                  input.value = val
+                  input.dispatchEvent(new Event('input', { bubbles: true }))
+                }
               }
             }}
           >
