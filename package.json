@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 3000",
     "dev:network": "next dev --turbopack -p 3000 -H 0.0.0.0",
     "dev:classic": "next dev -p 3000",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && sh -c 'if [ -n \"$DATABASE_DIRECT_URL\" ]; then DATABASE_URL=$DATABASE_DIRECT_URL prisma migrate deploy; else prisma migrate deploy; fi' && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
