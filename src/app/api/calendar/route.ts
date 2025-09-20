@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUserAndOrg } from '@/lib/org'
+import { getCurrentUserAndOrg, ensureUserOrg } from '@/lib/org'
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
@@ -25,7 +25,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { organizationId } = await getCurrentUserAndOrg()
+  // Ensure the user has an organization in production too (prevents the
+  // "optimistic then disappears" behavior when membership is missing)
+  const { organizationId } = await ensureUserOrg()
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
   const body = await request.json().catch(() => ({})) as { title?: string; startsAt?: string; endsAt?: string | null; description?: string | null }
   const title = String(body.title || '').trim()

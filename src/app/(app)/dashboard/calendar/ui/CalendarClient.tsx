@@ -11,9 +11,10 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
   const [category, setCategory] = useState('meeting')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const [cursor, setCursor] = useState(new Date(monthStart))
 
-  const refresh = useCallback(async () => {
-    const params = new URLSearchParams({ start: monthStart, end: monthEnd })
+  const refresh = useCallback(async (startStr?: string, endStr?: string) => {
+    const params = new URLSearchParams({ start: startStr || monthStart, end: endStr || monthEnd })
     const res = await fetch(`/api/calendar?${params.toString()}`, { cache: 'no-store' })
     if (!res.ok) return
     const json = await res.json()
@@ -57,6 +58,34 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
           <div className="flex items-center justify-between">
             <div className="font-medium text-white">Monthly View</div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800"
+                onClick={() => {
+                  const prev = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1)
+                  setCursor(prev)
+                  const start = new Date(prev.getFullYear(), prev.getMonth(), 1)
+                  const end = new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+                  refresh(start.toISOString(), end.toISOString())
+                }}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="px-2 py-1 rounded border border-slate-700 hover:bg-slate-800"
+                onClick={() => {
+                  const next = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
+                  setCursor(next)
+                  const start = new Date(next.getFullYear(), next.getMonth(), 1)
+                  const end = new Date(next.getFullYear(), next.getMonth() + 1, 1)
+                  refresh(start.toISOString(), end.toISOString())
+                }}
+              >
+                →
+              </button>
+            </div>
           </div>
           <MonthGrid
             events={events as any}
