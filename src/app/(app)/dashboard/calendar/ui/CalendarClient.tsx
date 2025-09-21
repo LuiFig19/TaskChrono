@@ -57,7 +57,10 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
       <div className="mt-4 grid lg:grid-cols-2 gap-6">
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
           <div className="flex items-center justify-between">
-            <div className="font-medium text-white">Monthly View</div>
+            <div>
+              <div className="font-medium text-white">Monthly View</div>
+              <div className="text-xs text-slate-400 mt-0.5">{new Date(cursor).toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -142,5 +145,8 @@ export default function CalendarClient({ defaultWhen, monthStart, monthEnd, init
     </div>
   )
 }
+
+
+
 
 

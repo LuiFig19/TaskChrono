@@ -16,8 +16,17 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams
   const monthParam = typeof sp?.month === 'string' ? sp.month : ''
   const defaultWhen = typeof (sp as any)?.d === 'string' ? (sp as any).d : ''
-  // Compute current month range for server filtering (improves load and prevents cross-month confusion)
-  const base = monthParam ? new Date(monthParam) : new Date()
+  // Compute month range; handle tokens like "prev"/"next" and invalid dates gracefully
+  let base = new Date()
+  if (monthParam) {
+    if (monthParam === 'prev' || monthParam === 'next') {
+      const offset = monthParam === 'prev' ? -1 : 1
+      base = new Date(base.getFullYear(), base.getMonth() + offset, 1)
+    } else {
+      const parsed = new Date(monthParam)
+      if (!isNaN(parsed.getTime())) base = parsed
+    }
+  }
   const start = new Date(base.getFullYear(), base.getMonth(), 1)
   const end = new Date(base.getFullYear(), base.getMonth() + 1, 1)
   const events = organizationId
@@ -36,5 +45,4 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
     />
   )
 }
-
 
