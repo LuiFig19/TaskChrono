@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { broadcastActivity } from '@/lib/activity'
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -25,6 +26,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   if (!text) return NextResponse.json({ error: 'Text required' }, { status: 400 })
   const user = await prisma.user.findUnique({ where: { id: userId } })
   await prisma.teamActivity.create({ data: { teamId: params.id, type: 'chat', payload: { text, userName: user?.name || user?.email || 'User' } as any } })
+  try { broadcastActivity({ type: 'chat.message', message: `${user?.name || 'User'}: ${text}`, meta: { teamId: params.id } }) } catch {}
   return NextResponse.json({ ok: true })
 }
 

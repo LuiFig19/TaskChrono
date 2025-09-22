@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import throttle from 'lodash.throttle'
 
-export type RglItem = { i: string; x: number; y: number; w: number; h: number }
+// Extend the minimal shape used throughout to support per-item controls like `static`/`isResizable`
+export type RglItem = { i: string; x: number; y: number; w: number; h: number; static?: boolean; isResizable?: boolean; isDraggable?: boolean }
 
 export function useWidgetLayout(defaultLayout: RglItem[], dashboard: string = 'main') {
   const [layout, setLayout] = useState<RglItem[] | null>(null)

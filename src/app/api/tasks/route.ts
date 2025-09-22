@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { broadcastActivity } from '@/lib/activity'
 
 async function getActiveOrganizationId(userId: string) {
   const membership = await prisma.organizationMember.findFirst({
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
       assigneeId: userId,
     },
   })
-
+  try { broadcastActivity({ type: 'task.created', message: `Task added: ${task.title}`, meta: { projectId: project.id, taskId: task.id } }) } catch {}
   return NextResponse.json({ ok: true, taskId: task.id })
 }
 

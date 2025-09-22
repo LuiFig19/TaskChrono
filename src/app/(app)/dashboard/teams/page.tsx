@@ -18,9 +18,11 @@ export default async function TeamsIndexPage() {
             <a href="/dashboard/teams/new" className="block px-3 py-2 rounded border border-slate-800 hover:bg-slate-800/60">Create your first team</a>
           </div>
         </aside>
-        <main className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-          <h1 className="text-2xl font-semibold">Teams</h1>
-          <p className="text-slate-300 mt-2">Select a team on the left or create a new one.</p>
+        <main className="rounded-xl border border-slate-800 bg-slate-900 p-4 pt-12 md:pt-12 lg:pt-14">
+          <div className="ml-1 md:ml-2 space-y-1">
+            <h1 className="text-2xl font-semibold relative top-0.5">Teams</h1>
+            <p className="text-slate-300">Select a team on the left or create a new one.</p>
+          </div>
         </main>
       </div>
     </div>

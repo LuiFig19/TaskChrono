@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { broadcastActivity } from '@/lib/activity'
 
 async function getActiveOrganizationId(userId: string) {
   const membership = await prisma.organizationMember.findFirst({ where: { userId } })
@@ -109,6 +110,7 @@ export async function POST(request: Request) {
   } catch (e) {
     // Non-fatal
   }
+  try { broadcastActivity({ type: 'project.created', message: `Project created: ${proj.name}`, meta: { projectId: proj.id } }) } catch {}
   return NextResponse.json({ id: proj.id })
 }
 

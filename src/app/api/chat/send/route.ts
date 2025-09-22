@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { ensureUserOrg } from '@/lib/org'
 import { broadcast } from '@/lib/chatStore'
 import { prisma } from '@/lib/prisma'
+import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
   })
   const msg = { id: created.id, channelId, user: { id: userId, name: userName }, text, ts: created.ts.getTime(), role: channelId==='managers' ? 'Management' : (channelId==='employees' ? 'Employee' : 'Staff') }
   broadcast(organizationId, channelId, 'message', msg)
+  try { broadcastActivity({ type: 'chat.message', message: `${userName}: ${text}`, meta: { channelId } }) } catch {}
   return NextResponse.json(msg)
 }
 

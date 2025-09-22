@@ -6,6 +6,11 @@ import { useWidgetLayout, type RglItem } from './useWidgetLayout'
 import MonthGrid from '../calendar/MonthGrid'
 // duplicate import removed
 import useSWR from 'swr'
+// Lazy-load recharts client-side with a state guard to avoid "Loading..." stalls
+let R: typeof import('recharts') | null = null
+if (typeof window !== 'undefined' && !R) {
+  import('recharts').then((m)=>{ R = m as any }).catch(()=>{})
+}
 
 function formatDuration(min: number) {
   const h = Math.floor(min / 60)
@@ -48,6 +53,65 @@ function TimeOverviewWidget() {
   )
 }
 
+function ActivityFeedWidget() {
+  const [events, setEvents] = useState<{ ts: number; type: string; message: string }[]>([])
+  useEffect(() => {
+    let esActivity: EventSource | null = null
+    let esChat: EventSource | null = null
+    let esTime: EventSource | null = null
+
+    function connectActivity() {
+      try { esActivity && esActivity.close() } catch {}
+      esActivity = new EventSource('/api/activity')
+      esActivity.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data)
+          if (!data?.type || data.type === 'connected') return
+          setEvents((prev) => [{ ts: data.ts || Date.now(), type: data.type, message: data.message || data.type }, ...prev].slice(0,25))
+        } catch {}
+      }
+      esActivity.addEventListener('error', () => { try { esActivity && esActivity.close() } catch {}; setTimeout(connectActivity, 2000) })
+    }
+
+    function connectChat() {
+      try { esChat && esChat.close() } catch {}
+      esChat = new EventSource('/api/chat/stream?c=all')
+      esChat.addEventListener('message', (e) => {
+        try { const m = JSON.parse(e.data); setEvents((prev)=> [{ ts: m.ts || Date.now(), type: 'chat.message', message: `${m.user?.name || 'User'}: ${m.text}` }, ...prev].slice(0,25)) } catch {}
+      })
+      esChat.addEventListener('error', () => { try { esChat && esChat.close() } catch {}; setTimeout(connectChat, 2000) })
+    }
+
+    function connectTime() {
+      try { esTime && esTime.close() } catch {}
+      esTime = new EventSource('/api/time')
+      esTime.addEventListener('changed', () => {
+        setEvents((prev)=> [{ ts: Date.now(), type: 'timer.changed', message: 'Timer updated' }, ...prev].slice(0,25))
+      })
+      esTime.addEventListener('error', () => { try { esTime && esTime.close() } catch {}; setTimeout(connectTime, 2000) })
+    }
+
+    connectActivity(); connectChat(); connectTime()
+    return () => { try { esActivity && esActivity.close() } catch {}; try { esChat && esChat.close() } catch {}; try { esTime && esTime.close() } catch {} }
+  }, [])
+  return (
+    <div className="mt-3 text-sm text-slate-300 space-y-2">
+      {events.length === 0 ? (
+        <div className="text-slate-400">No activity yet. Start a chat or create a task to get started.</div>
+      ) : (
+        <ul className="space-y-1 overflow-auto pr-1 max-h-[360px] tc-scroll">
+          {events.map((ev, idx) => (
+            <li key={`ev-${idx}`} className="rounded border border-slate-800 bg-slate-950/50 px-3 py-2">
+              <div className="text-xs text-slate-400">{new Date(ev.ts).toLocaleTimeString()}</div>
+              <div className="text-slate-200">{ev.message}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function TaskCompletionWidget() {
   const [projectId, setProjectId] = useState<string | 'all'>('all')
   const { data } = useSWR('/api/tasks', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
@@ -73,6 +137,159 @@ function TaskCompletionWidget() {
   )
 }
 
+function AnalyticsWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const [chartsReady, setChartsReady] = useState<boolean>(!!R)
+  useEffect(() => {
+    let mounted = true
+    if (!R) {
+      import('recharts').then((m)=>{ if (mounted) { R = m as any; setChartsReady(true) } }).catch(()=>{})
+    }
+    return () => { mounted = false }
+  }, [])
+  const breakdown = useMemo(() => {
+    const timers = (data?.timers ?? []) as { id: string; name: string; finalizedAt: string | null }[]
+    const entries = (data?.entries ?? []) as { durationMin: number; endedAt: string | null; timerId: string | null }[]
+    const totals: Record<string, number> = {}
+    entries.filter(e=>e.endedAt && e.timerId).forEach(e => { totals[String(e.timerId)] = (totals[String(e.timerId)]||0) + (e.durationMin||0) })
+    const rows = timers.map(t => ({ name: t.name || 'Timer', value: totals[t.id] || 0 }))
+    return rows.filter(r=>r.value>0)
+  }, [data])
+  if (!chartsReady || !R) return <div className="h-40 grid place-items-center text-slate-500">Loading data...</div>
+  const C = R
+  return (
+    <div className="mt-3 h-full overflow-auto tc-scroll pr-1">
+      {breakdown.length === 0 ? (
+        <div className="text-sm text-slate-400">Run and end timers to see analytics.</div>
+      ) : (
+        <div className="w-full h-full overflow-auto tc-scroll pr-1">
+          <div className="h-32 min-h-[128px]">
+            <C.ResponsiveContainer width="100%" height="100%">
+              <C.PieChart>
+                <C.Pie data={breakdown} dataKey="value" nameKey="name" innerRadius={38} outerRadius={60} paddingAngle={2}>
+                  {breakdown.map((entry, index) => (
+                    <C.Cell key={`cell-${index}`} fill={["#60a5fa","#34d399","#f59e0b","#f87171","#a78bfa","#f472b6","#22d3ee","#84cc16"][index % 8]} />
+                  ))}
+                </C.Pie>
+                <C.Tooltip />
+              </C.PieChart>
+            </C.ResponsiveContainer>
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs pb-2">
+            {breakdown.map((b, i) => (
+              <li key={`lg-${i}`} className="flex items-center gap-2">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full tc-legend-${i % 8}`} aria-hidden></span>
+                <span className="text-slate-200">{b.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InventorySummaryWidget() {
+  const [summary, setSummary] = useState<{ totalItems: number; inventoryValueCents: number; lowStockCount: number } | null>(null)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/inventory?includeTotals=1&page=1&pageSize=1', { cache: 'no-store' })
+        const json = await res.json()
+        if (!cancelled) setSummary(json?.meta?.summary || null)
+      } catch {
+        if (!cancelled) setSummary(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+  }, [])
+  const usd = (c:number)=> `$${((c||0)/100).toFixed(2)}`
+  return (
+    <div className="mt-3">
+      {loading ? (
+        <div className="h-24 grid place-items-center text-slate-500">Loading...</div>
+      ) : summary ? (
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Total Items</div>
+            <div className="text-xl font-semibold text-white">{summary.totalItems}</div>
+          </div>
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Inventory Value</div>
+            <div className="text-xl font-semibold text-white">{usd(summary.inventoryValueCents)}</div>
+          </div>
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Low Stock</div>
+            <div className="text-xl font-semibold text-white">{summary.lowStockCount}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-sm text-slate-400">No inventory yet. Open Inventory to add items.</div>
+      )}
+      <a href="/dashboard/inventory" className="inline-block mt-3 px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Inventory</a>
+    </div>
+  )
+}
+
+function PinnedTimerWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const timers = (data?.timers ?? []) as { id: string; name: string; finalizedAt: string | null }[]
+  const entries = (data?.entries ?? []) as { id: string; timerId: string | null; endedAt: string | null }[]
+
+  const options = useMemo(() => {
+    const activeTimerIds = new Set((entries || []).filter(e => !e.endedAt && e.timerId).map(e => String(e.timerId)))
+    const active = timers.filter(t => activeTimerIds.has(t.id))
+    if (active.length > 0) return active
+    return timers.filter(t => !t.finalizedAt)
+  }, [timers, entries])
+
+  const [pinnedId, setPinnedId] = useState<string>('')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tc:pinnedTimerId') || ''
+      if (saved) setPinnedId(saved)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!pinnedId && options.length > 0) {
+      setPinnedId(options[0].id)
+    }
+  }, [options, pinnedId])
+
+  useEffect(() => {
+    try { if (pinnedId) localStorage.setItem('tc:pinnedTimerId', pinnedId) } catch {}
+  }, [pinnedId])
+
+  const selected = options.find(o => o.id === pinnedId)
+
+  return (
+    <div className="mt-3 text-sm text-slate-300">
+      {options.length === 0 ? (
+        <div className="text-slate-400">No active timers. Start one in Timers.</div>
+      ) : (
+        <div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-slate-400">Active timer</label>
+            <select aria-label="Select active timer" value={pinnedId} onChange={(e)=>setPinnedId(e.target.value)} className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-100">
+              {options.map(t => (
+                <option key={t.id} value={t.id}>{t.name || 'Timer'}</option>
+              ))}
+            </select>
+          </div>
+          <a href="/dashboard/timers" className="inline-block mt-3 px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-700">Open Timers</a>
+        </div>
+      )}
+    </div>
+  )
+}
+
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
 type Widget = { id: string; title: string; render: () => React.ReactNode }
@@ -80,7 +297,7 @@ type Widget = { id: string; title: string; render: () => React.ReactNode }
 export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string }) {
   // Curated default coordinates to eliminate the top-right gap
   const curated: Record<string, RglItem> = {
-    calendar:   { i: 'calendar',    x: 0,  y: 0,  w: 8, h: 8 },
+    calendar:   { i: 'calendar',    x: 0,  y: 0,  w: 8, h: 8, static: true },
     overview:   { i: 'overview',    x: 8,  y: 0,  w: 4, h: 4 },
     completion: { i: 'completion',  x: 8,  y: 4,  w: 4, h: 4 },
     activity:   { i: 'activity',    x: 0,  y: 8,  w: 4, h: 8 },
@@ -141,13 +358,13 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
       <TimeOverviewWidget />
     ) },
     activity: { id: 'activity', title: 'Team Activity Feed', render: () => (
-      <div className="mt-4 text-sm text-slate-300">No activity yet. Start a chat or create a task to get started.</div>
+      <ActivityFeedWidget />
     ) },
     progress: { id: 'progress', title: 'Project Progress', render: () => <ProjectProgressWidget /> },
     completion: { id: 'completion', title: 'Task Completion', render: () => (
       <TaskCompletionWidget />
     ) },
-    analytics: { id: 'analytics', title: 'Analytics', render: () => (<div className="mt-2 text-sm text-slate-400">Charts will appear here as you add data.</div>) },
+    analytics: { id: 'analytics', title: 'Analytics', render: () => (<AnalyticsWidget />) },
     calendar: { id: 'calendar', title: 'Calendar', render: () => (
       <div className="mt-3 text-sm text-slate-400">
         <div className="flex items-start justify-between">
@@ -218,9 +435,11 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           <a href="/dashboard/calendar" className="inline-block mt-3 px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Calendar</a>
         </div>
     ) },
-    inventory: { id: 'inventory', title: 'Inventory Tracking', render: () => (<div className="text-sm text-slate-400">Track items at a glance. Manage stock in Inventory.</div>) },
+    inventory: { id: 'inventory', title: 'Inventory Tracking', render: () => (
+      <InventorySummaryWidget />
+    ) },
     timer_active: { id: 'timer_active', title: 'Pinned Timer', render: () => (
-      <div className="mt-3 text-sm text-slate-300">Control your current timer.</div>
+      <PinnedTimerWidget />
     ) },
   }
 
@@ -245,7 +464,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         onResizeStop={(l) => saveLayout(l as any)}
       >
         {order.map((id) => (
-          <div key={id} className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5`}>
+          <div key={id} className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden`}>
             <div className="tc-widget-handle cursor-move select-none font-bold text-white flex items-center justify-between">
               <span>{widgets[id]?.title}</span>
               {id === 'calendar' && (
@@ -254,8 +473,11 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                   <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</button>
                 </div>
               )}
+              {id !== 'calendar' && (
+                <button title="Remove widget" aria-label="Remove widget" className="ml-2 text-rose-400 hover:text-rose-300" onClick={() => setOrder((o)=> o.filter(x=>x!==id))}>🗑</button>
+              )}
             </div>
-            <div data-widget-id={id}>{widgets[id]?.render()}</div>
+            <div data-widget-id={id} className={`flex-1 min-h-0 ${id==='calendar' ? 'overflow-visible' : id==='progress' ? 'overflow-hidden' : id==='analytics' ? 'overflow-hidden' : id==='activity' ? 'overflow-hidden' : 'overflow-auto tc-scroll'}`}>{widgets[id]?.render()}</div>
           </div>
         ))}
       </ResponsiveGridLayout>

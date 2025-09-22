@@ -90,7 +90,7 @@ export default function ChatPanel() {
                 </button>
               </div>
             </div>
-            <div ref={listRef} className="overflow-y-auto p-3 space-y-2 text-sm bg-slate-950">
+            <div ref={listRef} className="overflow-y-auto p-3 space-y-2 text-sm bg-slate-950 tc-scroll">
               {(messagesByChannel[channelId]||[]).map(m=> {
                 const d = new Date(m.ts)
                 const mm = String(d.getMonth()+1).padStart(2,'0')

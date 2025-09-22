@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 import { emitToUser } from '@/lib/realtime'
+import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   // Finalize timer
   await prisma.timer.update({ where: { id: timerId }, data: { finalizedAt: now } })
   emitToUser(userId, 'timer:changed', { type: 'finalize', timerId })
+  try { broadcastActivity({ type: 'timer.end', message: 'Timer ended', meta: { timerId } }) } catch {}
 
   return NextResponse.json({ ok: true })
 }
