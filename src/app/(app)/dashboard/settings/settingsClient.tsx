@@ -19,14 +19,17 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
   const [orgName, setOrgName] = React.useState('')
   const [brandColor, setBrandColor] = React.useState<string>('#c7d2fe')
   const [wheelOpen, setWheelOpen] = React.useState(false)
+  const [orgPickerOpen, setOrgPickerOpen] = React.useState(false)
+  const [orgs, setOrgs] = React.useState<Array<{ id: string; name: string; role: string }>>([])
 
   React.useEffect(() => {
     let ignore = false
     async function load() {
       try {
-        const [teamRes, orgRes] = await Promise.all([
+        const [teamRes, orgRes, listRes] = await Promise.all([
           fetch('/api/team', { cache: 'no-store' }),
-          organizationId ? fetch(`/api/org/${organizationId}`, { cache: 'no-store' }) : Promise.resolve(null as any)
+          organizationId ? fetch(`/api/org/${organizationId}`, { cache: 'no-store' }) : Promise.resolve(null as any),
+          fetch('/api/org/list', { cache: 'no-store' })
         ])
         if (teamRes?.ok) {
           const data = await teamRes.json(); if (!ignore) setMembers(data.members || [])
@@ -34,6 +37,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
         if (orgRes?.ok) {
           const org = await orgRes.json(); if (!ignore) { setOrgName(org.name || ''); if (org.brandColor) setBrandColor(org.brandColor) }
         }
+        if (listRes?.ok) { const data = await listRes.json(); if (!ignore) setOrgs(data.orgs || []) }
       } catch {}
     }
     load()
@@ -59,12 +63,15 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
     if (!email.trim()) return
     setLoading(true)
     try {
-      // Optimistic add placeholder
-      const optimistic: Member = { id: 'tmp-'+Math.random().toString(36).slice(2), name: null, email, role: 'MEMBER' }
-      setMembers((m) => [optimistic, ...m])
       const res = await fetch('/api/team/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
       if (!res.ok) throw new Error('invite failed')
-      notify('Invitation sent')
+      const data = await res.json().catch(()=>null)
+      // Open Gmail compose with prefilled message
+      const subject = encodeURIComponent('You\'re invited to TaskChrono')
+      const body = encodeURIComponent(`You have been invited to join our TaskChrono workspace. Click Continue to accept: ${data?.acceptUrl || ''}`)
+      const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`
+      try { window.open(gmail, '_blank', 'noopener,noreferrer') } catch {}
+      notify('Compose email opened in Gmail')
       setEmail('')
     } catch {
       notify('Failed to invite')
@@ -109,7 +116,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
           </div>
           <div className="flex items-center gap-2">
             <button onClick={()=>setWheelOpen(true)} className="h-10 px-4 rounded-full border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700">Pick Color</button>
-            <div className="h-8 w-8 rounded-full border border-slate-600" style={{ background: brandColor }} title={brandColor} />
+            <div className="h-8 w-8 rounded-full border border-slate-600" aria-label="Selected color" title={brandColor} style={{ background: brandColor }} />
             <button onClick={saveOrgName} className="h-10 shrink-0 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Save</button>
           </div>
         </div>
@@ -170,6 +177,25 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
           </div>
         )}
       </section>
+
+      {/* Switch workspace */}
+      <section className="mt-6 rounded-lg border border-slate-800 bg-slate-900/60">
+        <header className="flex items-center justify-between px-4 py-3">
+          <div>
+            <div className="font-medium">Workspaces</div>
+            <div className="text-sm text-slate-400">Switch between organizations you belong to</div>
+          </div>
+          <button onClick={() => setOrgPickerOpen(true)} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">Switch</button>
+        </header>
+      </section>
+
+      {orgPickerOpen && (
+        <OrgPickerModal
+          orgs={orgs}
+          onClose={()=>setOrgPickerOpen(false)}
+          onChoose={async (id)=>{ try { await fetch('/api/org/set-active', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: id }) }); window.location.reload() } catch {} }}
+        />
+      )}
 
       {/* Billing */}
       <section className="mt-6 rounded-lg border border-slate-800 bg-slate-900/60">
@@ -289,22 +315,54 @@ function ColorWheelModal({ initialColor, onClose, onChange }: { initialColor: st
             <div className="h-6 w-6 rounded-full border border-slate-600" style={{ background: hex }} />
           </div>
           <div className="mt-4 grid gap-3">
-            <input type="range" min={0} max={360} value={hue} onChange={e=>setHue(Number(e.target.value))} className="w-full" />
+            <label className="sr-only" htmlFor="cw-hue">Hue</label>
+            <input id="cw-hue" type="range" min={0} max={360} value={hue} onChange={e=>setHue(Number(e.target.value))} className="w-full" />
             <div className="flex items-center gap-2">
               <label className="text-xs text-slate-400 w-14">Saturation</label>
-              <input type="range" min={0} max={100} value={sat} onChange={e=>setSat(Number(e.target.value))} className="flex-1" />
+              <input aria-label="Saturation" type="range" min={0} max={100} value={sat} onChange={e=>setSat(Number(e.target.value))} className="flex-1" />
             </div>
             <div className="flex items-center gap-2">
               <label className="text-xs text-slate-400 w-14">Lightness</label>
-              <input type="range" min={0} max={100} value={light} onChange={e=>setLight(Number(e.target.value))} className="flex-1" />
+              <input aria-label="Lightness" type="range" min={0} max={100} value={light} onChange={e=>setLight(Number(e.target.value))} className="flex-1" />
             </div>
             <div className="flex items-center gap-2">
               <label className="text-xs text-slate-400 w-14">HEX</label>
-              <input value={hexInput} onChange={e=>onHexTyped(e.target.value)} placeholder="#RRGGBB" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100 font-mono" />
+              <input aria-label="HEX" value={hexInput} onChange={e=>onHexTyped(e.target.value)} placeholder="#RRGGBB" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100 font-mono" />
             </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button onClick={onClose} className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+function OrgPickerModal({ orgs, onClose, onChoose }: { orgs: Array<{ id: string; name: string; role: string }>; onClose: () => void; onChoose: (id: string) => void }) {
+  return (
+    <div className="fixed inset-0 z-[100000]">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 grid place-items-center p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-2xl">
+          <div className="text-slate-200 font-medium">Switch workspace</div>
+          <div className="mt-3 grid gap-2 max-h-[360px] overflow-y-auto">
+            {orgs.map((o) => (
+              <button key={o.id} onClick={()=>onChoose(o.id)} className="text-left px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="text-slate-200">{o.name}</div>
+                  <div className="text-xs text-slate-400">Role: {o.role}</div>
+                </div>
+                <span className="text-xs text-indigo-300">Switch →</span>
+              </button>
+            ))}
+            {orgs.length === 0 && (
+              <div className="text-sm text-slate-400">You only belong to your current workspace.</div>
+            )}
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={onClose} className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Close</button>
           </div>
         </div>
       </div>

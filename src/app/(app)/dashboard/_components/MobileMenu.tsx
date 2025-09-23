@@ -6,9 +6,11 @@ import { createPortal } from 'react-dom'
 
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
-export default function MobileMenu({ plan }: { plan: Plan }) {
+export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?: string }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [orgOpen, setOrgOpen] = useState(false)
+  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; role: string }>>([])
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
     window.addEventListener('keydown', onKey)
@@ -38,21 +40,13 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div
-                className="fixed inset-0 z-[2147483647]"
-                style={{ background: 'transparent', pointerEvents: 'auto' }}
-                onClick={() => setOpen(false)}
-              />
+              <div className="fixed inset-0 z-[2147483647] bg-transparent" onClick={() => setOpen(false)} />
               <motion.div
                 initial={{ x: 280, opacity: 0, scale: 0.98 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 exit={{ x: 280, opacity: 0, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-                className="fixed right-3 top-3 w-[280px] rounded-xl border border-indigo-600/30 shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(99,102,241,0.25),0_0_18px_rgba(99,102,241,0.18)] p-4 z-[2147483647]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(37,99,235,0.88), rgba(147,51,234,0.88))',
-                  pointerEvents: 'auto'
-                }}
+                className="fixed right-3 top-3 w-[280px] rounded-xl border border-indigo-600/30 shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(99,102,241,0.25),0_0_18px_rgba(99,102,241,0.18)] p-4 z-[2147483647] [background:linear-gradient(135deg,rgba(37,99,235,0.88),rgba(147,51,234,0.88))]"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm text-slate-200 font-medium">Quick Actions</div>
@@ -81,6 +75,12 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
                   <Link href="/dashboard/teams" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
                     <span className="inline-block transition-transform group-hover:translate-x-0.5">Teams →</span>
                   </Link>
+                  <button
+                    className="text-left px-3 py-2 rounded hover:bg-slate-800/80 w-full"
+                    onClick={async()=>{ setOrgOpen(true); try { const r = await fetch('/api/org/list', { cache: 'no-store' }); if (r.ok) { const d = await r.json(); setOrgs(d.orgs || []) } } catch {} }}
+                  >
+                    Switch Workspace…
+                  </button>
                   <div className="my-2 border-t border-slate-800" />
                   <button 
                     className="text-left px-3 py-2 rounded hover:bg-slate-800/80 w-full"
@@ -95,10 +95,39 @@ export default function MobileMenu({ plan }: { plan: Plan }) {
                       }
                     }}
                   >
-                    Sign Out
+                    Sign Out <span className="text-xs opacity-70">({userEmail || ''})</span>
                   </button>
                 </nav>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>, document.body)}
+
+      {mounted && createPortal(
+        <AnimatePresence>
+          {orgOpen && (
+            <motion.div className="fixed inset-0 z-[2147483647]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="absolute inset-0 bg-black/60" onClick={()=>setOrgOpen(false)} />
+              <div className="absolute inset-0 grid place-items-center p-4">
+                <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.98, opacity: 0 }} className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-2xl">
+                  <div className="text-slate-200 font-medium mb-2">Switch workspace</div>
+                  <div className="grid gap-2 max-h-[360px] overflow-y-auto">
+                    {orgs.map((o) => (
+                      <button key={o.id} onClick={async()=>{ try { await fetch('/api/org/set-active', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: o.id }) }); window.location.reload() } catch {} }} className="text-left px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800 flex items-center justify-between">
+                        <div>
+                          <div className="text-slate-200">{o.name}</div>
+                          <div className="text-xs text-slate-400">Role: {o.role}</div>
+                        </div>
+                        <span className="text-xs text-indigo-300">Switch →</span>
+                      </button>
+                    ))}
+                    {orgs.length === 0 && <div className="text-sm text-slate-400">No other workspaces found.</div>}
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button onClick={()=>setOrgOpen(false)} className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800">Close</button>
+                  </div>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>, document.body)}

@@ -471,19 +471,19 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                 <div className="flex gap-1">
                   <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</button>
                   <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</button>
-                </div>
-              )}
+                        </div>
+                      )}
               {id !== 'calendar' && (
                 <button title="Remove widget" aria-label="Remove widget" className="ml-2 text-rose-400 hover:text-rose-300" onClick={() => setOrder((o)=> o.filter(x=>x!==id))}>🗑</button>
               )}
-            </div>
+                    </div>
             <div data-widget-id={id} className={`flex-1 min-h-0 ${id==='calendar' ? 'overflow-visible' : id==='progress' ? 'overflow-hidden' : id==='analytics' ? 'overflow-hidden' : id==='activity' ? 'overflow-hidden' : 'overflow-auto tc-scroll'}`}>{widgets[id]?.render()}</div>
-          </div>
-        ))}
+                  </div>
+            ))}
       </ResponsiveGridLayout>
       {/* Expose reset via window event dispatched by the Reset button */}
       <ResetBridge onReset={reset} />
-    </div>
+          </div>
   )
 }
 

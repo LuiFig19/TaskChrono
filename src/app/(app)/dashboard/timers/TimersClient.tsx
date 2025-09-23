@@ -259,8 +259,8 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button id="tc-add-timer" className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => setOpen(true)}>+ Add Timer</button>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Filter:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={filter} onChange={e=>setFilter(e.target.value as any)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-filter">Filter:</label>
+          <select id="tc-filter" title="Filter timers" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={filter} onChange={e=>setFilter(e.target.value as any)}>
             <option value="all">All</option>
             <option value="active">Active</option>
             <option value="paused">Paused</option>
@@ -270,15 +270,15 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Tag:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={tagFilter} onChange={e=>setTagFilter(e.target.value)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-tag">Tag:</label>
+          <select id="tc-tag" title="Filter by tag" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={tagFilter} onChange={e=>setTagFilter(e.target.value)}>
             <option value="">All</option>
             {availableTags.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Sort:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={sort} onChange={e=>setSort(e.target.value as any)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-sort">Sort:</label>
+          <select id="tc-sort" title="Sort timers" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={sort} onChange={e=>setSort(e.target.value as any)}>
             <option value="recent">Most recent</option>
             <option value="oldest">Oldest</option>
             <option value="longest">Longest</option>
@@ -568,7 +568,7 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Productivity Breakdown */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950">
+      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
           <div className="text-slate-200">Productivity breakdown</div>
           <div className="text-xs text-slate-300 flex items-center gap-1">
@@ -576,12 +576,12 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
             <button className={`px-2 py-1 rounded-md ${mode==='tags'?'bg-slate-800 text-white':'text-slate-300 border border-slate-700'}`} onClick={()=>setMode('tags')}>Tags</button>
           </div>
         </div>
-        <div style={{ height: 260 }}>
+        <div style={{ height: 300 }} className="overflow-visible">
           {breakdown.length === 0 ? (
             <div className="h-full grid place-items-center text-slate-500">No data yet</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 8, right: 8, bottom: 36, left: 8 }}>
                 <Pie data={breakdown.map((d,i)=>({ ...d, value: d.minutes }))} dataKey="value" nameKey="label" innerRadius={60} outerRadius={95}>
                   {breakdown.map((_: any, idx: number) => (<Cell key={idx} fill={colors[idx % colors.length]} stroke="#0f172a" strokeWidth={1} />))}
                 </Pie>
@@ -616,14 +616,14 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
       </div>
 
       {/* Weekly Timeline */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950">
+      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="mb-2 text-slate-200">Weekly timeline</div>
-        <div style={{ height: 260 }}>
+        <div style={{ height: 320 }} className="overflow-visible">
           {weeklyStacked.data.length === 0 ? (
             <div className="h-full grid place-items-center text-slate-500">No data yet</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyStacked.data}>
+              <BarChart data={weeklyStacked.data} margin={{ top: 8, right: 12, bottom: 40, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
                 <XAxis dataKey="day" tick={{ fill: '#cbd5e1' }} />
                 <YAxis tick={{ fill: '#cbd5e1' }} unit="h" />
