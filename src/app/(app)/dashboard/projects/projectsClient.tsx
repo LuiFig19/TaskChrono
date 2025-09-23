@@ -171,9 +171,12 @@ function useProjectsData() {
       load()
     }
   }
-  async function remove(id: string) {
-    if (!confirm('Delete this project and its tasks?')) return
-    await fetch(`/api/projects/${id}`, { method: 'DELETE' })
+  const [deleteId, setDeleteId] = React.useState<string | null>(null)
+  async function remove(id: string) { setDeleteId(id) }
+  async function confirmDelete() {
+    if (!deleteId) return
+    await fetch(`/api/projects/${deleteId}`, { method: 'DELETE' })
+    setDeleteId(null)
     load()
   }
 
@@ -182,7 +185,7 @@ function useProjectsData() {
     .filter(p => !query || p.name.toLowerCase().includes(query.toLowerCase()))
     .sort((a,b) => sort==='updated' ? (new Date(b.updatedAt).getTime()-new Date(a.updatedAt).getTime()) : 0)
 
-  return { projects, setProjects, loading, filter, setFilter, query, setQuery, sort, setSort, shown, rename, remove }
+  return { projects, setProjects, loading, filter, setFilter, query, setQuery, sort, setSort, shown, rename, remove, deleteId, setDeleteId, confirmDelete }
 }
 
 function statusLabel(s: string | undefined) {
@@ -204,7 +207,7 @@ function TrashButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
 }
 
 function ProjectsList() {
-  const { projects, loading, filter, setFilter, query, setQuery, sort, setSort, shown, rename, remove } = useProjectsData()
+  const { projects, loading, filter, setFilter, query, setQuery, sort, setSort, shown, rename, remove, deleteId, setDeleteId, confirmDelete } = useProjectsData()
   const [editing, setEditing] = React.useState<null | { id: string; name: string; status: string; budgetCents?: number }>(null)
   const [busy, setBusy] = React.useState(false)
   const [editName, setEditName] = React.useState('')
@@ -300,6 +303,21 @@ function ProjectsList() {
                   <button type="submit" disabled={busy} className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Save</button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteId && (
+        <div className="fixed inset-0 z-[100000]">
+          <div className="absolute inset-0 bg-slate-950/90" onClick={()=>setDeleteId(null)} />
+          <div className="absolute inset-0 grid place-items-center p-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900 p-5 shadow-2xl">
+              <div className="text-white font-semibold">Delete project?</div>
+              <div className="text-sm text-slate-300 mt-1">This will remove the project and its tasks. This action cannot be undone.</div>
+              <div className="mt-5 flex items-center justify-end gap-2">
+                <button type="button" onClick={()=>setDeleteId(null)} className="px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800">Cancel</button>
+                <button type="button" onClick={confirmDelete} className="px-4 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700">Delete</button>
+              </div>
             </div>
           </div>
         </div>
