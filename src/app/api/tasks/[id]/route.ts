@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { recomputeProjectStatus } from '@/lib/projectStatus'
 
 async function getActiveOrganizationId(userId: string) {
   const membership = await prisma.organizationMember.findFirst({ where: { userId } })
@@ -25,6 +26,7 @@ export async function PATCH(_req: Request, { params }: { params: { id: string } 
       dueDate: body.dueDate === undefined ? undefined : (body.dueDate ? new Date(body.dueDate) : null),
     },
   })
+  try { await recomputeProjectStatus(updated.projectId) } catch {}
   return NextResponse.json(updated)
 }
 
@@ -34,7 +36,9 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const userId = (session.user as any).id as string
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  const existing = await prisma.task.findUnique({ where: { id: params.id }, select: { projectId: true } })
   await prisma.task.delete({ where: { id: params.id } })
+  if (existing?.projectId) { try { await recomputeProjectStatus(existing.projectId) } catch {} }
   return NextResponse.json({ ok: true })
 }
 
