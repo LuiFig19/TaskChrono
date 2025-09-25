@@ -9,7 +9,7 @@ type EventDto = {
   description?: string | null
 }
 
-export default function MonthGrid({ events, baseDate }: { events: EventDto[]; baseDate?: string }) {
+export default function MonthGrid({ events, baseDate, onSelect }: { events: EventDto[]; baseDate?: string; onSelect?: (localInputValue: string) => void }) {
   const base = baseDate ? new Date(baseDate) : new Date()
   const year = base.getFullYear()
   const month = base.getMonth()
@@ -65,15 +65,16 @@ export default function MonthGrid({ events, baseDate }: { events: EventDto[]; ba
         const key = d.toDateString()
         const meta = dayMeta.get(key) || null
         const clsMap: Record<string, { bg: string; ring: string; dot: string }> = {
-          meeting: { bg: 'bg-blue-500/20', ring: 'ring-blue-500/40', dot: 'bg-blue-500' },
-          release: { bg: 'bg-green-500/20', ring: 'ring-green-500/40', dot: 'bg-green-500' },
-          invoice: { bg: 'bg-red-500/20', ring: 'ring-red-500/40', dot: 'bg-red-500' },
-          review: { bg: 'bg-purple-500/20', ring: 'ring-purple-500/40', dot: 'bg-purple-500' },
-          demo: { bg: 'bg-cyan-500/20', ring: 'ring-cyan-500/40', dot: 'bg-cyan-500' },
-          deadline: { bg: 'bg-orange-500/20', ring: 'ring-orange-500/40', dot: 'bg-orange-500' },
-          personal: { bg: 'bg-emerald-500/20', ring: 'ring-emerald-500/40', dot: 'bg-emerald-500' },
-          urgent: { bg: 'bg-rose-600/20', ring: 'ring-rose-600/40', dot: 'bg-rose-600' },
-          general: { bg: 'bg-indigo-600/20', ring: 'ring-indigo-600/40', dot: 'bg-indigo-600' },
+          // Brighter, more distinct palette that matches the dashboard widget
+          meeting: { bg: 'bg-blue-500/30', ring: 'ring-blue-400/60', dot: 'bg-blue-500' },
+          release: { bg: 'bg-lime-500/30', ring: 'ring-lime-400/60', dot: 'bg-lime-500' },
+          invoice: { bg: 'bg-rose-500/30', ring: 'ring-rose-400/60', dot: 'bg-rose-500' },
+          review: { bg: 'bg-violet-500/30', ring: 'ring-violet-400/60', dot: 'bg-violet-500' },
+          demo: { bg: 'bg-teal-500/30', ring: 'ring-teal-400/60', dot: 'bg-teal-500' },
+          deadline: { bg: 'bg-amber-500/30', ring: 'ring-amber-400/60', dot: 'bg-amber-500' },
+          personal: { bg: 'bg-emerald-500/30', ring: 'ring-emerald-400/60', dot: 'bg-emerald-500' },
+          urgent: { bg: 'bg-red-600/30', ring: 'ring-red-500/60', dot: 'bg-red-600' },
+          general: { bg: 'bg-fuchsia-500/30', ring: 'ring-fuchsia-400/60', dot: 'bg-fuchsia-500' },
         }
         return (
           <button
@@ -82,10 +83,15 @@ export default function MonthGrid({ events, baseDate }: { events: EventDto[]; ba
             className={`relative group block py-2.5 md:py-3 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.items[0]?.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors duration-150 cursor-pointer`}
             aria-label={meta ? `${day}: ${meta.items.map((i) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
             onClick={() => {
-              const input = document.getElementById('calendar-when') as HTMLInputElement | null
-              if (input) {
-                input.value = toLocalInput(d)
-                input.dispatchEvent(new Event('input', { bubbles: true }))
+              const val = toLocalInput(d)
+              if (onSelect) {
+                onSelect(val)
+              } else {
+                const input = document.getElementById('calendar-when') as HTMLInputElement | null
+                if (input) {
+                  input.value = val
+                  input.dispatchEvent(new Event('input', { bubbles: true }))
+                }
               }
             }}
           >

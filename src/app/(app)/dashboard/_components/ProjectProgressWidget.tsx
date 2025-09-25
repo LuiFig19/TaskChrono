@@ -86,13 +86,16 @@ export default function ProjectProgressWidget() {
     })
   }
 
+  // Only allow the inner grid to scroll once more than 3 bars are present
   return (
-    <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
-      {selectedIds.map((selectedId, idx) => {
+    <div className="mt-2 text-sm h-full min-h-0 grid grid-rows-[minmax(0,1fr)_auto]">
+      {/* Cards area — scrolls only when content exceeds space */}
+      <div className="grid gap-3 md:grid-cols-3 content-start overflow-y-auto pr-2 tc-scroll min-h-0 pb-2"> 
+        {selectedIds.map((selectedId, idx) => {
         const progress = progressById[selectedId] ?? 0
         return (
-          <div key={`ppw-${idx}`} className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div key={`ppw-${idx}`} className="rounded-md border border-slate-700 bg-slate-800/60 p-2">
+            <div className="flex items-center gap-2 mb-1.5">
               <label htmlFor={`ppw-select-${idx}`} className="text-slate-300">Project</label>
               <select
                 id={`ppw-select-${idx}`}
@@ -120,20 +123,19 @@ export default function ProjectProgressWidget() {
               <span className="text-xs text-slate-300">{progress}%</span>
             </div>
             <div className="h-2 w-full rounded bg-slate-900 overflow-hidden">
-              <div
-                className="h-2 bg-indigo-500 transition-[width] duration-500"
-                aria-hidden
-                data-progress={progress}
-                style={{ width: `${progress}%` }}
-              />
+              <div className={`h-2 bg-indigo-500 transition-[width] duration-500 w-[${progress}%]`} aria-hidden data-progress={progress} />
             </div>
           </div>
         )
-      })}
-      <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-3 flex items-center justify-center">
-        <button onClick={addBar} className="px-3 py-1.5 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">
-          + Add Progress Bar
-        </button>
+        })}
+      </div>
+      {/* Footer area is fixed at the bottom and always fully visible */}
+      <div className="pt-2 shrink-0 sticky bottom-0 bg-transparent">
+        <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-2 h-10 flex items-center justify-center">
+          <button onClick={addBar} className="px-3 py-1 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">
+            + Add Progress Bar
+          </button>
+        </div>
       </div>
     </div>
   )

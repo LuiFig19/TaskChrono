@@ -5,6 +5,13 @@ import React from 'react'
 export default function AutoLaunch() {
   React.useEffect(() => {
     const url = new URL(window.location.href)
+    // Invite deep link: open landing modal that will handle auth
+    const invite = url.searchParams.get('invite')
+    if (invite) {
+      // redirect into dedicated join screen to show modal and continue auth
+      window.location.replace(`/join?token=${encodeURIComponent(invite)}`)
+      return
+    }
     if (url.searchParams.get('signin') === '1') {
       const dst = url.searchParams.get('dst') || '/dashboard'
       const w = 520, h = 640

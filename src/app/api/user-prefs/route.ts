@@ -15,6 +15,7 @@ export async function GET() {
   const { organizationId } = await getCurrentUserAndOrg()
   const raw = pref?.dashboardWidgets as any
   let widgets: string[] | null = null
+  let rglLayout: any[] | null = null
   let progressIds: string[] | null = null
   if (Array.isArray(raw)) {
     widgets = raw
@@ -22,15 +23,16 @@ export async function GET() {
     const orgKey = organizationId || 'default'
     widgets = raw?.orgs?.[orgKey]?.layout ?? null
     progressIds = raw?.orgs?.[orgKey]?.progressIds ?? null
+    rglLayout = raw?.orgs?.[orgKey]?.rglLayout ?? null
   }
-  return NextResponse.json({ widgets, progressIds, orgId: organizationId || null })
+  return NextResponse.json({ widgets, layout: rglLayout, progressIds, orgId: organizationId || null })
 }
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
   const userId = (session.user as unknown as { id: string }).id
-  const body = await request.json().catch(() => ({})) as { order?: string[]; progressIds?: string[] }
+  const body = await request.json().catch(() => ({})) as { order?: string[]; progressIds?: string[]; rglLayout?: any[] }
   const { organizationId } = await getCurrentUserAndOrg()
   const orgKey = organizationId || 'default'
   const existing = await prisma.userPreference.findUnique({ where: { userId } })
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
   if (!state.orgs[orgKey]) state.orgs[orgKey] = {}
   if (Array.isArray(body.order)) state.orgs[orgKey].layout = body.order
   if (Array.isArray(body.progressIds)) state.orgs[orgKey].progressIds = body.progressIds
+  if (Array.isArray(body.rglLayout)) state.orgs[orgKey].rglLayout = body.rglLayout
   await prisma.userPreference.upsert({
     where: { userId },
     update: { dashboardWidgets: state },

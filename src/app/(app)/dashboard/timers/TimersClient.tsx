@@ -48,6 +48,9 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
+  const [endOpen, setEndOpen] = useState(false)
+  const [endBusy, setEndBusy] = useState(false)
+  const [endTarget, setEndTarget] = useState<{ id: string; name: string } | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null)
   const [hydrated, setHydrated] = useState(false)
   const [tick, setTick] = useState(0)
@@ -121,9 +124,9 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
   type Row = { timerId: string; name: string; startedAt: string | null; endedAt: string | null; durationMin: number; status: 'active'|'paused'|'ended'; tags: string[] }
   const rows: Row[] = useMemo(() => {
     const byTimer: Row[] = []
-    const map = new Map<string, { totalEnded: number; lastStart: string | null; lastEnd: string | null; activeStart: string | null }>()
+    const map = new Map<string, { totalEnded: number; lastStart: string | null; lastEnd: string | null; activeStart: string | null; finalizedAt: string | null }>()
     for (const t of timers) {
-      map.set(t.id, { totalEnded: 0, lastStart: null, lastEnd: null, activeStart: null })
+      map.set(t.id, { totalEnded: 0, lastStart: null, lastEnd: null, activeStart: null, finalizedAt: t.finalizedAt || null })
     }
     for (const e of entries) {
       const b = map.get(e.timerId || '')
@@ -140,7 +143,7 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
     for (const t of timers) {
       const b = map.get(t.id)!
       let status: Row['status'] = 'paused'
-      if (t.finalizedAt) status = 'ended'
+      if (b.finalizedAt) status = 'ended'
       else if (b.activeStart) status = 'active'
       // Compute display duration: sum of ended + live seconds
       let minutes = b.totalEnded
@@ -215,9 +218,22 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
 
   const end = useCallback(async (timerId: string | null) => {
     if (!timerId) return
-    // optimistic: finalize timer
+    const prevTimers = timers
     setTimers(prev => prev.map(t => t.id === timerId ? { ...t, finalizedAt: new Date().toISOString() } : t))
-    await fetch('/api/timers/end', { method: 'POST', body: new URLSearchParams({ timerId }) })
+    try {
+      const res = await fetch('/api/timers/end', { method: 'POST', body: new URLSearchParams({ timerId }) })
+      if (!res.ok) throw new Error('end failed')
+      await refresh()
+    } catch (e) {
+      setTimers(prevTimers)
+      throw e
+    }
+  }, [timers, refresh])
+
+  const openEndModal = useCallback((timerId: string | null, timerName: string) => {
+    if (!timerId) return
+    setEndTarget({ id: timerId, name: timerName || 'Timer' })
+    setEndOpen(true)
   }, [])
 
   const removeTimer = useCallback(async (timerId: string) => {
@@ -236,15 +252,15 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
 
   // UI
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-6">
+    <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <h1 className="text-2xl font-semibold">Timers</h1>
       <div className="mt-2 text-slate-300">Total Time Tracked: <span className="font-medium" suppressHydrationWarning>{formatDuration(totalEndedMin)}</span></div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button id="tc-add-timer" className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => setOpen(true)}>+ Add Timer</button>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Filter:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={filter} onChange={e=>setFilter(e.target.value as any)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-filter">Filter:</label>
+          <select id="tc-filter" title="Filter timers" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={filter} onChange={e=>setFilter(e.target.value as any)}>
             <option value="all">All</option>
             <option value="active">Active</option>
             <option value="paused">Paused</option>
@@ -254,15 +270,15 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Tag:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={tagFilter} onChange={e=>setTagFilter(e.target.value)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-tag">Tag:</label>
+          <select id="tc-tag" title="Filter by tag" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={tagFilter} onChange={e=>setTagFilter(e.target.value)}>
             <option value="">All</option>
             {availableTags.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-400">Sort:</label>
-          <select className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={sort} onChange={e=>setSort(e.target.value as any)}>
+          <label className="text-sm text-slate-400" htmlFor="tc-sort">Sort:</label>
+          <select id="tc-sort" title="Sort timers" className="px-2 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200" value={sort} onChange={e=>setSort(e.target.value as any)}>
             <option value="recent">Most recent</option>
             <option value="oldest">Oldest</option>
             <option value="longest">Longest</option>
@@ -307,7 +323,7 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
                     {isActive ? (
                       <>
                         <button className="px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]" onClick={() => pause(row.timerId)}>Pause</button>
-                        <button className="ml-2 px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98]" onClick={() => end(row.timerId)}>End</button>
+                        <button className="ml-2 px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98]" onClick={() => openEndModal(row.timerId, row.name)}>End</button>
                       </>
                     ) : (
                       !isEnded && <button className="px-2 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98]" onClick={() => resume(row.timerId, row.name)}>Start</button>
@@ -352,6 +368,29 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
                   <button type="submit" disabled={busy} className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-transform active:scale-[0.98]">{busy ? 'Starting…' : 'Start'}</button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {endOpen && endTarget && (
+        <div className="fixed inset-0 z-[100000]">
+          <div className="absolute inset-0 bg-slate-950/90" onClick={()=>!endBusy && setEndOpen(false)} />
+          <div className="absolute inset-0 grid place-items-center p-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900 p-5 shadow-2xl">
+              <div className="text-white font-semibold">End Timer</div>
+              <div className="text-sm text-slate-400 mt-1">Are you sure you want to end “{endTarget.name}”? This will finalize and record its time.</div>
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button type="button" onClick={()=>!endBusy && setEndOpen(false)} className="px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800">Cancel</button>
+                <button
+                  type="button"
+                  disabled={endBusy}
+                  onClick={async ()=>{ if (!endTarget?.id) return; setEndBusy(true); try { await end(endTarget.id); setEndOpen(false) } finally { setEndBusy(false) } }}
+                  className="px-4 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition-transform active:scale-[0.98]"
+                >
+                  {endBusy ? 'Ending…' : 'End Timer'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -405,11 +444,14 @@ function TagBadges({ value, onChange }: { value: string[]; onChange: (v: string[
 function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; timers: Timer[]; filter: string; tagFilter: string }) {
   // Lazy-load Recharts only on client
   const [R, setR] = useState<any>(null)
+  const [chartsLoading, setChartsLoading] = useState(true)
   useEffect(() => {
-    import('recharts').then(setR)
+    let mounted = true
+    import('recharts').then((mod)=>{ if (mounted) setR(mod) }).finally(()=>{ if (mounted) setChartsLoading(false) })
+    return () => { mounted = false }
   }, [])
   // UI state must be declared before any early returns to keep hook order stable
-  const [mode, setMode] = useState<'tags'|'projects'>('tags')
+  const [mode, setMode] = useState<'tags'|'projects'>('projects')
   // Filter entries for analytics (ended entries only)
   const filtered = useMemo(() => {
     const now = new Date()
@@ -449,6 +491,13 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
     }
     return Array.from(map.entries()).map(([label, minutes]) => ({ label, minutes }))
   }, [filtered, timers])
+
+  // If there is no tag data but project data exists, auto-switch to projects to show a chart
+  useEffect(() => {
+    if (mode === 'tags' && breakdownByTag.length === 0 && breakdownByProject.length > 0) {
+      setMode('projects')
+    }
+  }, [mode, breakdownByTag.length, breakdownByProject.length])
 
   // Weekly stacked data (current week, by top categories)
   const weeklyStacked = useMemo(() => {
@@ -501,7 +550,14 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
     return { data, keys: [...top, 'Other'].filter(Boolean), totalWeek, lastWeekHours: lastWeekMinutes, most, least, mostLabel, leastLabel }
   }, [filtered, entries, timers])
 
-  if (!R) return null
+  if (!R) {
+    return (
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="rounded-md border border-slate-800 p-3 bg-slate-950 h-[320px] animate-pulse" />
+        <div className="rounded-md border border-slate-800 p-3 bg-slate-950 h-[320px] animate-pulse" />
+      </div>
+    )
+  }
   const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend, CartesianGrid } = R
   const colors = ['#22c55e', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444', '#10b981', '#64748b']
 
@@ -512,7 +568,7 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Productivity Breakdown */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950">
+      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
           <div className="text-slate-200">Productivity breakdown</div>
           <div className="text-xs text-slate-300 flex items-center gap-1">
@@ -520,12 +576,12 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
             <button className={`px-2 py-1 rounded-md ${mode==='tags'?'bg-slate-800 text-white':'text-slate-300 border border-slate-700'}`} onClick={()=>setMode('tags')}>Tags</button>
           </div>
         </div>
-        <div style={{ height: 260 }}>
+        <div style={{ height: 300 }} className="overflow-visible">
           {breakdown.length === 0 ? (
             <div className="h-full grid place-items-center text-slate-500">No data yet</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart margin={{ top: 8, right: 8, bottom: 36, left: 8 }}>
                 <Pie data={breakdown.map((d,i)=>({ ...d, value: d.minutes }))} dataKey="value" nameKey="label" innerRadius={60} outerRadius={95}>
                   {breakdown.map((_: any, idx: number) => (<Cell key={idx} fill={colors[idx % colors.length]} stroke="#0f172a" strokeWidth={1} />))}
                 </Pie>
@@ -560,14 +616,14 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
       </div>
 
       {/* Weekly Timeline */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950">
+      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="mb-2 text-slate-200">Weekly timeline</div>
-        <div style={{ height: 260 }}>
+        <div style={{ height: 320 }} className="overflow-visible">
           {weeklyStacked.data.length === 0 ? (
             <div className="h-full grid place-items-center text-slate-500">No data yet</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyStacked.data}>
+              <BarChart data={weeklyStacked.data} margin={{ top: 8, right: 12, bottom: 40, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
                 <XAxis dataKey="day" tick={{ fill: '#cbd5e1' }} />
                 <YAxis tick={{ fill: '#cbd5e1' }} unit="h" />

@@ -73,3 +73,8 @@ CREATE INDEX IF NOT EXISTS "Invoice_org_status_issueDate_idx"
   ON "taskchrono"."Invoice" ("organizationId", "status", "issueDate");
 
 
+
+
+
+
+

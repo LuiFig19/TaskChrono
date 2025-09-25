@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { broadcastActivity } from '@/lib/activity'
+import { recomputeProjectStatus } from '@/lib/projectStatus'
 
 async function getActiveOrganizationId(userId: string) {
   const membership = await prisma.organizationMember.findFirst({
@@ -80,7 +82,9 @@ export async function POST(request: Request) {
       assigneeId: userId,
     },
   })
-
+  // If project was PLANNING or COMPLETED, adding a task should make it ACTIVE
+  try { await recomputeProjectStatus(project.id) } catch {}
+  try { broadcastActivity({ type: 'task.created', message: `Task added: ${task.title}`, meta: { projectId: project.id, taskId: task.id } }) } catch {}
   return NextResponse.json({ ok: true, taskId: task.id })
 }
 

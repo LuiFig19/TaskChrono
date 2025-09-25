@@ -16,7 +16,7 @@ export default async function SubscriptionPage({ searchParams }: { searchParams?
   }
 
   return (
-    <div className="max-w-screen-md mx-auto px-4 py-6">
+    <div className="max-w-screen-md mx-auto px-4 pt-2 pb-6">
       <h1 className="text-2xl font-semibold">Subscription</h1>
       <div className="mt-4 rounded-lg border border-slate-800 bg-slate-900 p-4">
         <div className="text-sm text-slate-300">Current plan</div>

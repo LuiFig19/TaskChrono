@@ -10,10 +10,10 @@ export default async function InventoryPage() {
 	if (!session?.user) {
 		redirect('/login')
 	}
-	const plan = await getUserPlanServer()
-	if (plan === 'FREE') return <LockedFeature title="Inventory Tracking" />
+  const plan = await getUserPlanServer()
+  if (plan === 'FREE') return <LockedFeature title="Inventory Tracking" />
 	return (
-		<div className="max-w-screen-2xl mx-auto px-4 py-6">
+		<div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
 			<InventoryClient />
 		</div>
 	)

@@ -52,9 +52,16 @@ export default function BoardClient({ projectId }: { projectId: string }) {
                       {grouped[col].map((t, idx) => (
                         <Draggable key={t.id} draggableId={`task:${t.id}`} index={idx}>
                           {(p) => (
-                            <div ref={p.innerRef} {...p.draggableProps} {...p.dragHandleProps} className="rounded-lg border border-slate-700 bg-slate-900 p-3">
-                              <div className="text-slate-200 text-sm">{t.title}</div>
-                              {t.description ? <div className="text-xs text-slate-400 mt-1">{t.description}</div> : null}
+                            <div
+                              ref={p.innerRef}
+                              {...p.draggableProps}
+                              {...p.dragHandleProps}
+                              className="rounded-lg border border-slate-700 bg-slate-900 p-3 max-w-full overflow-hidden"
+                            >
+                              <div className="text-slate-200 text-sm break-words whitespace-pre-wrap">{t.title}</div>
+                              {t.description ? (
+                                <div className="text-xs text-slate-400 mt-1 break-words whitespace-pre-wrap">{t.description}</div>
+                              ) : null}
                               <div className="text-xs text-slate-500 mt-1">P{t.priority}</div>
                             </div>
                           )}

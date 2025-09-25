@@ -6,9 +6,16 @@ export async function getCurrentUserAndOrg() {
   const session = await getServerSession(authOptions)
   if (!session?.user) return { userId: null, organizationId: null }
   const userId = (session.user as any).id as string
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId },
-  })
+  // Prefer user's active org from preferences; fall back to first membership
+  const [pref, membership] = await Promise.all([
+    prisma.userPreference.findUnique({ where: { userId } }),
+    prisma.organizationMember.findFirst({ where: { userId } }),
+  ])
+  try {
+    const state = pref?.dashboardWidgets as any
+    const active = state?.activeOrgId as string | undefined
+    if (active) return { userId, organizationId: active }
+  } catch {}
   return { userId, organizationId: membership?.organizationId ?? null }
 }
 

@@ -32,7 +32,10 @@ export default function DemoPreview() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Calendar */}
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 lg:col-span-2">
-          <div className="font-medium text-white">Calendar</div>
+          <div className="font-medium text-white flex items-center justify-between">
+            <span>Calendar</span>
+            <span className="text-xs text-slate-400">{new Date().toLocaleString(undefined, { month: 'long', year: 'numeric' })}</span>
+          </div>
           <div className="mt-2 text-sm text-slate-400">Quick view of this month. Create detailed events in Calendar.</div>
           <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -95,5 +98,8 @@ export default function DemoPreview() {
     </div>
   )
 }
+
+
+
 
 

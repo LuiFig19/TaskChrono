@@ -6,13 +6,14 @@ import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 
 export async function createOrganizationAction(formData: FormData) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    redirect('/login')
-  }
   const name = String(formData.get('name') || '').trim()
   const plan = String(formData.get('plan') || 'FREE') as 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
   const emailCsv = String(formData.get('emails') || '').trim()
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    const callbackPath = `/onboarding?plan=${encodeURIComponent(plan)}&name=${encodeURIComponent(name)}&emails=${encodeURIComponent(emailCsv)}`
+    redirect(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`)
+  }
   if (!name) {
     throw new Error('Organization name is required')
   }
@@ -20,21 +21,27 @@ export async function createOrganizationAction(formData: FormData) {
   // Ensure user exists
   const userId = session.user.id
 
-  // Create organization and membership
-  const org = await prisma.organization.create({
-    data: {
-      name,
-      planTier: plan,
-      trialEndsAt: plan === 'FREE' ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      createdById: userId,
-      members: {
-        create: {
-          userId,
-          role: 'OWNER',
+  // Create organization and membership (best-effort; skip if DB unavailable)
+  let org: { id: string; name: string } | null = null
+  try {
+    org = await prisma.organization.create({
+      data: {
+        name,
+        planTier: plan,
+        trialEndsAt: plan === 'FREE' ? null : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        createdById: userId,
+        members: {
+          create: {
+            userId,
+            role: 'OWNER',
+          },
         },
       },
-    },
-  })
+    }) as any
+  } catch {
+    // No database configured – continue to dashboard shell
+    redirect('/dashboard')
+  }
 
   // Parse invite emails and queue placeholder entries for future invites
   const invites = emailCsv
@@ -42,7 +49,7 @@ export async function createOrganizationAction(formData: FormData) {
     .map((e) => e.trim().toLowerCase())
     .filter((e) => e && /.+@.+\..+/.test(e))
 
-  if (invites.length) {
+  if (invites.length && org) {
     // For now, store as tasks tagged as INVITE to avoid new tables (upgrade later to Invite table + Resend emails)
     const project = await prisma.project.create({ data: { name: 'Invites', organizationId: org.id } })
     await prisma.task.createMany({
@@ -57,7 +64,7 @@ export async function createOrganizationAction(formData: FormData) {
   }
 
   // For paid tiers, create or reuse Stripe customer and redirect to Checkout with 14‑day trial
-  if (!stripe) {
+  if (!stripe || !org) {
     // Fallback: go to subscription page for manual upgrade if Stripe isn't configured
     redirect('/dashboard/subscription')
   }
@@ -67,7 +74,12 @@ export async function createOrganizationAction(formData: FormData) {
   if (!customerId) {
     const customer = await stripe.customers.create({ name: org.name, metadata: { organizationId: org.id } })
     customerId = customer.id
-    await prisma.organization.update({ where: { id: org.id }, data: { /* @ts-ignore */ stripeCustomerId: customerId } as any })
+    // Persist to DB if the column exists; ignore if schema is out-of-sync locally
+    try {
+      await prisma.organization.update({ where: { id: org.id }, data: { /* @ts-ignore */ stripeCustomerId: customerId } as any })
+    } catch {
+      // swallow – continue with in-memory customerId so checkout can proceed
+    }
   }
 
   // Resolve the price id based on selected tier

@@ -1,5 +1,6 @@
 "use client"
 import dynamic from 'next/dynamic'
+import React from 'react'
 import Link from 'next/link'
 import { MotionDiv } from '@/components/ClientMotion'
 
@@ -92,20 +93,38 @@ export default function LandingClient() {
       <section id="screenshot" className="py-20 bg-slate-900">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Dashboard Screenshot</h2>
-            <p className="text-slate-300">A static preview of the TaskChrono dashboard</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Product Preview</h2>
+            <p className="text-slate-300">Slideshow of screenshots (placeholders for now)</p>
           </div>
-          <div className="rounded-2xl border border-slate-800 shadow-2xl bg-slate-950">
-            <div className="relative">
-              <div id="demo" className="absolute -top-24" aria-hidden />
-              <img src="/dashboarddemo.png" alt="TaskChrono dashboard screenshot" className="w-full h-auto rounded-2xl" loading="eager" />
-              <div className="pointer-events-none absolute left-2 bottom-2 h-12 w-28 rounded-md bg-slate-950/95" />
-            </div>
-          </div>
+          <Slideshow />
         </div>
       </section>
     </main>
   )
 }
+
+function Slideshow() {
+  const total = 5
+  const [idx, setIdx] = React.useState(0)
+  React.useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % total), 5000)
+    return () => clearInterval(t)
+  }, [])
+  const prev = () => setIdx((i) => (i - 1 + total) % total)
+  const next = () => setIdx((i) => (i + 1) % total)
+  return (
+    <div className="relative rounded-2xl border border-slate-800 shadow-2xl bg-slate-950 overflow-hidden">
+      <div className="aspect-[16/9] grid place-items-center text-slate-400">
+        <div className="text-center">
+          <div className="text-sm">Slide {idx + 1} / {total}</div>
+          <div className="mt-2 text-xs">(placeholder — images coming soon)</div>
+        </div>
+      </div>
+      <button onClick={prev} aria-label="Previous" className="absolute left-3 top-1/2 -translate-y-1/2 px-3 py-2 rounded-md bg-slate-800/70 hover:bg-slate-800 text-white">⟵</button>
+      <button onClick={next} aria-label="Next" className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-2 rounded-md bg-slate-800/70 hover:bg-slate-800 text-white">⟶</button>
+    </div>
+  )
+}
+
 
 

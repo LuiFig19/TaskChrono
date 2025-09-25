@@ -1,272 +1,409 @@
 "use client"
 import React, { useEffect, useMemo, useState } from 'react'
-import dynamic from 'next/dynamic'
-import type { DropResult, DraggableProvided, DroppableProvided } from '@hello-pangea/dnd'
 import ProjectProgressWidget from './ProjectProgressWidget'
+import ResponsiveGridLayout from './RGLResponsiveClient'
+import { useWidgetLayout, type RglItem } from './useWidgetLayout'
+import MonthGrid from '../calendar/MonthGrid'
+// duplicate import removed
+import useSWR from 'swr'
+// Lazy-load recharts client-side with a state guard to avoid "Loading..." stalls
+let R: typeof import('recharts') | null = null
+if (typeof window !== 'undefined' && !R) {
+  import('recharts').then((m)=>{ R = m as any }).catch(()=>{})
+}
 
-const DragDropContext: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.DragDropContext), { ssr: false })
-const Droppable: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.Droppable), { ssr: false })
-const Draggable: any = dynamic(() => import('@hello-pangea/dnd').then((m) => m.Draggable), { ssr: false })
+function formatDuration(min: number) {
+  const h = Math.floor(min / 60)
+  const m = Math.floor(min % 60)
+  return `${h}h ${m}m`
+}
+
+function TimeOverviewWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const totals = useMemo(() => {
+    const entries = (data?.entries ?? []) as { startedAt: string; endedAt: string | null; durationMin: number }[]
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfWeek = new Date(startOfDay)
+    startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay())
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const within = (d: Date, from: Date) => d >= from
+    const sum = (from: Date) => entries.reduce((acc, e) => {
+      const end = e.endedAt ? new Date(e.endedAt) : null
+      const start = new Date(e.startedAt)
+      if (!end) return acc
+      if (within(end, from)) return acc + (e.durationMin || 0)
+      return acc
+    }, 0)
+    return {
+      today: sum(startOfDay),
+      week: sum(startOfWeek),
+      month: sum(startOfMonth),
+    }
+  }, [data])
+  return (
+    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+      {[{ key: 'today', label: 'Today' }, { key: 'week', label: 'This Week' }, { key: 'month', label: 'This Month' }].map((s:any) => (
+        <div key={s.key} className="rounded-md border border-slate-700 p-3">
+          <div className="text-xs text-slate-400">{s.label}</div>
+          <div className="text-xl font-semibold text-white">{formatDuration((totals as any)?.[s.key] ?? 0)}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ActivityFeedWidget() {
+  const [events, setEvents] = useState<{ ts: number; type: string; message: string }[]>([])
+  useEffect(() => {
+    let esActivity: EventSource | null = null
+    let esChat: EventSource | null = null
+    let esTime: EventSource | null = null
+
+    function connectActivity() {
+      try { esActivity && esActivity.close() } catch {}
+      esActivity = new EventSource('/api/activity')
+      esActivity.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data)
+          if (!data?.type || data.type === 'connected') return
+          setEvents((prev) => [{ ts: data.ts || Date.now(), type: data.type, message: data.message || data.type }, ...prev].slice(0,25))
+        } catch {}
+      }
+      esActivity.addEventListener('error', () => { try { esActivity && esActivity.close() } catch {}; setTimeout(connectActivity, 2000) })
+    }
+
+    function connectChat() {
+      try { esChat && esChat.close() } catch {}
+      esChat = new EventSource('/api/chat/stream?c=all')
+      esChat.addEventListener('message', (e) => {
+        try { const m = JSON.parse(e.data); setEvents((prev)=> [{ ts: m.ts || Date.now(), type: 'chat.message', message: `${m.user?.name || 'User'}: ${m.text}` }, ...prev].slice(0,25)) } catch {}
+      })
+      esChat.addEventListener('error', () => { try { esChat && esChat.close() } catch {}; setTimeout(connectChat, 2000) })
+    }
+
+    function connectTime() {
+      try { esTime && esTime.close() } catch {}
+      esTime = new EventSource('/api/time')
+      esTime.addEventListener('changed', () => {
+        setEvents((prev)=> [{ ts: Date.now(), type: 'timer.changed', message: 'Timer updated' }, ...prev].slice(0,25))
+      })
+      esTime.addEventListener('error', () => { try { esTime && esTime.close() } catch {}; setTimeout(connectTime, 2000) })
+    }
+
+    connectActivity(); connectChat(); connectTime()
+    return () => { try { esActivity && esActivity.close() } catch {}; try { esChat && esChat.close() } catch {}; try { esTime && esTime.close() } catch {} }
+  }, [])
+  return (
+    <div className="mt-3 text-sm text-slate-300 space-y-2">
+      {events.length === 0 ? (
+        <div className="text-slate-400">No activity yet. Start a chat or create a task to get started.</div>
+      ) : (
+        <ul className="space-y-1 overflow-auto pr-1 max-h-[360px] tc-scroll">
+          {events.map((ev, idx) => (
+            <li key={`ev-${idx}`} className="rounded border border-slate-800 bg-slate-950/50 px-3 py-2">
+              <div className="text-xs text-slate-400">{new Date(ev.ts).toLocaleTimeString()}</div>
+              <div className="text-slate-200">{ev.message}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function TaskCompletionWidget() {
+  const [projectId, setProjectId] = useState<string | 'all'>('all')
+  const { data } = useSWR('/api/tasks', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const options = (data?.projects ?? []) as { id: string; name: string; tasks: { status: string }[] }[]
+  const { percent } = useMemo(() => {
+    const list = projectId === 'all' ? options.flatMap(p=>p.tasks) : (options.find(p=>p.id===projectId)?.tasks ?? [])
+    if (list.length === 0) return { percent: 0 }
+    const done = list.filter(t => String(t.status).toUpperCase() === 'DONE').length
+    return { percent: Math.round((done / list.length) * 100) }
+  }, [options, projectId])
+  return (
+    <div>
+      <div className="mt-2 flex items-center gap-2">
+        <label className="text-xs text-slate-400">Project</label>
+        <select aria-label="Select project" value={projectId} onChange={(e)=>setProjectId(e.target.value as any)} className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-100">
+          <option value="all">All</option>
+          {options.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+      <div className="mt-3 text-3xl text-white">{percent}%</div>
+      <div className="text-xs text-slate-400">Completion</div>
+    </div>
+  )
+}
+
+function AnalyticsWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const [chartsReady, setChartsReady] = useState<boolean>(!!R)
+  useEffect(() => {
+    let mounted = true
+    if (!R) {
+      import('recharts').then((m)=>{ if (mounted) { R = m as any; setChartsReady(true) } }).catch(()=>{})
+    }
+    return () => { mounted = false }
+  }, [])
+  const breakdown = useMemo(() => {
+    const timers = (data?.timers ?? []) as { id: string; name: string; finalizedAt: string | null }[]
+    const entries = (data?.entries ?? []) as { durationMin: number; endedAt: string | null; timerId: string | null }[]
+    const totals: Record<string, number> = {}
+    entries.filter(e=>e.endedAt && e.timerId).forEach(e => { totals[String(e.timerId)] = (totals[String(e.timerId)]||0) + (e.durationMin||0) })
+    const rows = timers.map(t => ({ name: t.name || 'Timer', value: totals[t.id] || 0 }))
+    return rows.filter(r=>r.value>0)
+  }, [data])
+  if (!chartsReady || !R) return <div className="h-40 grid place-items-center text-slate-500">Loading data...</div>
+  const C = R
+  return (
+    <div className="mt-3 h-full overflow-auto tc-scroll pr-1">
+      {breakdown.length === 0 ? (
+        <div className="text-sm text-slate-400">Run and end timers to see analytics.</div>
+      ) : (
+        <div className="w-full h-full overflow-auto tc-scroll pr-1">
+          <div className="h-32 min-h-[128px]">
+            <C.ResponsiveContainer width="100%" height="100%">
+              <C.PieChart>
+                <C.Pie data={breakdown} dataKey="value" nameKey="name" innerRadius={38} outerRadius={60} paddingAngle={2}>
+                  {breakdown.map((entry, index) => (
+                    <C.Cell key={`cell-${index}`} fill={["#60a5fa","#34d399","#f59e0b","#f87171","#a78bfa","#f472b6","#22d3ee","#84cc16"][index % 8]} />
+                  ))}
+                </C.Pie>
+                <C.Tooltip />
+              </C.PieChart>
+            </C.ResponsiveContainer>
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs pb-2">
+            {breakdown.map((b, i) => (
+              <li key={`lg-${i}`} className="flex items-center gap-2">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full tc-legend-${i % 8}`} aria-hidden></span>
+                <span className="text-slate-200">{b.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function InventorySummaryWidget() {
+  const [summary, setSummary] = useState<{ totalItems: number; inventoryValueCents: number; lowStockCount: number } | null>(null)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/inventory?includeTotals=1&page=1&pageSize=1', { cache: 'no-store' })
+        const json = await res.json()
+        if (!cancelled) setSummary(json?.meta?.summary || null)
+      } catch {
+        if (!cancelled) setSummary(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+  }, [])
+  const usd = (c:number)=> `$${((c||0)/100).toFixed(2)}`
+  return (
+    <div className="mt-3">
+      {loading ? (
+        <div className="h-24 grid place-items-center text-slate-500">Loading...</div>
+      ) : summary ? (
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Total Items</div>
+            <div className="text-xl font-semibold text-white">{summary.totalItems}</div>
+          </div>
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Inventory Value</div>
+            <div className="text-xl font-semibold text-white">{usd(summary.inventoryValueCents)}</div>
+          </div>
+          <div className="rounded-md border border-slate-700 p-3">
+            <div className="text-xs text-slate-400">Low Stock</div>
+            <div className="text-xl font-semibold text-white">{summary.lowStockCount}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-sm text-slate-400">No inventory yet. Open Inventory to add items.</div>
+      )}
+      <a href="/dashboard/inventory" className="inline-block mt-3 px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Inventory</a>
+    </div>
+  )
+}
+
+function PinnedTimerWidget() {
+  const { data } = useSWR('/api/timers/list', (u)=>fetch(u, { cache: 'no-store' }).then(r=>r.json()))
+  const timers = (data?.timers ?? []) as { id: string; name: string; finalizedAt: string | null }[]
+  const entries = (data?.entries ?? []) as { id: string; timerId: string | null; endedAt: string | null }[]
+
+  const options = useMemo(() => {
+    const activeTimerIds = new Set((entries || []).filter(e => !e.endedAt && e.timerId).map(e => String(e.timerId)))
+    const active = timers.filter(t => activeTimerIds.has(t.id))
+    if (active.length > 0) return active
+    return timers.filter(t => !t.finalizedAt)
+  }, [timers, entries])
+
+  const [pinnedId, setPinnedId] = useState<string>('')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tc:pinnedTimerId') || ''
+      if (saved) setPinnedId(saved)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!pinnedId && options.length > 0) {
+      setPinnedId(options[0].id)
+    }
+  }, [options, pinnedId])
+
+  useEffect(() => {
+    try { if (pinnedId) localStorage.setItem('tc:pinnedTimerId', pinnedId) } catch {}
+  }, [pinnedId])
+
+  const selected = options.find(o => o.id === pinnedId)
+
+  return (
+    <div className="mt-3 text-sm text-slate-300">
+      {options.length === 0 ? (
+        <div className="text-slate-400">No active timers. Start one in Timers.</div>
+      ) : (
+        <div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-slate-400">Active timer</label>
+            <select aria-label="Select active timer" value={pinnedId} onChange={(e)=>setPinnedId(e.target.value)} className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-100">
+              {options.map(t => (
+                <option key={t.id} value={t.id}>{t.name || 'Timer'}</option>
+              ))}
+            </select>
+          </div>
+          <a href="/dashboard/timers" className="inline-block mt-3 px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-700">Open Timers</a>
+        </div>
+      )}
+    </div>
+  )
+}
 
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
-type Widget = {
-  id: string
-  title: string
-  render: () => React.ReactNode
-}
+type Widget = { id: string; title: string; render: () => React.ReactNode }
 
 export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string }) {
-  const initial = useMemo(() => {
-    // Ensure Calendar is first, then the rest in a sensible order
-    const defaults = ['calendar', 'overview', 'activity', 'progress', 'completion']
-    return Array.from(new Set(defaults))
-  }, [plan])
+  // Curated default coordinates to eliminate the top-right gap
+  const curated: Record<string, RglItem> = {
+    calendar:   { i: 'calendar',    x: 0,  y: 0,  w: 8, h: 8, static: true },
+    overview:   { i: 'overview',    x: 8,  y: 0,  w: 4, h: 4 },
+    completion: { i: 'completion',  x: 8,  y: 4,  w: 4, h: 4 },
+    activity:   { i: 'activity',    x: 0,  y: 8,  w: 4, h: 8 },
+    progress:   { i: 'progress',    x: 4,  y: 8,  w: 8, h: 6 },
+    analytics:  { i: 'analytics',   x: 0,  y: 14, w: 4, h: 4 },
+    inventory:  { i: 'inventory',   x: 4,  y: 14, w: 4, h: 6 },
+    timer_active:{ i: 'timer_active',x: 8,  y: 16, w: 4, h: 3 },
+  }
+  const initialOrder = useMemo(() => Object.keys(curated), [])
+  const [order, setOrder] = useState<string[]>(initialOrder)
+  const DEFAULT_LAYOUT = useMemo(() => order.map((id) => curated[id]).filter(Boolean), [order])
 
-  const [order, setOrder] = useState<string[]>(initial)
+  const { layout, saveLayout, reset, loading } = useWidgetLayout(DEFAULT_LAYOUT, 'main')
+
+  useEffect(() => { if (pin && !order.includes(pin)) setOrder((o)=> o.includes(pin) ? o : [...o, pin]) }, [pin, order])
+
+  // Listen for Add Widget events and append the widget to the grid without navigation
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const res = await fetch('/api/user-prefs', { cache: 'no-store' })
-        if (res.ok) {
-          const data = await res.json()
-          if (mounted && Array.isArray(data.widgets)) {
-            const arr = data.widgets as string[]
-            const withCalendarFirst = ['calendar', ...arr.filter((x) => x !== 'calendar')]
-            setOrder(withCalendarFirst)
-          } else {
-            const stored = typeof window !== 'undefined' ? localStorage.getItem('tc_dash_order') : null
-            if (mounted && stored) {
-              const arr = JSON.parse(stored)
-              const withCalendarFirst = ['calendar', ...arr.filter((x: string) => x !== 'calendar')]
-              setOrder(withCalendarFirst)
-            }
-          }
-        }
-      } catch {
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('tc_dash_order') : null
-        if (mounted && stored) {
-          const arr = JSON.parse(stored)
-          const withCalendarFirst = ['calendar', ...arr.filter((x: string) => x !== 'calendar')]
-          setOrder(withCalendarFirst)
-        }
+    function onAdd(e: Event) {
+      const id = (e as any)?.detail?.id as string | undefined
+      if (!id) return
+      setOrder(prev => prev.includes(id) ? prev : [...prev, id])
+      // If current layout doesn't have a position for this widget, add one at the end
+      const has = Array.isArray(layout) && (layout as any[]).some((l) => l.i === id)
+      if (!has) {
+        const pos = (curated as any)[id] || { i: id, x: 0, y: Infinity, w: 4, h: 4 }
+        saveLayout([...(layout as any[] || []), pos] as any)
       }
-    })()
-    return () => {
-      mounted = false
     }
-  }, [])
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('tc_dash_order', JSON.stringify(order))
-    ;(async () => {
-      try {
-        await fetch('/api/user-prefs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order }) })
-      } catch {}
-    })()
-  }, [order])
+    document.addEventListener('tc:add-widget' as any, onAdd)
+    return () => document.removeEventListener('tc:add-widget' as any, onAdd)
+  }, [layout, saveLayout])
 
-  useEffect(() => {
-    function refresh() { setCalEvents(v=>v.slice()) }
-    document.addEventListener('tc:refresh', refresh as EventListener)
-    return () => document.removeEventListener('tc:refresh', refresh as EventListener)
-  }, [])
-
-  useEffect(() => {
-    // lightweight ticking for visible timers (~20s)
-    const id = setInterval(() => {
-      document.dispatchEvent(new CustomEvent('tc:refresh'))
-    }, 20000)
-    return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => {
-    if (!pin) return
-    if (!canUseWidget(pin)) return
-    setOrder((cur) => (cur.includes(pin) ? cur : [...cur, pin]))
-  }, [pin])
-
-  // Calendar events for widget (current month)
+  // Calendar widget month + events
   const [calEvents, setCalEvents] = useState<any[]>([])
+  const [calBase, setCalBase] = useState<Date>(new Date())
   useEffect(() => {
-    const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth(), 1)
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    ;(async () => {
+    async function fetchMonth(base: Date) {
       try {
+        const start = new Date(base.getFullYear(), base.getMonth(), 1)
+        const end = new Date(base.getFullYear(), base.getMonth() + 1, 1)
         const res = await fetch(`/api/calendar?start=${start.toISOString()}&end=${end.toISOString()}`, { cache: 'no-store' })
         if (res.ok) {
           const json = await res.json()
           setCalEvents(Array.isArray(json.events) ? json.events : [])
         }
       } catch {}
-    })()
-  }, [])
-
-  // Team Activity items (latest chat events across channels)
-  type ActivityItem = { id: string; ts: number; text: string }
-  const [activityItems, setActivityItems] = useState<ActivityItem[]>([])
-  useEffect(() => {
-    let active = true
-    const seen = new Set<string>()
-    ;(async () => {
-      try {
-        const res = await fetch('/api/activity', { cache: 'no-store' })
-        if (res.ok) {
-          const json = await res.json()
-          if (active && Array.isArray(json.items)) {
-            setActivityItems(json.items)
-            for (const it of json.items) seen.add(it.id)
-          }
-        }
-      } catch {}
-      const channels = ['all', 'managers', 'employees']
-      const sources = channels.map((c) => {
-        const es = new EventSource(`/api/chat/stream?c=${c}`)
-        es.addEventListener('message', (ev: MessageEvent) => {
-          try {
-            const m = JSON.parse(ev.data) as { id: string; ts: number; user?: { name?: string }; text: string }
-            if (seen.has(m.id)) return
-            seen.add(m.id)
-            const item: ActivityItem = { id: m.id, ts: m.ts, text: `${m.user?.name || 'User'} in #${c}: ${m.text}` }
-            setActivityItems((cur) => [item, ...cur].slice(0, 50))
-          } catch {}
-        })
-        return es
-      })
-      // cleanup on unmount
-      return () => sources.forEach((s) => s.close())
-    })()
-    return () => {
-      active = false
     }
-  }, [])
+    fetchMonth(calBase)
+    function onChanged() { fetchMonth(calBase) }
+    document.addEventListener('tc:calendar-changed' as any, onChanged)
+    return () => document.removeEventListener('tc:calendar-changed' as any, onChanged)
+  }, [calBase])
 
-  const catHex: Record<string, string> = {
-    meeting: '#007BFF',
-    release: '#28A745',
-    invoice: '#DC3545',
-    review: '#6F42C1',
-    demo: '#17A2B8',
-    deadline: '#FD7E14',
-    personal: '#20C997',
-    urgent: '#C82333',
-    general: '#4F46E5',
-  }
-
-  // Map categories to Tailwind classes to avoid inline styles
-  const categoryClasses: Record<string, { bg: string; ring: string; dot: string }> = {
-    meeting: { bg: 'bg-blue-500/20', ring: 'ring-blue-500/40', dot: 'bg-blue-500' },
-    release: { bg: 'bg-green-500/20', ring: 'ring-green-500/40', dot: 'bg-green-500' },
-    invoice: { bg: 'bg-red-500/20', ring: 'ring-red-500/40', dot: 'bg-red-500' },
-    review: { bg: 'bg-purple-500/20', ring: 'ring-purple-500/40', dot: 'bg-purple-500' },
-    demo: { bg: 'bg-cyan-500/20', ring: 'ring-cyan-500/40', dot: 'bg-cyan-500' },
-    deadline: { bg: 'bg-orange-500/20', ring: 'ring-orange-500/40', dot: 'bg-orange-500' },
-    personal: { bg: 'bg-emerald-500/20', ring: 'ring-emerald-500/40', dot: 'bg-emerald-500' },
-    urgent: { bg: 'bg-rose-600/20', ring: 'ring-rose-600/40', dot: 'bg-rose-600' },
-    general: { bg: 'bg-indigo-600/20', ring: 'ring-indigo-600/40', dot: 'bg-indigo-600' },
-  }
-
-  const demo = false
-  function rand(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1)) + min
-  }
-
-  async function startApiTimer() {
-    try {
-      const name = typeof window !== 'undefined' ? window.prompt('Name this timer:')?.trim() : 'Timer'
-      if (!name) return
-      await fetch('/api/timers/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
-    } catch {}
-  }
-  async function stopApiTimer() {
-    try {
-      await fetch('/api/timers/stop', { method: 'POST' })
-    } catch {}
-  }
-
+  // Data for widgets
   const widgets: Record<string, Widget> = {
-    overview: {
-      id: 'overview',
-      title: 'Time Tracking Overview',
-      render: () => (
-        <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-          {[{ label: 'Today' }, { label: 'This Week' }, { label: 'This Month' }].map((s, i) => (
-            <div key={s.label} className="rounded-md border border-slate-700 p-3">
-              <div className="text-xs text-slate-400">{s.label}</div>
-              <div className="text-xl font-semibold text-white">{demo ? `${rand(0, i===0?8:80)}h ${rand(0,59)}m` : '0h 0m'}</div>
+    overview: { id: 'overview', title: 'Time Tracking Overview', render: () => (
+      <TimeOverviewWidget />
+    ) },
+    activity: { id: 'activity', title: 'Team Activity Feed', render: () => (
+      <ActivityFeedWidget />
+    ) },
+    progress: { id: 'progress', title: 'Project Progress', render: () => <ProjectProgressWidget /> },
+    completion: { id: 'completion', title: 'Task Completion', render: () => (
+      <TaskCompletionWidget />
+    ) },
+    analytics: { id: 'analytics', title: 'Analytics', render: () => (<AnalyticsWidget />) },
+    calendar: { id: 'calendar', title: 'Calendar', render: () => (
+      <div className="mt-3 text-sm text-slate-400">
+        <div className="flex items-start justify-between">
+          <div className="pt-0.5">
+            <div className="text-xs text-slate-400">{calBase.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
+            <div>Quick view of this month. Create detailed events in Calendar.</div>
             </div>
-          ))}
+          {/* Month navigation moved to widget header; no arrows here */}
         </div>
-      ),
-    },
-    activity: {
-      id: 'activity',
-      title: 'Team Activity Feed',
-      render: () => (
-        <div className="mt-4 text-sm text-slate-300">
-          {activityItems.length === 0 ? (
-            <div className="text-slate-400">No activity yet. Start a chat or create a task to get started.</div>
-          ) : (
-            <ul className="space-y-2">
-              {activityItems.map((a) => (
-                <li key={a.id} className="rounded border border-slate-700 bg-slate-800/50 px-3 py-2 flex items-center justify-between">
-                  <div className="truncate pr-3">{a.text}</div>
-                  <div className="shrink-0 text-xs text-slate-400">{new Date(a.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ),
-    },
-    progress: {
-      id: 'progress',
-      title: 'Project Progress',
-      render: () => <ProjectProgressWidget />,
-    },
-    completion: {
-      id: 'completion',
-      title: 'Task Completion',
-      render: () => (
-        <div>
-          <div className="mt-4 text-3xl text-white">{demo ? `${rand(20, 95)}%` : '0%'}</div>
-          <div className="text-xs text-slate-400">Last 7 days</div>
-        </div>
-      ),
-    },
-    analytics: {
-      id: 'analytics',
-      title: 'Analytics',
-      render: () => (
-        <div className="mt-2 text-sm text-slate-400">Charts will appear here as you add data.</div>
-      ),
-    },
-    calendar: {
-      id: 'calendar',
-      title: 'Calendar',
-      render: () => (
-        <div className="mt-3 text-sm text-slate-400">
-          Quick view of this month. Create detailed events in Calendar.
           {(() => {
-            const now = new Date()
-            const year = now.getFullYear()
-            const month = now.getMonth()
+          const year = calBase.getFullYear()
+          const month = calBase.getMonth()
             const daysInMonth = new Date(year, month + 1, 0).getDate()
             const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
+          const clsMap: Record<string, { bg: string; ring: string }> = {
+            meeting: { bg: 'bg-blue-500/30', ring: 'ring-blue-400/60' },
+            release: { bg: 'bg-lime-500/30', ring: 'ring-lime-400/60' },
+            invoice: { bg: 'bg-rose-500/30', ring: 'ring-rose-400/60' },
+            review: { bg: 'bg-violet-500/30', ring: 'ring-violet-400/60' },
+            demo: { bg: 'bg-teal-500/30', ring: 'ring-teal-400/60' },
+            deadline: { bg: 'bg-amber-500/30', ring: 'ring-amber-400/60' },
+            personal: { bg: 'bg-emerald-500/30', ring: 'ring-emerald-400/60' },
+            urgent: { bg: 'bg-red-600/30', ring: 'ring-red-500/60' },
+            general: { bg: 'bg-fuchsia-500/30', ring: 'ring-fuchsia-400/60' },
+          }
             const getMeta = (day: number) => {
               const dateStr = new Date(year, month, day).toDateString()
-              const dayEvents = calEvents.filter((e: any) => new Date(e.startsAt).toDateString() === dateStr)
+            const dayEvents = (calEvents || []).filter((e: any) => new Date(e.startsAt).toDateString() === dateStr)
               if (dayEvents.length === 0) return null
               const items = dayEvents.map((e: any) => {
                 let parsed: any = {}
                 try { parsed = e.description ? JSON.parse(e.description) : {} } catch {}
                 const category: string = String(parsed.category || 'general').toLowerCase()
-                const hex = catHex[category] || catHex.general
                 const time = new Date(e.startsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                return { title: e.title, time, category, hex }
+              return { title: e.title, time, category }
               })
-              return { items, hex: items[0].hex }
+            // choose category of first event for color coding
+            const primaryCategory = items[0]?.category || 'general'
+            return { items, category: primaryCategory }
             }
             return (
               <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
@@ -274,17 +411,14 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
                   const day = idx + 1
                   const meta = getMeta(day)
                   const href = `/dashboard/calendar?d=${year}-${pad(month + 1)}-${pad(day)}T09:00`
-                  const cat = meta ? String(meta.items[0].category || 'general').toLowerCase() : 'general'
-                  const cls = categoryClasses[cat] || categoryClasses.general
                   return (
                     <a
                       key={`wday-${day}`}
                       href={href}
-                      className={`relative group block py-2 rounded border border-slate-700 ${meta ? `text-white ring-1 ${cls.bg} ${cls.ring}` : 'bg-slate-800/60 text-slate-300'} transition-colors`}
+                    className={`relative group block py-2 rounded border border-slate-700 ${meta ? `text-white ring-1 ${clsMap[(meta.category || 'general') as keyof typeof clsMap]?.bg} ${clsMap[(meta.category || 'general') as keyof typeof clsMap]?.ring}` : 'bg-slate-800/60 text-slate-300'} transition-colors`}
                       aria-label={meta ? `${day}: ${meta.items.map((i:any) => `${i.title} ${i.time}`).join(', ')}` : String(day)}
                     >
                       {day}
-                      {meta && <span aria-hidden className={`pointer-events-none absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full ${cls.dot}`} />}
                       {meta && (
                         <div role="tooltip" className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 text-slate-200 rounded px-2 py-1 shadow-xl whitespace-nowrap z-10">
                           {meta.items.map((it:any, i:number) => (
@@ -300,206 +434,65 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           })()}
           <a href="/dashboard/calendar" className="inline-block mt-3 px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Calendar</a>
         </div>
-      ),
-    },
-    inventory: {
-      id: 'inventory',
-      title: 'Inventory Tracking',
-      render: () => (
-        <div className="mt-3 text-sm text-slate-400">
-          Track items at a glance. Manage stock in Inventory.
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {[{ n: 'Widgets', q: 0 }, { n: 'Gadgets', q: 0 }].map((r) => (
-              <div key={r.n} className="rounded border border-slate-700 p-3 bg-slate-800/60">
-                <div className="text-slate-200">{r.n}</div>
-                <div className="text-xs text-slate-400">Qty: {0}</div>
-              </div>
-            ))}
-          </div>
-          <a href="/dashboard/inventory" className="inline-block mt-3 px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Inventory</a>
-        </div>
-      ),
-    },
-    timer_active: {
-      id: 'timer_active',
-      title: 'Pinned Timer',
-      render: () => (
-        <div className="mt-3 text-sm text-slate-300">
-          Control your current timer.
-          <div className="mt-3 flex gap-2">
-            <button onClick={startApiTimer} className="px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700">Start</button>
-            <button onClick={stopApiTimer} className="px-3 py-1.5 rounded bg-rose-600 text-white hover:bg-rose-700">Stop</button>
-            <a href="/dashboard/timers" className="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800">Open Timers</a>
-          </div>
-        </div>
-      ),
-    },
-    // Additional timers can be controlled from the Timers page; this pinned widget provides global controls
+    ) },
+    inventory: { id: 'inventory', title: 'Inventory Tracking', render: () => (
+      <InventorySummaryWidget />
+    ) },
+    timer_active: { id: 'timer_active', title: 'Pinned Timer', render: () => (
+      <PinnedTimerWidget />
+    ) },
   }
 
-  // Revert to baseline background for all widgets
   const widgetBackgroundClass: Record<string, string> = {
-    overview: 'bg-slate-900',
-    activity: 'bg-slate-900',
-    progress: 'bg-slate-900',
-    completion: 'bg-slate-900',
-    analytics: 'bg-slate-900',
-    calendar: 'bg-slate-900',
-    inventory: 'bg-slate-900',
-    timer_active: 'bg-slate-900',
+    overview: 'bg-slate-900', activity: 'bg-slate-900', progress: 'bg-slate-900', completion: 'bg-slate-900', analytics: 'bg-slate-900', calendar: 'bg-slate-900', inventory: 'bg-slate-900', timer_active: 'bg-slate-900',
   }
 
-  // Respect plan gating in the real app; the marketing demo uses a separate component without locks
-  function canUseWidget(id: string): boolean {
-    if (id === 'inventory') return plan === 'ENTERPRISE' || plan === 'CUSTOM'
-    if (id === 'analytics') return plan !== 'FREE'
-    return true
-  }
-
-  // Smooth settle for siblings using a lightweight FLIP
-  const itemNodeMapRef = React.useRef<Map<string, HTMLElement>>(new Map())
-  const pendingRectsRef = React.useRef<Map<string, DOMRect> | null>(null)
-
-  function onDragEnd(res: DropResult) {
-    if (!res.destination) return
-    if (res.source.index === res.destination.index) return
-    // Capture current positions before reorder
-    const before = new Map<string, DOMRect>()
-    for (const id of order) {
-      const el = itemNodeMapRef.current.get(id)
-      if (el) before.set(id, el.getBoundingClientRect())
-    }
-    pendingRectsRef.current = before
-    const next = Array.from(order)
-    const [removed] = next.splice(res.source.index, 1)
-    next.splice(res.destination.index, 0, removed)
-    setOrder(next)
-  }
-
-  function addWidget(id: string) {
-    if (!widgets[id]) return
-    if (!canUseWidget(id)) return
-    setOrder((cur) => (cur.includes(id) ? cur : [...cur, id]))
-  }
-
-  function removeWidget(id: string) {
-    if (id === 'activity') return
-    setOrder((cur) => cur.filter((x) => x !== id))
-  }
-
-  // Run FLIP animation after order updates
-  useEffect(() => {
-    const before = pendingRectsRef.current
-    if (!before) return
-    pendingRectsRef.current = null
-    // Wait one frame for DOM to reflect new order
-    if (typeof window === 'undefined') return
-    requestAnimationFrame(() => {
-      for (const id of order) {
-        const el = itemNodeMapRef.current.get(id)
-        if (!el) continue
-        const prev = before.get(id)
-        const now = el.getBoundingClientRect()
-        if (!prev) continue
-        const dx = prev.left - now.left
-        const dy = prev.top - now.top
-        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue
-        el.style.willChange = 'transform'
-        el.style.transform = `translate(${dx}px, ${dy}px)`
-        // Ensure styles apply before animating back to 0
-        requestAnimationFrame(() => {
-          el.style.transition = 'transform 180ms ease-out'
-          el.style.transform = 'translate(0, 0)'
-          const cleanup = () => {
-            el.style.transition = ''
-            el.style.transform = ''
-            el.style.willChange = ''
-            el.removeEventListener('transitionend', cleanup)
-          }
-          el.addEventListener('transitionend', cleanup)
-        })
-      }
-    })
-  }, [order])
+  if (loading || !layout) return null
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      {/* Listen for top-bar add requests */}
-      <WidgetAddListener onAdd={addWidget} />
-      {/* Add widget menu moved to top action bar in DashboardPage to reduce clutter */}
-      <Droppable droppableId="grid" direction="vertical">
-        {(provided: DroppableProvided) => (
-          <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-flow-dense gap-6">
-            {order.map((id, idx) => (
-              <Draggable draggableId={id} index={idx} key={id}>
-                {(p: DraggableProvided, s) => (
-                  <div
-                    ref={(node) => {
-                      (p.innerRef as unknown as (el: HTMLElement | null) => void)(node)
-                      if (node) itemNodeMapRef.current.set(id, node)
-                      else itemNodeMapRef.current.delete(id)
-                    }}
-                    {...p.draggableProps}
-                    {...p.dragHandleProps}
-                    className={`rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 ${
-                      id === 'progress' || id === 'calendar' ? 'lg:col-span-2' : ''
-                    } ${s.isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'}`}
-                    style={{ ...(p.draggableProps.style as any), transform: (p.draggableProps.style as any)?.transform || undefined }}
-                  >
-                    <div className="font-medium text-white flex items-center justify-between">
-                      {widgets[id]?.title}
-                      {id !== 'activity' && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              const el = document.querySelector(`[data-widget-id="${id}"]`) as HTMLElement | null
-                              if (el) {
-                                el.animate([
-                                  { transform: 'scale(1)', opacity: 1 },
-                                  { transform: 'scale(0.95)', opacity: 0 }],
-                                  { duration: 150, easing: 'ease-out' }
-                                ).onfinish = () => removeWidget(id)
-                              } else {
-                                removeWidget(id)
-                              }
-                            }}
-                            className="p-1.5 rounded hover:bg-rose-700/20 text-slate-300 hover:text-rose-400 transition-colors"
-                            aria-label="Remove widget"
-                            title="Remove"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                              <path fillRule="evenodd" d="M9.75 3a.75.75 0 00-.75.75V5H6a.75.75 0 000 1.5h12A.75.75 0 0018 5h-3V3.75a.75.75 0 00-.75-.75h-4.5zM7.5 7.25A.75.75 0 018.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zM12 7.25a.75.75 0 01.75.75v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75zm4.5 0A.75.75 0 0117.25 8v10a.75.75 0 01-1.5 0V8a.75.75 0 01.75-.75z" clipRule="evenodd" />
-                            </svg>
-                          </button>
+    <div>
+      <ResponsiveGridLayout
+        className="layout"
+        layouts={{ lg: layout as any }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as any}
+        rowHeight={40}
+        margin={[16, 16] as any}
+        isResizable
+        isDraggable
+        draggableHandle=".tc-widget-handle"
+        onDragStop={(l) => saveLayout(l as any)}
+        onResizeStop={(l) => saveLayout(l as any)}
+      >
+        {order.map((id) => (
+          <div key={id} className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden`}>
+            <div className="tc-widget-handle cursor-move select-none font-bold text-white flex items-center justify-between">
+              <span>{widgets[id]?.title}</span>
+              {id === 'calendar' && (
+                <div className="flex gap-1">
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</button>
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</button>
                         </div>
                       )}
+              {id !== 'calendar' && (
+                <button title="Remove widget" aria-label="Remove widget" className="ml-2 text-rose-400 hover:text-rose-300" onClick={() => setOrder((o)=> o.filter(x=>x!==id))}>🗑</button>
+              )}
                     </div>
-                    <div data-widget-id={id}>{widgets[id]?.render()}</div>
+            <div data-widget-id={id} className={`flex-1 min-h-0 ${id==='calendar' ? 'overflow-visible' : id==='progress' ? 'overflow-hidden' : id==='analytics' ? 'overflow-hidden' : id==='activity' ? 'overflow-hidden' : 'overflow-auto tc-scroll'}`}>{widgets[id]?.render()}</div>
                   </div>
-                )}
-              </Draggable>
             ))}
-            <div className="col-span-full pointer-events-none" style={{ minHeight: 1 }}>{provided.placeholder}</div>
+      </ResponsiveGridLayout>
+      {/* Expose reset via window event dispatched by the Reset button */}
+      <ResetBridge onReset={reset} />
           </div>
-        )}
-      </Droppable>
-    </DragDropContext>
   )
 }
 
-function WidgetAddListener({ onAdd }: { onAdd: (id: string) => void }) {
-  // Subscribe once on mount, cleanup on unmount
+function ResetBridge({ onReset }: { onReset: () => void }) {
   useEffect(() => {
-    function handle(e: Event) {
-      const detail = (e as CustomEvent).detail as { id?: string }
-      if (detail?.id) onAdd(detail.id)
-    }
-    if (typeof window !== 'undefined') {
-      window.addEventListener('tc:add-widget', handle as EventListener)
-      return () => window.removeEventListener('tc:add-widget', handle as EventListener)
-    }
-  }, [onAdd])
+    function handler() { onReset() }
+    window.addEventListener('tc:reset-layout' as any, handler as EventListener)
+    return () => window.removeEventListener('tc:reset-layout' as any, handler as EventListener)
+  }, [onReset])
   return null
 }
-
 
