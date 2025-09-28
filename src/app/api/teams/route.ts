@@ -7,8 +7,27 @@ export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ teams: [] }, { status: 401 })
   const userId = (session.user as any).id as string
-  const memberships = await prisma.teamMembership.findMany({ where: { userId }, include: { team: true }, orderBy: { joinedAt: 'desc' } })
-  return NextResponse.json({ teams: memberships.map((m) => ({ id: m.team.id, name: m.team.name, description: m.team.description })) })
+  const memberships = await prisma.teamMembership.findMany({
+    where: { userId },
+    include: {
+      team: {
+        include: {
+          _count: { select: { members: true } },
+          activities: { orderBy: { createdAt: 'desc' }, take: 1 },
+        },
+      },
+    },
+    orderBy: { joinedAt: 'desc' },
+  })
+  return NextResponse.json({
+    teams: memberships.map((m) => ({
+      id: m.team.id,
+      name: m.team.name,
+      description: m.team.description,
+      memberCount: (m.team as any)._count?.members ?? 0,
+      lastActivityAt: (m.team as any).activities?.[0]?.createdAt || (m.team as any).updatedAt,
+    })),
+  })
 }
 
 export async function POST(request: Request) {

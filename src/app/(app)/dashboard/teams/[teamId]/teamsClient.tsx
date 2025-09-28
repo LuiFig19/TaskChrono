@@ -1,8 +1,22 @@
 "use client"
 import useSWR from 'swr'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
+import NotesEditor, { NotesEditorHandle } from '@/components/teams/NotesEditor'
 
 const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((r) => r.json())
+
+function timeAgo(input?: string | Date | null) {
+  if (!input) return '—'
+  const d = typeof input === 'string' ? new Date(input) : input
+  const s = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (s < 60) return 'just now'
+  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`
+  const days = Math.floor(h / 24); if (days < 7) return `${days}d ago`
+  const weeks = Math.floor(days / 7); if (weeks < 5) return `${weeks}w ago`
+  const months = Math.floor(days / 30); if (months < 12) return `${months}mo ago`
+  const years = Math.floor(days / 365); return `${years}y ago`
+}
 
 export default function TeamsClient({ teamId, initialTab }: { teamId: string; initialTab: string }) {
   const [tab, setTab] = useState(initialTab)
@@ -13,7 +27,7 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
-      <aside className="rounded-xl border border-slate-800 bg-slate-900 p-4 h-[70vh] md:sticky md:top-[calc(var(--nav-h,56px)+16px)]">
+      <aside className="rounded-2xl shadow-lg shadow-black/20 bg-slate-900/60 p-4 h-[70vh] md:sticky md:top-[calc(var(--nav-h,56px)+16px)]">
         <div className="flex items-center gap-2 mb-3">
           <input placeholder="Search teams" className="w-full px-3 py-2 rounded-md border border-slate-700 bg-slate-950 text-slate-100 text-sm" />
           <a href="/dashboard/teams/new" className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm">+ New</a>
@@ -21,29 +35,30 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
         <div className="text-xs text-slate-400 mb-2">Teams</div>
         <div className="space-y-1 overflow-y-auto pr-1">
           {(teamsData?.teams || []).map((t: any) => (
-            <a key={t.id} href={`/dashboard/teams/${t.id}?tab=${tab}`} className={`block px-3 py-2 rounded hover:bg-slate-800/60 ${t.id===teamId?'bg-slate-800/60':''}`}>{t.name}</a>
+            <a key={t.id} href={`/dashboard/teams/${t.id}?tab=${tab}`} title={t.name} className={`block px-3 py-2 rounded-md ${t.id===teamId?'bg-slate-800':'hover:bg-slate-800/60'}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate max-w-[170px] text-slate-200 text-sm">{t.name}</span>
+                <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-2 rounded-full bg-slate-800 text-slate-300 text-[11px] border border-slate-700">{t.memberCount ?? 0}</span>
+              </div>
+              <div className="text-[11px] text-slate-400 truncate">Active {timeAgo(t.lastActivityAt)}</div>
+            </a>
           ))}
         </div>
-        <div className="mt-4 flex gap-2">
-          <button className="flex-1 px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800 text-sm">Invite</button>
-          <button className="flex-1 px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800 text-sm">Settings</button>
-        </div>
       </aside>
-      <main className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <main className="rounded-2xl shadow-lg shadow-black/20 bg-slate-900/60 p-4">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="pl-4 pt-1">
-            <h1 className="text-2xl font-semibold leading-tight">{team.name}</h1>
-            <p className="text-slate-300 text-sm">{team.description || '—'}</p>
+            <h1 className="text-2xl font-semibold leading-tight truncate max-w-[60vw] md:max-w-[40rem]" title={team.name}>{team.name}</h1>
+            <p className="text-slate-300/90 text-sm mt-0.5 truncate max-w-[60vw] md:max-w-[40rem]" title={team.description || undefined}>{team.description || '—'}</p>
           </div>
-          <div className="flex items-center gap-2 pr-1">
-            <button onClick={()=>setTab('team-settings')} className="px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800">Invite</button>
-            <button onClick={()=>setTab('team-settings')} className="px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800">Settings</button>
+          <div className="flex items-center gap-2 pr-3">
+            <button data-cta="invite-header" onClick={()=>setTab('team-settings')} className="px-3 py-2 rounded-md bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-black/20">Invite</button>
           </div>
         </header>
 
-        <nav className="mt-4 flex flex-wrap gap-2 text-sm">
+        <nav className="mt-4 flex flex-wrap gap-2 text-sm pl-4">
           {['overview','people','goals','notes','chat','team-settings'].map((t) => (
-            <button key={t} onClick={()=>setTab(t)} className={`px-3 py-1.5 rounded-full border ${tab===t ? 'border-indigo-500 bg-indigo-500/10 text-indigo-200' : 'border-slate-700 hover:bg-slate-800 text-slate-200'}`}>{t[0].toUpperCase()+t.slice(1)}</button>
+            <button key={t} data-tab={t} onClick={()=>setTab(t)} className={`px-3 py-1.5 rounded-full border ${tab===t ? 'border-indigo-500 bg-indigo-500/10 text-indigo-200' : 'border-slate-700 hover:bg-slate-800 text-slate-200'}`}>{t[0].toUpperCase()+t.slice(1)}</button>
           ))}
         </nav>
 
@@ -62,7 +77,7 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/60 p-3">
       <div className="text-sm font-medium text-slate-200 mb-2">{title}</div>
       {children}
     </div>
@@ -71,9 +86,22 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Overview({ teamId }: { teamId: string }) {
   return (
-    <div className="grid md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-[160px] px-2 md:px-3 pb-2">
       <OverviewCards teamId={teamId} />
     </div>
+  )
+}
+
+function Skeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/50 p-4 animate-pulse">
+          <div className="h-4 w-28 bg-slate-700/60 rounded mb-3" />
+          <div className="h-3 w-40 bg-slate-800/60 rounded" />
+        </div>
+      ))}
+    </>
   )
 }
 
@@ -81,31 +109,115 @@ function OverviewCards({ teamId }: { teamId: string }) {
   const { data: goalsData } = useSWR(`/api/teams/${teamId}/goals`, fetcher)
   const { data: membersData } = useSWR(`/api/teams/${teamId}/members`, fetcher)
   const { data: chatData } = useSWR(`/api/teams/${teamId}/chat`, fetcher)
-  const goals = (goalsData?.goals || []) as Array<{ id: string; status: string }>
+  const { data: activityData } = useSWR(`/api/teams/${teamId}/activity`, fetcher)
+  const { data: tasksData } = useSWR(`/api/tasks`, fetcher)
+  const goals = (goalsData?.goals || []) as Array<{ id: string; status: string; dueDate?: string|null }>
   const total = goals.length
   const done = goals.filter(g=>g.status==='COMPLETE').length
+  const now = new Date()
+  const activeGoals = goals.filter(g => g.status !== 'COMPLETE')
+  const overdueGoals = activeGoals.filter(g => g.dueDate && new Date(g.dueDate as any) < now).length
   const pct = total ? Math.round((done/total)*100) : 0
+  const memberIds = new Set(((membersData?.members||[]) as any[]).map((m:any)=>m.id))
+  const allTasks = ((tasksData?.projects||[]) as any[]).flatMap((p:any)=> p.tasks || [])
+  const teamTasks = allTasks.filter((t:any)=> !t.assigneeId || memberIds.has(t.assigneeId))
+  const openTasks = teamTasks.filter((t:any)=> t.status !== 'DONE').length
+  const overdueTasks = teamTasks.filter((t:any)=> t.status !== 'DONE' && t.dueDate && new Date(t.dueDate) < new Date()).length
+  const loadingGoals = goalsData === undefined
+  const loadingChat = chatData === undefined
+  const InlineSkeleton = ({ lines = 2 }: { lines?: number }) => (
+    <div className="animate-pulse space-y-2">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} className={`h-3 rounded ${i===0?'w-32':'w-40'} bg-slate-700/50`} />
+      ))}
+    </div>
+  )
   return (
     <>
-      <Card title="Goals Snapshot">
-        <div className="text-slate-300 text-sm">{done}/{total} complete ({pct}%)</div>
+      <Card title="Goals">
+        {loadingGoals ? (
+          <InlineSkeleton />
+        ) : total > 0 ? (
+          <>
+            <div className="text-3xl font-semibold text-indigo-400">{pct}%</div>
+            <div className="text-slate-300 text-sm">{done} of {total} complete</div>
+          </>
+        ) : (
+          <div className="text-slate-400 text-sm">No goals yet — <a href="#" className="text-indigo-300 underline" onClick={(e)=>{e.preventDefault(); const el=document.querySelector('[data-tab=\"goals\"]') as HTMLElement|null; el?.click()}}>create one</a>.</div>
+        )}
       </Card>
-      <Card title="Workload Snapshot">
-        <div className="text-slate-300 text-sm">Team members: {(membersData?.members||[]).length}</div>
+      <Card title="Workload">
+        <div className="grid grid-cols-1 gap-2">
+            <div className="flex items-end gap-6">
+              <div>
+                <div className="text-3xl font-semibold text-emerald-400">{(membersData?.members||[]).length}</div>
+                <div className="text-slate-300 text-sm">Members</div>
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-blue-400">{Number.isFinite(openTasks) ? openTasks : 0}</div>
+                <div className="text-slate-300 text-sm">Open tasks</div>
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-rose-400">{Number.isFinite(overdueGoals) ? overdueGoals : 0}</div>
+                <div className="text-slate-300 text-sm">Overdue</div>
+              </div>
+            </div>
+            <div className="text-slate-300 text-sm">
+            <div className="font-medium mb-1 text-amber-300">Important goals</div>
+              <ul className="list-disc pl-5 space-y-0.5">
+                {goals.filter((g:any)=>g.starred).slice(0,3).map((g:any)=> (
+                  <li key={g.id} className="truncate text-amber-200">{g.title}</li>
+                ))}
+                {goals.filter((g:any)=>g.starred).length === 0 && (
+                  <li className="list-none text-slate-400">No starred goals yet</li>
+                )}
+              </ul>
+            </div>
+        </div>
       </Card>
       <Card title="Recent Chat">
-        <div className="text-slate-300 text-sm">Last: {(chatData?.messages||[]).slice(-1)[0]?.text || '—'}</div>
+        {loadingChat ? (
+          <InlineSkeleton />
+        ) : ((chatData?.messages||[]).length > 0) ? (
+          <div className="text-sm space-y-2 max-h-[140px] overflow-auto pr-2 tc-scroll">
+            {(chatData?.messages||[]).slice(-3).reverse().map((m:any)=> (
+              <div key={m.id} className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-slate-200 truncate"><span className="text-slate-400">{m.userName}:</span> {m.text}</div>
+                  <div className="text-[11px] text-slate-500">{timeAgo(m.ts)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-slate-400 text-sm">No messages yet — <a href="#" className="text-indigo-300 underline" onClick={(e)=>{e.preventDefault(); const el=document.querySelector('[data-tab=\"chat\"]') as HTMLElement|null; el?.click()}}>start chatting</a>.</div>
+        )}
       </Card>
       <div className="md:col-span-3">
         <Card title="Recent Activity">
-          <div className="text-slate-300 text-sm">{(chatData?.messages||[]).slice(-5).reverse().map((m:any)=> (<div key={m.id} className="truncate">{m.userName}: {m.text}</div>))}</div>
+          <div className="h-[140px] overflow-auto pr-2 space-y-2 tc-scroll">
+            {(activityData?.events||[]).length ? (
+              (activityData!.events as any[]).map((ev:any)=> (
+                <div key={ev.id} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-slate-200 truncate">{ev.text}</div>
+                    <div className="text-[11px] text-slate-500">{timeAgo(ev.ts)}</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-slate-400 text-sm">No recent activity</div>
+            )}
+          </div>
         </Card>
       </div>
     </>
   )
 }
 
-function People({ teamId, members, onInvite }: { teamId: string; members: Array<{ id: string; name: string|null; email: string|null; role: string }>; onInvite: ()=>void }) {
+function People({ teamId, members, onInvite }: { teamId: string; members: Array<{ id: string; name: string|null; email: string|null; role: string; roleLabelId?: string|null }>; onInvite: ()=>void }) {
   const [local, setLocal] = React.useState(members)
   React.useEffect(()=>setLocal(members), [members])
   const { data: rolesData } = useSWR(`/api/teams/${teamId}/roles`, fetcher)
@@ -124,12 +236,12 @@ function People({ teamId, members, onInvite }: { teamId: string; members: Array<
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-300">Roster</div>
-        <button onClick={onInvite} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Invite</button>
+        <div className="text-sm text-slate-300 pl-4">Roster</div>
+        <button onClick={onInvite} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 mr-4 md:mr-6">Invite</button>
       </div>
-      <div className="rounded-lg border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl shadow-lg shadow-black/20 overflow-hidden bg-slate-950/40 mt-1">
         <table className="w-full text-sm">
-          <thead className="bg-slate-950 text-slate-300">
+          <thead className="bg-slate-950/70 text-slate-300">
             <tr>
               <th className="text-left px-3 py-2">Name</th>
               <th className="text-left px-3 py-2">Role</th>
@@ -140,11 +252,11 @@ function People({ teamId, members, onInvite }: { teamId: string; members: Array<
           </thead>
           <tbody>
             {local.length === 0 ? (
-              <tr className="border-t border-slate-800">
+              <tr className="border-t border-slate-800/60">
                 <td className="px-3 py-4 text-slate-400" colSpan={5}>No members yet.</td>
               </tr>
             ) : local.map((m) => (
-              <tr key={m.id} className="border-t border-slate-800">
+              <tr key={m.id} className="border-t border-slate-800/60">
                 <td className="px-3 py-2">
                   <div className="text-slate-200">{m.name || '—'}</div>
                   <div className="text-xs text-slate-400">{m.email || '—'}</div>
@@ -169,7 +281,7 @@ function People({ teamId, members, onInvite }: { teamId: string; members: Array<
         <div className="fixed inset-0 z-[100000]">
           <div className="absolute inset-0 bg-slate-950/60" onClick={()=>setPickerFor(null)} />
           <div className="absolute inset-0 grid place-items-center p-4">
-            <div className="relative w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-4" role="dialog" aria-modal="true">
+            <div className="relative w-full max-w-sm rounded-2xl shadow-lg shadow-black/20 bg-slate-900 p-4" role="dialog" aria-modal="true">
               <button aria-label="Close" onClick={()=>setPickerFor(null)} className="absolute right-2 top-2 h-8 w-8 grid place-items-center rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800">×</button>
               <div className="text-slate-200 font-medium mb-2 pr-10">Select role</div>
               <div className="grid gap-2">
@@ -188,9 +300,32 @@ function People({ teamId, members, onInvite }: { teamId: string; members: Array<
 
 // RoleBadges removed; replaced by modal picker sourced from Team Settings roles
 
+function AssignDropdown({ teamId, currentOwnerId, onAssign }: { teamId: string; currentOwnerId: string|null; onAssign: (userId: string|null) => void }) {
+  const { data } = useSWR(`/api/teams/${teamId}/members`, fetcher)
+  const { data: teamInfo } = useSWR(`/api/teams/${teamId}`, fetcher)
+  const members = React.useMemo(() => {
+    const list = (data?.members || []) as Array<{ id: string; name: string|null; email: string|null }>
+    return list
+  }, [data?.members])
+  const [open, setOpen] = React.useState(false)
+  return (
+    <div className="relative inline-block">
+      <button onClick={()=>setOpen(o=>!o)} className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800 text-slate-200" title="Assign">Assign</button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-1 w-48 rounded-md border border-slate-800 bg-slate-900 p-1 shadow-lg">
+          <button onClick={()=>{ onAssign(null); setOpen(false) }} className={`w-full text-left px-2 py-1 rounded hover:bg-slate-800 ${currentOwnerId===null?'text-indigo-300':'text-slate-200'}`}>Unassigned</button>
+          {members.map(m => (
+            <button key={m.id} onClick={()=>{ onAssign(m.id); setOpen(false) }} className={`w-full text-left px-2 py-1 rounded hover:bg-slate-800 ${currentOwnerId===m.id?'text-indigo-300':'text-slate-200'}`}>{m.name || m.email || 'User'}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Goals({ teamId }: { teamId: string }) {
   const { data, mutate } = useSWR(`/api/teams/${teamId}/goals`, fetcher)
-  const goals = (data?.goals || []) as Array<{ id: string; title: string; description?: string }>
+  const goals = (data?.goals || []) as Array<{ id: string; title: string; description?: string; status?: string; ownerId?: string | null; starred?: boolean; dueDate?: string|null }>
   const [createOpen, setCreateOpen] = React.useState(false)
   const [createBusy, setCreateBusy] = React.useState(false)
   const [title, setTitle] = React.useState('')
@@ -222,28 +357,32 @@ function Goals({ teamId }: { teamId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-300">Objectives</div>
-        <div className="flex gap-2">
+        <div className="text-sm text-slate-300 pl-4">Objectives</div>
+        <div className="flex gap-2 mr-4 md:mr-6">
           <button onClick={()=>setCreateOpen(true)} className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">+ New Goal</button>
         </div>
       </div>
-      <div className="rounded-lg border border-slate-800 overflow-hidden">
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-950 text-slate-300">
+          <thead className="bg-slate-950/70 text-slate-300">
             <tr>
               <th className="text-left px-3 py-2">Title</th>
               <th className="text-left px-3 py-2">Description</th>
+              <th className="text-left px-3 py-2">Due date</th>
               <th className="text-left px-3 py-2">Status</th>
               <th className="text-right px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {goals.length === 0 ? (
-              <tr className="border-t border-slate-800"><td colSpan={4} className="px-3 py-3 text-slate-400">No goals yet.</td></tr>
-            ) : [...goals].sort((a,b)=> (a.status==='COMPLETE'?1:0) - (b.status==='COMPLETE'?1:0)).map(g => (
-              <tr key={g.id} className={`border-t border-slate-800 ${g.status==='COMPLETE' ? 'opacity-90' : ''}`}>
+              <tr className="border-t border-slate-800/60"><td colSpan={4} className="px-3 py-3 text-slate-400">No goals yet.</td></tr>
+            ) : [...goals]
+              .sort((a,b)=> ((b.starred?1:0) - (a.starred?1:0)) || ((a.status==='COMPLETE'?1:0) - (b.status==='COMPLETE'?1:0)))
+              .map(g => (
+              <tr key={g.id} className={`border-t border-slate-800/60 ${g.status==='COMPLETE' ? 'opacity-90' : ''}`}>
                 <td className="px-3 py-2 text-slate-200">{g.title}</td>
                 <td className="px-3 py-2 text-slate-300">{g.description || '—'}</td>
+                <td className="px-3 py-2 text-slate-300">{g.dueDate ? new Date(g.dueDate).toLocaleDateString() : '—'}</td>
                 <td className="px-3 py-2">
                   {g.status==='COMPLETE' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-700/30 text-emerald-300 border border-emerald-700">Complete 🎉</span>
@@ -252,8 +391,10 @@ function Goals({ teamId }: { teamId: string }) {
                   )}
                 </td>
                 <td className="px-3 py-2 text-right space-x-2">
+                  <AssignDropdown teamId={teamId} currentOwnerId={g.ownerId || null} onAssign={async(userId)=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, ownerId: userId }) }); await mutate() }} />
+                  <button onClick={async()=>{ const next = !(g.starred||false); await fetch(`/api/teams/${teamId}/goals/${g.id}/updates`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: next }) }); await mutate(); }} className={`px-2 py-1 rounded-md border ${g.starred?'border-amber-500 text-amber-400 bg-amber-500/10':'border-slate-700 text-slate-300'} hover:bg-slate-800`} title="Favorite">★</button>
                   <button onClick={()=>setDeleteId(g.id)} className="px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700" title="Delete">🗑️</button>
-                  <button disabled={g.status==='COMPLETE'} onClick={async()=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, status: 'COMPLETE' }) }); await mutate(); try { const confetti = (await import('canvas-confetti')).default; const run=()=>{ confetti({ spread:60, ticks:70, gravity:0.9, startVelocity:30, particleCount:60, origin:{x:0.2,y:0.2}}); confetti({ spread:60, ticks:70, gravity:0.9, startVelocity:30, particleCount:60, origin:{x:0.8,y:0.2}}); confetti({ spread:60, ticks:70, gravity:0.9, startVelocity:30, particleCount:40, origin:{x:Math.random(),y:0.1}})}; run(); setTimeout(run,200); setTimeout(run,400);} catch {} }} className={`px-2 py-1 rounded-md ${g.status==='COMPLETE' ? 'bg-slate-700 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`} title="Mark Completed">Completed 🎉</button>
+                  <button disabled={g.status==='COMPLETE'} onClick={async()=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, status: 'COMPLETE' }) }); await mutate(); }} className={`px-2 py-1 rounded-md ${g.status==='COMPLETE' ? 'bg-slate-700 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`} title="Mark Completed">Completed 🎉</button>
                 </td>
               </tr>
             ))}
@@ -271,9 +412,22 @@ function Goals({ teamId }: { teamId: string }) {
               <div className="mt-4 grid gap-3">
                 <input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Goal title" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" />
                 <textarea value={desc} onChange={(e)=>setDesc(e.target.value)} placeholder="Description" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" rows={3} />
+                <label className="grid gap-1">
+                  <span className="text-sm text-slate-300">Due date</span>
+                  <input type="date" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" onChange={(e:any)=> (e.currentTarget.dataset.v = e.currentTarget.value)} data-v="" />
+                </label>
                 <div className="flex items-center justify-end gap-2">
                   <button type="button" onClick={()=>!createBusy && setCreateOpen(false)} className="px-3 py-2 rounded-md border border-slate-700 hover:bg-slate-800">Cancel</button>
-                  <button type="button" disabled={createBusy} onClick={submitCreate} className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-transform active:scale-[0.98]">{createBusy ? 'Creating…' : 'Create'}</button>
+                  <button type="button" disabled={createBusy} onClick={async()=>{
+                    const picker = document.querySelector('input[type="date"][data-v]') as HTMLInputElement | null
+                    const dueVal = picker?.dataset.v || picker?.value || ''
+                    const t = title.trim(); if (!t) return
+                    setCreateBusy(true)
+                    try {
+                      await fetch(`/api/teams/${teamId}/goals`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, description: desc.trim()||null, dueDate: dueVal || null }) })
+                      setTitle(''); setDesc(''); setCreateOpen(false); await mutate()
+                    } finally { setCreateBusy(false) }
+                  }} className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-transform active:scale-[0.98]">{createBusy ? 'Creating…' : 'Create'}</button>
                 </div>
               </div>
             </div>
@@ -336,7 +490,7 @@ function Notes({ teamId }: { teamId: string }) {
   }
   return (
     <div className="grid md:grid-cols-[280px_1fr] gap-4">
-      <div className="rounded-lg border border-slate-800 p-3">
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-3 mt-1">
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm text-slate-300">Notes</div>
           <button onClick={()=>setCreateOpen(true)} className="px-3 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm">+ New</button>
@@ -350,18 +504,19 @@ function Notes({ teamId }: { teamId: string }) {
           ))}
         </div>
       </div>
-      <div className="rounded-lg border border-slate-800 p-3">
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-3 mt-1">
         {!activeId ? (
           <div className="text-sm text-slate-300">Select a note to view/edit</div>
         ) : (
-          <NoteEditor
-            key={activeId}
-            teamId={teamId}
-            noteId={activeId}
-            title={(noteDetail?.title)||''}
-            content={(noteDetail?.contentMd)||''}
-            onSaved={async()=>{ await mutate(); await mutateDetail() }}
-          />
+          <div className="grid gap-3">
+            <NotesEditorWrapper
+              key={activeId}
+              teamId={teamId}
+              noteId={activeId}
+              initialMarkdown={(noteDetail?.contentMd)||''}
+              onSaved={async()=>{ await mutate(); await mutateDetail() }}
+            />
+          </div>
         )}
       </div>
 
@@ -403,16 +558,18 @@ function Notes({ teamId }: { teamId: string }) {
   )
 }
 
-function NoteEditor({ teamId, noteId, title, content, onSaved }: { teamId: string; noteId: string; title: string; content: string; onSaved: ()=>void }) {
-  const [t, setT] = React.useState(title)
-  const [md, setMd] = React.useState(content)
+function NotesEditorWrapper({ teamId, noteId, initialMarkdown, onSaved }: { teamId: string; noteId: string; initialMarkdown: string; onSaved: ()=>void }) {
+  const editorRef = useRef<NotesEditorHandle | null>(null)
+  const [t, setT] = React.useState('')
+  const [md, setMd] = React.useState(initialMarkdown)
   const [busy, setBusy] = React.useState(false)
   const [emojiOpen, setEmojiOpen] = React.useState(false)
   React.useEffect(()=>{ const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape') setEmojiOpen(false)}; window.addEventListener('keydown',onKey); return()=>window.removeEventListener('keydown',onKey)},[])
   async function save() {
     setBusy(true)
     try {
-      await fetch(`/api/teams/${teamId}/notes/${noteId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, contentMd: md }) })
+      const content = editorRef.current?.getMarkdown() || md
+      await fetch(`/api/teams/${teamId}/notes/${noteId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, contentMd: content }) })
       onSaved()
     } finally { setBusy(false) }
   }
@@ -480,24 +637,11 @@ function NoteEditor({ teamId, noteId, title, content, onSaved }: { teamId: strin
   ), [])
   return (
     <div className="grid gap-3">
-      <input value={t} onChange={(e)=>setT(e.target.value)} className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" />
+      <input aria-label="Note title" value={t} onChange={(e)=>setT(e.target.value)} className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" />
       <div className="relative flex items-center gap-2 text-sm">
-        <button className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800" onClick={toggleBulleted}>• Bulleted</button>
-        <button className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800" onClick={toggleNumbered}>1. Numbered</button>
-        <button className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800" onClick={()=>insert('**','**')}>Bold</button>
-        <button className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800" onClick={()=>insert('_','_')}>Italic</button>
-        <div className="relative">
-          <button className="px-2 py-1 rounded-md border border-slate-700 hover:bg-slate-800" onClick={()=>setEmojiOpen(v=>!v)}>Emoji 😃</button>
-          {emojiOpen && (
-            <div className="absolute z-10 mt-2 right-0 w-[300px] max-h-56 overflow-auto rounded-md border border-slate-700 bg-slate-900 p-2 grid grid-cols-8 gap-1" onMouseLeave={()=>setEmojiOpen(false)}>
-              {emojis.map((e, idx)=> (
-                <button key={idx} className="h-7 w-7 grid place-items-center rounded hover:bg-slate-800" onClick={()=>{ insert(e+' '); setEmojiOpen(false) }}>{e}</button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Old toolbar removed per request - only TipTap toolbar below */}
       </div>
-      <textarea id="tc-note-editor" value={md} onChange={(e)=>setMd(e.target.value)} rows={18} className="w-full min-h-[360px] px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100 font-mono" />
+      <NotesEditor ref={editorRef as any} initialMarkdown={md} />
       <div className="flex items-center justify-end gap-2">
         <button onClick={save} disabled={busy} className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">{busy ? 'Saving…' : 'Save'}</button>
       </div>
@@ -570,7 +714,7 @@ function TeamSettings({ teamId }: { teamId: string }) {
   return (
     <div className="space-y-3">
       <div className="grid md:grid-cols-[1fr_320px] gap-4">
-        <div className="rounded-lg border border-slate-800 p-4">
+        <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-4">
           <div className="text-sm font-medium text-slate-200 mb-3">Team Settings</div>
           <div className="grid gap-3 max-w-xl">
           <label className="grid gap-1">
@@ -587,7 +731,7 @@ function TeamSettings({ teamId }: { teamId: string }) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-800 p-4">
+        <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-4">
           <div className="text-sm font-medium text-slate-200 mb-3">Roles</div>
           <div className="flex items-center gap-2 mb-3">
             <input value={newRole} onChange={(e)=>setNewRole(e.target.value)} placeholder="New role name" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-950 text-slate-100" />
@@ -606,7 +750,7 @@ function TeamSettings({ teamId }: { teamId: string }) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-800 p-4">
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-4">
         <div className="text-sm font-medium text-slate-200 mb-3">Team members</div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -640,7 +784,19 @@ function TeamSettings({ teamId }: { teamId: string }) {
         </div>
       </div>
 
-      
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-rose-950/40 p-4 border border-rose-900/60">
+        <div className="text-sm font-medium text-rose-300 mb-2">Danger zone</div>
+        <div className="text-sm text-rose-200/80 mb-3">Deleting a team will remove its goals, notes, invites, and memberships. This cannot be undone.</div>
+        <button
+          onClick={async()=>{
+            const ok = confirm('Delete this team and all its data?')
+            if (!ok) return
+            await fetch(`/api/teams/${teamId}`, { method: 'DELETE' })
+            window.location.href = '/dashboard/teams'
+          }}
+          className="px-4 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700"
+        >Delete team</button>
+      </div>
     </div>
   )
 }

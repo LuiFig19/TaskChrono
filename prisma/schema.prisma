@@ -592,6 +592,7 @@ model TeamGoal {
   dueDate     DateTime?
   status      GoalStatus @default(PLANNED)
   progress    Float      @default(0)
+  starred     Boolean    @default(false)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 

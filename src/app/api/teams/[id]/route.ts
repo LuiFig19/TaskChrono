@@ -27,3 +27,23 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   return NextResponse.json({ id: team.id, name: team.name, description: team.description })
 }
 
+export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = (session.user as any).id as string
+  const { id } = await context.params
+  // Only admins can delete
+  const membership = await prisma.teamMembership.findFirst({ where: { teamId: id, userId }, select: { role: true } })
+  if (!membership || (membership.role as any) !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  await prisma.$transaction([
+    prisma.teamMembership.deleteMany({ where: { teamId: id } }),
+    prisma.teamGoal.deleteMany({ where: { teamId: id } }),
+    prisma.teamNote.deleteMany({ where: { teamId: id } }),
+    prisma.teamInvite.deleteMany({ where: { teamId: id } }),
+    prisma.teamRoleLabel.deleteMany({ where: { teamId: id } }),
+    prisma.teamActivity.deleteMany({ where: { teamId: id } }),
+    prisma.team.delete({ where: { id } }),
+  ] as any)
+  return NextResponse.json({ ok: true })
+}
+
