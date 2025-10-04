@@ -460,6 +460,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         isResizable
         isDraggable
         draggableHandle=".tc-widget-handle"
+        draggableCancel=".tc-no-drag"
         onDragStop={(l) => saveLayout(l as any)}
         onResizeStop={(l) => saveLayout(l as any)}
       >
@@ -469,8 +470,8 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
               <span>{widgets[id]?.title}</span>
               {id === 'calendar' && (
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</button>
-                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</button>
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="tc-no-drag inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Previous month">⟵</button>
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="tc-no-drag inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800" aria-label="Next month">⟶</button>
                         </div>
                       )}
               {id !== 'calendar' && (
