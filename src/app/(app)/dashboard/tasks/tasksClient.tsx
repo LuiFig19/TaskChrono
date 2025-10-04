@@ -11,6 +11,8 @@ type Task = {
   priority: number
   dueDate?: string | null
   createdAt: string
+  assigneeId?: string | null
+  teamId?: string | null
 }
 
 type ProjectGroup = {
@@ -29,11 +31,13 @@ export default function TasksClient() {
   const [description, setDescription] = useState("")
   const [priority, setPriority] = useState(3)
   const [dueDate, setDueDate] = useState("")
+  const [teamId, setTeamId] = useState<string | "">("")
 
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string | 'ALL'>('ALL')
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [orderByProject, setOrderByProject] = useState<Record<string, string[]>>({})
+  const [teamOptions, setTeamOptions] = useState<Array<{ id: string; name: string }>>([])
 
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
@@ -85,6 +89,19 @@ export default function TasksClient() {
     return () => clearInterval(id)
   }, [fetchData])
 
+  useEffect(() => {
+    // load teams list for linking
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/teams', { cache: 'no-store' })
+        const json = await res.json()
+        if (!cancelled) setTeamOptions((json?.teams || []).map((t: any) => ({ id: t.id, name: t.name })))
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   async function onAddTask(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !projectName.trim()) return
@@ -120,6 +137,7 @@ export default function TasksClient() {
           projectName: optimisticProjectName,
           priority,
           dueDate: dueDate || undefined,
+          teamId: teamId || null,
         }),
       })
       setTitle("")
@@ -127,6 +145,7 @@ export default function TasksClient() {
       setDescription("")
       setPriority(3)
       setDueDate("")
+      setTeamId("")
       fetchData()
     } finally {
       setSubmitting(false)
@@ -320,7 +339,7 @@ export default function TasksClient() {
             <label className="text-xs text-slate-400">Description</label>
             <textarea value={description} onChange={(e)=>setDescription(e.target.value)} rows={3} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" placeholder="Optional details" />
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-slate-400">Priority (1-5)</label>
               <input type="number" min={1} max={5} value={priority} onChange={(e)=>setPriority(Number(e.target.value)||3)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" title="Priority" placeholder="3" />
@@ -328,6 +347,16 @@ export default function TasksClient() {
             <div>
               <label className="text-xs text-slate-400">Due date</label>
               <input type="date" value={dueDate} onChange={(e)=>setDueDate(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" title="Due date" placeholder="YYYY-MM-DD" />
+            </div>
+            <div>
+              <label className="text-xs text-slate-400">Link to team (optional)</label>
+              <select value={teamId} onChange={(e)=>setTeamId(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200">
+                <option value="">No team</option>
+                {/* options fetched client-side */}
+                {teamOptions.map((t)=> (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="flex items-center gap-2">

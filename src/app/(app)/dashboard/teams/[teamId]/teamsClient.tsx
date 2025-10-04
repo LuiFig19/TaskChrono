@@ -57,7 +57,7 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
         </header>
 
         <nav className="mt-4 flex flex-wrap gap-2 text-sm pl-4">
-          {['overview','people','goals','notes','chat','team-settings'].map((t) => (
+          {['overview','people','goals','linked-tasks','notes','chat','team-settings'].map((t) => (
             <button key={t} data-tab={t} onClick={()=>setTab(t)} className={`px-3 py-1.5 rounded-full border ${tab===t ? 'border-indigo-500 bg-indigo-500/10 text-indigo-200' : 'border-slate-700 hover:bg-slate-800 text-slate-200'}`}>{t[0].toUpperCase()+t.slice(1)}</button>
           ))}
         </nav>
@@ -66,6 +66,7 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
           {tab === 'overview' && <Overview teamId={teamId} />}
           {tab === 'people' && <People teamId={teamId} members={(membersData?.members||[])} onInvite={()=>setTab('team-settings')} />}
           {tab === 'goals' && <Goals teamId={teamId} />}
+          {tab === 'linked-tasks' && <LinkedTasks teamId={teamId} />}
           {tab === 'notes' && <Notes teamId={teamId} />}
           {tab === 'chat' && <Chat teamId={teamId} />}
           {tab === 'team-settings' && <TeamSettings teamId={teamId} />}
@@ -120,7 +121,8 @@ function OverviewCards({ teamId }: { teamId: string }) {
   const pct = total ? Math.round((done/total)*100) : 0
   const memberIds = new Set(((membersData?.members||[]) as any[]).map((m:any)=>m.id))
   const allTasks = ((tasksData?.projects||[]) as any[]).flatMap((p:any)=> p.tasks || [])
-  const teamTasks = allTasks.filter((t:any)=> !t.assigneeId || memberIds.has(t.assigneeId))
+  // Count only tasks explicitly linked to this team
+  const teamTasks = allTasks.filter((t:any)=> t.teamId === teamId)
   const openTasks = teamTasks.filter((t:any)=> t.status !== 'DONE').length
   const overdueTasks = teamTasks.filter((t:any)=> t.status !== 'DONE' && t.dueDate && new Date(t.dueDate) < new Date()).length
   const loadingGoals = goalsData === undefined
@@ -158,7 +160,7 @@ function OverviewCards({ teamId }: { teamId: string }) {
                 <div className="text-slate-300 text-sm">Open tasks</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-rose-400">{Number.isFinite(overdueGoals) ? overdueGoals : 0}</div>
+                <div className="text-2xl font-semibold text-rose-400">{Number.isFinite(overdueTasks) ? overdueTasks : 0}</div>
                 <div className="text-slate-300 text-sm">Overdue</div>
               </div>
             </div>
@@ -214,6 +216,46 @@ function OverviewCards({ teamId }: { teamId: string }) {
         </Card>
       </div>
     </>
+  )
+}
+
+function LinkedTasks({ teamId }: { teamId: string }) {
+  const { data } = useSWR(`/api/tasks`, fetcher)
+  const tasks = React.useMemo(() => {
+    const all = ((data?.projects||[]) as any[]).flatMap((p:any)=> p.tasks || [])
+    return all.filter((t:any)=> t.teamId === teamId)
+  }, [data, teamId])
+  return (
+    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-slate-950/70 text-slate-300">
+          <tr>
+            <th className="text-left px-3 py-2">Title</th>
+            <th className="text-left px-3 py-2">Description</th>
+            <th className="text-left px-3 py-2">Due date</th>
+            <th className="text-left px-3 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tasks.length === 0 ? (
+            <tr className="border-t border-slate-800/60"><td colSpan={4} className="px-3 py-3 text-slate-400">No linked tasks yet.</td></tr>
+          ) : tasks.map((t:any)=> (
+            <tr key={t.id} className="border-t border-slate-800/60">
+              <td className="px-3 py-2 text-slate-200">{t.title}</td>
+              <td className="px-3 py-2 text-slate-300">{t.description || '—'}</td>
+              <td className="px-3 py-2 text-slate-300">{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'}</td>
+              <td className="px-3 py-2">
+                {t.status==='DONE' ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-700/30 text-emerald-300 border border-emerald-700">Done</span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">{t.status || 'TODO'}</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

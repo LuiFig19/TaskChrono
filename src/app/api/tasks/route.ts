@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     ...(projectId ? { where: { organizationId, id: projectId } } as any : {}),
     orderBy: { updatedAt: 'desc' },
     include: {
-      tasks: { orderBy: { createdAt: 'desc' } },
+      tasks: { orderBy: { createdAt: 'desc' }, select: { id: true, title: true, description: true, status: true, priority: true, dueDate: true, createdAt: true, assigneeId: true, teamId: true } },
     },
   })
 
@@ -43,6 +43,8 @@ export async function GET(request: Request) {
       priority: t.priority,
       dueDate: t.dueDate,
       createdAt: t.createdAt,
+      assigneeId: t.assigneeId,
+      teamId: (t as any).teamId || null,
     })),
   }))
 
@@ -62,8 +64,9 @@ export async function POST(request: Request) {
     projectName?: string
     priority?: number
     dueDate?: string
+    teamId?: string | null
   }
-  const { title, projectName, description, priority, dueDate } = body
+  const { title, projectName, description, priority, dueDate, teamId } = body
   if (!title || !projectName) return NextResponse.json({ error: 'Missing title or projectName' }, { status: 400 })
 
   let project = await prisma.project.findFirst({ where: { organizationId, name: projectName } })
@@ -80,6 +83,7 @@ export async function POST(request: Request) {
       priority: typeof priority === 'number' && priority >= 1 && priority <= 5 ? priority : 3,
       dueDate: dueDate ? new Date(dueDate) : null,
       assigneeId: userId,
+      teamId: teamId || null,
     },
   })
   // If project was PLANNING or COMPLETED, adding a task should make it ACTIVE

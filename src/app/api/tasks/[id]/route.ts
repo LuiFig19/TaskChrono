@@ -15,7 +15,7 @@ export async function PATCH(_req: Request, { params }: { params: { id: string } 
   const userId = (session.user as any).id as string
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
-  const body = await _req.json().catch(() => ({})) as { title?: string; description?: string | null; status?: string; priority?: number; dueDate?: string | null }
+  const body = await _req.json().catch(() => ({})) as { title?: string; description?: string | null; status?: string; priority?: number; dueDate?: string | null; teamId?: string | null }
   const updated = await prisma.task.update({
     where: { id: params.id },
     data: {
@@ -24,6 +24,7 @@ export async function PATCH(_req: Request, { params }: { params: { id: string } 
       status: body.status as any ?? undefined,
       priority: typeof body.priority === 'number' ? body.priority : undefined,
       dueDate: body.dueDate === undefined ? undefined : (body.dueDate ? new Date(body.dueDate) : null),
+      teamId: body.teamId === undefined ? undefined : (body.teamId || null),
     },
   })
   try { await recomputeProjectStatus(updated.projectId) } catch {}
