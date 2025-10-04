@@ -93,6 +93,9 @@ export default function ProjectProgressWidget() {
       <div className="grid gap-3 md:grid-cols-3 content-start overflow-y-auto pr-2 tc-scroll min-h-0 pb-2"> 
         {selectedIds.map((selectedId, idx) => {
         const progress = progressById[selectedId] ?? 0
+        const pct = Math.max(0, Math.min(100, progress))
+        const hue = Math.round((pct / 100) * 120) // 0=>red, 120=>green
+        const fillColor = `hsl(${hue}, 85%, 55%)`
         return (
           <div key={`ppw-${idx}`} className="rounded-md border border-slate-700 bg-slate-800/60 p-2">
             <div className="flex items-center gap-2 mb-1.5">
@@ -120,10 +123,15 @@ export default function ProjectProgressWidget() {
             </div>
             <div className="flex items-center justify-between text-slate-200 mb-1">
               <span>Progress</span>
-              <span className="text-xs text-slate-300">{progress}%</span>
+              <span className="text-xs text-slate-300">{pct}%</span>
             </div>
             <div className="h-2 w-full rounded bg-slate-900 overflow-hidden">
-              <div className={`h-2 bg-indigo-500 transition-[width] duration-500 w-[${progress}%]`} aria-hidden data-progress={progress} />
+              <div
+                className="h-2 rounded transition-all duration-500"
+                style={{ width: `${pct}%`, backgroundColor: fillColor } as React.CSSProperties}
+                aria-label={`Project progress ${pct}%`}
+                data-progress={pct}
+              />
             </div>
           </div>
         )
