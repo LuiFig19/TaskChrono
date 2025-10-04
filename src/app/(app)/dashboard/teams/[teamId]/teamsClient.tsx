@@ -78,7 +78,7 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/60 p-3">
+    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/60 p-3 h-full">
       <div className="text-sm font-medium text-slate-200 mb-2">{title}</div>
       {children}
     </div>
@@ -87,7 +87,10 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Overview({ teamId }: { teamId: string }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-[160px] px-2 md:px-3 pb-2">
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-2 md:px-3 pb-2"
+      style={{ gridAutoRows: '160px' } as React.CSSProperties}
+    >
       <OverviewCards teamId={teamId} />
     </div>
   )
