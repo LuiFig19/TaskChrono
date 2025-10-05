@@ -184,7 +184,7 @@ function OverviewCards({ teamId }: { teamId: string }) {
         {loadingChat ? (
           <InlineSkeleton />
         ) : ((chatData?.messages||[]).length > 0) ? (
-          <div className="text-sm space-y-2 max-h-[140px] overflow-auto pr-2 tc-scroll">
+          <div className="text-sm space-y-2 max-h-[110px] overflow-y-auto overflow-x-hidden pr-2 tc-scroll">
             {(chatData?.messages||[]).slice(-3).reverse().map((m:any)=> (
               <div key={m.id} className="flex items-start gap-2">
                 <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
@@ -201,7 +201,7 @@ function OverviewCards({ teamId }: { teamId: string }) {
       </Card>
       <div className="md:col-span-3">
         <Card title="Recent Activity">
-          <div className="h-[140px] overflow-auto pr-2 space-y-2 tc-scroll">
+          <div className="max-h-[110px] overflow-y-auto overflow-x-hidden pr-2 space-y-2 tc-scroll">
             {(activityData?.events||[]).length ? (
               (activityData!.events as any[]).map((ev:any)=> (
                 <div key={ev.id} className="flex items-start gap-2 text-sm">
