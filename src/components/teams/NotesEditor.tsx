@@ -15,7 +15,7 @@ export type NotesEditorHandle = {
   insertEmoji: (emoji: string) => void
 }
 
-export default forwardRef<NotesEditorHandle, { initialMarkdown: string }>(function NotesEditor(
+export default forwardRef<NotesEditorHandle, { initialMarkdown: string; onEmojiClick?: () => void }>(function NotesEditor(
   { initialMarkdown },
   ref,
 ) {
@@ -81,13 +81,8 @@ export default forwardRef<NotesEditorHandle, { initialMarkdown: string }>(functi
         >
           Italic
         </button>
-        <button
-          type="button"
-          onMouseDown={(e) => { e.preventDefault(); /* emoji picker integration point */ }}
-          className="px-2 py-1 rounded-md border border-slate-700 text-sm hover:bg-slate-800"
-        >
-          Emoji 😃
-        </button>
+        {/* Emoji picker anchored to this button */}
+        <EmojiButton editorInsert={(emoji)=> editor?.chain().focus().insertContent(emoji).run()} />
       </div>
       <div className="rounded-xl bg-black/20 border border-white/5 p-3 h-96 overflow-y-auto">
         <EditorContent editor={editor} />
@@ -95,5 +90,46 @@ export default forwardRef<NotesEditorHandle, { initialMarkdown: string }>(functi
     </div>
   )
 })
+
+
+function EmojiButton({ editorInsert }: { editorInsert: (emoji: string) => void }) {
+  const [open, setOpen] = React.useState(false)
+  const emojis = React.useMemo(() => (
+    '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 💀 ☠️ 👻 👽 🤖 🎃 💩 🙈 🙉 🙊 💘 💝 💖 💗 💓 💞 💕 💌 💟 👍 👎 🙌 👏 🔥 ✅ ❌ ⭐ 🌟 ✨ ⚡ 🎉 🥳 ❤️ 🧡 💛 💚 💙 💜 🤍 🤎 🖤'
+      .split(/\s+/)
+  ), [])
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); setOpen(v=>!v) }}
+        className="px-2 py-1 rounded-md border border-slate-700 text-sm hover:bg-slate-800"
+        aria-label="Insert emoji"
+      >
+        😃 Emoji
+      </button>
+      {open && (
+        <div className="absolute z-[1000] mt-2 left-0 w-[340px] max-h-[260px] overflow-auto rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-xl">
+          <div className="grid grid-cols-8 gap-1 text-lg">
+            {emojis.map((e, i) => (
+              <button
+                key={i}
+                className="h-8 w-8 grid place-items-center rounded hover:bg-slate-800"
+                onMouseDown={(ev) => { ev.preventDefault(); editorInsert(e); setOpen(false) }}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 

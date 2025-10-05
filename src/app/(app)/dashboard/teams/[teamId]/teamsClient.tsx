@@ -78,8 +78,8 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/60 p-3 h-full">
-      <div className="text-sm font-medium text-slate-200 mb-2">{title}</div>
+    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/60 p-3 h-full flex flex-col mx-2 md:mx-3">
+      <div className="text-sm font-medium text-slate-200 mb-2 shrink-0">{title}</div>
       {children}
     </div>
   )
@@ -88,8 +88,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function Overview({ teamId }: { teamId: string }) {
   return (
     <div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-2 md:px-3 pb-2"
-      style={{ gridAutoRows: '160px' } as React.CSSProperties}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 px-2 md:px-3 pb-1"
+      style={{ gridAutoRows: '172px' } as React.CSSProperties}
     >
       <OverviewCards teamId={teamId} />
     </div>
@@ -184,7 +184,7 @@ function OverviewCards({ teamId }: { teamId: string }) {
         {loadingChat ? (
           <InlineSkeleton />
         ) : ((chatData?.messages||[]).length > 0) ? (
-          <div className="text-sm space-y-2 max-h-[110px] overflow-y-auto overflow-x-hidden pr-2 tc-scroll">
+          <div className="text-sm space-y-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 tc-scroll">
             {(chatData?.messages||[]).slice(-3).reverse().map((m:any)=> (
               <div key={m.id} className="flex items-start gap-2">
                 <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
@@ -201,7 +201,7 @@ function OverviewCards({ teamId }: { teamId: string }) {
       </Card>
       <div className="md:col-span-3">
         <Card title="Recent Activity">
-          <div className="max-h-[110px] overflow-y-auto overflow-x-hidden pr-2 space-y-2 tc-scroll">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 tc-scroll">
             {(activityData?.events||[]).length ? (
               (activityData!.events as any[]).map((ev:any)=> (
                 <div key={ev.id} className="flex items-start gap-2 text-sm">
@@ -229,7 +229,7 @@ function LinkedTasks({ teamId }: { teamId: string }) {
     return all.filter((t:any)=> t.teamId === teamId)
   }, [data, teamId])
   return (
-    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden">
+    <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden mx-2 md:mx-3">
       <table className="w-full text-sm">
         <thead className="bg-slate-950/70 text-slate-300">
           <tr>
@@ -282,9 +282,10 @@ function People({ teamId, members, onInvite }: { teamId: string; members: Array<
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-300 pl-4">Roster</div>
-        <button onClick={onInvite} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 mr-4 md:mr-6">Invite</button>
+        {/* invite button intentionally removed on People tab */}
+        <div className="mr-4 md:mr-6" />
       </div>
-      <div className="rounded-2xl shadow-lg shadow-black/20 overflow-hidden bg-slate-950/40 mt-1">
+      <div className="rounded-2xl shadow-lg shadow-black/20 overflow-hidden bg-slate-950/40 mt-1 mx-2 md:mx-3">
         <table className="w-full text-sm">
           <thead className="bg-slate-950/70 text-slate-300">
             <tr>
@@ -407,7 +408,7 @@ function Goals({ teamId }: { teamId: string }) {
           <button onClick={()=>setCreateOpen(true)} className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">+ New Goal</button>
         </div>
       </div>
-      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden">
+      <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden mx-2 md:mx-3">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-slate-950/70 text-slate-300">
             <tr>
@@ -682,13 +683,13 @@ function NotesEditorWrapper({ teamId, noteId, initialMarkdown, onSaved }: { team
     setTimeout(()=>{ const t = getTa(); if (t) { t.focus(); t.selectionStart = start; t.selectionEnd = start + nextSel.length } }, 0)
   }
   const emojis = React.useMemo(() => (
-    '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 💀 ☠️ 👻 👽 🤖 🎃 💩 🙈 🙉 🙊 💘 💝 💖 💗 💓 💞 💕 💌 💟'.split(/\s+/)
+    '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 💀 ☠️ 👻 👽 🤖 🎃 💩 🙈 🙉 🙊 💘 💝 💖 💗 💓 💞 💕 💌 💟 👍 👎 🙌 👏 🔥 ✅ ❌ ⭐ 🌟 ✨ ⚡ 🎉 🥳 ❤️ 🧡 💛 💚 💙 💜 🤍 🤎 🖤'.split(/\s+/)
   ), [])
   return (
     <div className="grid gap-3">
       <input aria-label="Note title" value={t} onChange={(e)=>setT(e.target.value)} className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" />
       <div className="relative flex items-center gap-2 text-sm">
-        {/* Old toolbar removed per request - only TipTap toolbar below */}
+        {/* Toolbar is provided within NotesEditor, including Emoji button anchored to itself */}
       </div>
       <NotesEditor ref={editorRef as any} initialMarkdown={md} />
       <div className="flex items-center justify-end gap-2">
@@ -701,6 +702,8 @@ function NotesEditorWrapper({ teamId, noteId, initialMarkdown, onSaved }: { team
 function Chat({ teamId }: { teamId: string }) {
   const { data, mutate } = useSWR(`/api/teams/${teamId}/chat`, fetcher)
   const [text, setText] = React.useState('')
+  const [emojiOpen, setEmojiOpen] = React.useState(false)
+  const emojis = React.useMemo(()=> '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 👍 👎 🙌 👏 🔥 ✅ ❌ ⭐ 🎉 ❤️'.split(/\s+/), [])
   React.useEffect(()=>{ const id = setInterval(()=>mutate(), 4000); return ()=>clearInterval(id) }, [mutate])
   async function send() {
     const t = text.trim(); if (!t) return
@@ -716,7 +719,17 @@ function Chat({ teamId }: { teamId: string }) {
         ))}
         {!(data?.messages||[]).length && <div className="text-slate-500 text-sm">No messages yet.</div>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative">
+        <button aria-label="Emoji" className="h-10 w-10 grid place-items-center rounded-md border border-slate-700 hover:bg-slate-800" onClick={()=>setEmojiOpen(v=>!v)}>😊</button>
+        {emojiOpen && (
+          <div className="absolute bottom-12 left-0 z-[1000] w-[320px] max-h-[260px] overflow-auto rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-xl">
+            <div className="grid grid-cols-8 gap-1 text-lg">
+              {emojis.map((e,i)=> (
+                <button key={i} className="h-8 w-8 grid place-items-center rounded hover:bg-slate-800" onClick={()=>{ setText(t=>t + e); setEmojiOpen(false) }}>{e}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <input value={text} onChange={(e)=>setText(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder="Message" className="flex-1 px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100" />
         <button onClick={send} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Send</button>
       </div>
