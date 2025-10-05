@@ -21,6 +21,16 @@ export default function ChatPanel() {
   const [text, setText] = useState('')
   const listRef = useRef<HTMLDivElement | null>(null)
   const eventRef = useRef<EventSource | null>(null)
+  const [emojiOpen, setEmojiOpen] = useState(false)
+  const emojis = useMemo(() => (
+    '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 👍 👎 🙌 👏 🔥 ✅ ❌ ⭐ 🎉 ❤️ 🧡 💛 💚 💙 💜 🤍 🤎 🖤'
+      .split(/\s+/)
+  ), [])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setEmojiOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     DEFAULT_CHANNELS.forEach(c => { if (!seenRef.current.has(c.id)) seenRef.current.set(c.id, new Set()) })
@@ -128,7 +138,19 @@ export default function ChatPanel() {
                 </div>
               )})}
             </div>
-            <form onSubmit={async(e)=>{e.preventDefault(); await send();}} className="p-3 border-t border-slate-800 grid grid-cols-[1fr_auto] gap-2">
+            <form onSubmit={async(e)=>{e.preventDefault(); await send();}} className="p-3 border-t border-slate-800 grid grid-cols-[auto_1fr_auto] gap-2 relative">
+              <div className="relative">
+                <button type="button" aria-label="Emoji" className="h-10 w-10 grid place-items-center rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800" onClick={()=>setEmojiOpen(v=>!v)}>😊</button>
+                {emojiOpen && (
+                  <div className="absolute bottom-12 left-0 z-[2147483647] w-[320px] max-h-[260px] overflow-auto tc-scroll rounded-xl border border-slate-700 bg-slate-900 p-2 shadow-xl">
+                    <div className="grid grid-cols-8 gap-1 text-lg">
+                      {emojis.map((e,i)=> (
+                        <button key={i} className="h-8 w-8 grid place-items-center rounded hover:bg-slate-800" onMouseDown={(ev)=>{ ev.preventDefault(); setText(t=>t + e); setEmojiOpen(false) }}>{e}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={(e)=>{ if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder="Message..." aria-label="Message" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-900 text-slate-100 focus:ring-2 focus:ring-indigo-500/50" />
               <button className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-transform active:scale-[0.98]">Send</button>
             </form>

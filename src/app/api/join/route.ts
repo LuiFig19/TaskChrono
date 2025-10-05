@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOrgInviteToken } from '@/lib/invites'
+import { broadcastActivity } from '@/lib/activity'
 
 export async function GET(req: Request) {
 	const url = new URL(req.url)
@@ -27,6 +28,12 @@ export async function GET(req: Request) {
 		if (!state || Array.isArray(state)) state = { orgs: {} }
 		state.activeOrgId = payload.orgId
 		await prisma.userPreference.upsert({ where: { userId }, update: { dashboardWidgets: state as any }, create: { userId, dashboardWidgets: state as any } })
+	} catch {}
+
+	// Broadcast activity for dashboards listening globally
+	try {
+		const user = await prisma.user.findUnique({ where: { id: userId } })
+		broadcastActivity({ type: 'org.member.joined', message: `${user?.name || user?.email || 'A user'} has joined this dashboard 🎉` })
 	} catch {}
 	return NextResponse.json({ ok: true, needsAuth: false, orgId: payload.orgId })
 }

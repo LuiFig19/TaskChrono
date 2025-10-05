@@ -795,9 +795,9 @@ function TeamSettings({ teamId }: { teamId: string }) {
 
         <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 p-4">
           <div className="text-sm font-medium text-slate-200 mb-3">Roles</div>
-          <div className="flex items-center gap-2 mb-3">
-            <input value={newRole} onChange={(e)=>setNewRole(e.target.value)} placeholder="New role name" className="px-3 py-2 rounded-md border border-slate-700 bg-slate-950 text-slate-100" />
-            <button onClick={async()=>{ const n = newRole.trim(); if (!n) return; await fetch(`/api/teams/${teamId}/roles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) }); setNewRole(''); await mutateRoles() }} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Add role</button>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-2 mb-3">
+            <input value={newRole} onChange={(e)=>setNewRole(e.target.value)} placeholder="New role name" className="w-full min-w-0 px-3 py-2 rounded-md border border-slate-700 bg-slate-950 text-slate-100" />
+            <button onClick={async()=>{ const n = newRole.trim(); if (!n) return; await fetch(`/api/teams/${teamId}/roles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) }); setNewRole(''); await mutateRoles() }} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 whitespace-nowrap">Add role</button>
           </div>
           <div className="flex flex-wrap gap-2">
             {(rolesData?.roles||[]).map((r: any) => (

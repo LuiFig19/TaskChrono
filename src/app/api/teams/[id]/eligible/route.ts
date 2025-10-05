@@ -14,13 +14,14 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
   const members = await prisma.organizationMember.findMany({
     where: { organizationId },
     include: { user: true },
-    orderBy: { createdAt: 'asc' },
+    // Avoid ordering by non-existent columns across providers; we'll sort in-memory by user name/email
   })
   const teamMembers = await prisma.teamMembership.findMany({ where: { teamId } })
   const teamUserIds = new Set(teamMembers.map((m) => m.userId))
   const eligible = members
     .filter((m) => !teamUserIds.has(m.userId))
-    .map((m) => ({ id: m.userId, name: m.user?.name, email: m.user?.email }))
+    .map((m) => ({ id: m.userId, name: m.user?.name || '', email: m.user?.email || '' }))
+    .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email))
   return NextResponse.json({ users: eligible })
 }
 
