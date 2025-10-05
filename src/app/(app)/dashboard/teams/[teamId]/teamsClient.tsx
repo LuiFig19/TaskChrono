@@ -415,7 +415,7 @@ function Goals({ teamId }: { teamId: string }) {
               <th className="text-left px-3 py-2 w-[480px]">Description</th>
               <th className="text-left px-3 py-2">Due date</th>
               <th className="text-left px-3 py-2">Status</th>
-              <th className="text-right px-3 py-2">Actions</th>
+              <th className="text-right px-3 py-2 w-[280px]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -427,7 +427,7 @@ function Goals({ teamId }: { teamId: string }) {
               <tr key={g.id} className={`border-t border-slate-800/60 ${g.status==='COMPLETE' ? 'opacity-90' : ''}`}>
                 <td className="px-3 py-2 text-slate-200 align-top">{g.title}</td>
                 <td className="px-3 py-2 align-top w-[480px]">
-                  <div className="max-h-16 overflow-y-auto pr-1 text-slate-300 break-words tc-scroll">{g.description || '—'}</div>
+                  <div className="max-h-16 overflow-y-auto overflow-x-hidden px-2 text-slate-300 break-words whitespace-pre-wrap tc-scroll">{g.description || '—'}</div>
                 </td>
                 <td className="px-3 py-2 text-slate-300 align-top">{g.dueDate ? new Date(g.dueDate).toLocaleDateString() : '—'}</td>
                 <td className="px-3 py-2 align-top">
@@ -437,11 +437,13 @@ function Goals({ teamId }: { teamId: string }) {
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Active</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-right space-x-2 whitespace-nowrap align-top">
-                  <AssignDropdown teamId={teamId} currentOwnerId={g.ownerId || null} onAssign={async(userId)=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, ownerId: userId }) }); await mutate() }} />
-                  <button onClick={async()=>{ const next = !(g.starred||false); await fetch(`/api/teams/${teamId}/goals/${g.id}/updates`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: next }) }); await mutate(); }} className={`px-2 py-1 rounded-md border ${g.starred?'border-amber-500 text-amber-400 bg-amber-500/10':'border-slate-700 text-slate-300'} hover:bg-slate-800`} title="Favorite">★</button>
-                  <button onClick={()=>setDeleteId(g.id)} className="px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700" title="Delete">🗑️</button>
-                  <button disabled={g.status==='COMPLETE'} onClick={async()=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, status: 'COMPLETE' }) }); await mutate(); }} className={`px-2 py-1 rounded-md ${g.status==='COMPLETE' ? 'bg-slate-700 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`} title="Mark Completed">Completed 🎉</button>
+                <td className="px-3 py-2 align-top min-w-[280px]">
+                  <div className="inline-flex flex-wrap gap-2 justify-end w-full">
+                    <AssignDropdown teamId={teamId} currentOwnerId={g.ownerId || null} onAssign={async(userId)=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, ownerId: userId }) }); await mutate() }} />
+                    <button onClick={async()=>{ const next = !(g.starred||false); await fetch(`/api/teams/${teamId}/goals/${g.id}/updates`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: next }) }); await mutate(); }} className={`px-2 py-1 rounded-md border ${g.starred?'border-amber-500 text-amber-400 bg-amber-500/10':'border-slate-700 text-slate-300'} hover:bg-slate-800`} title="Favorite">★</button>
+                    <button onClick={()=>setDeleteId(g.id)} className="px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700" title="Delete">🗑️</button>
+                    <button disabled={g.status==='COMPLETE'} onClick={async()=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, status: 'COMPLETE' }) }); await mutate(); }} className={`px-2 py-1 rounded-md ${g.status==='COMPLETE' ? 'bg-slate-700 text-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`} title="Mark Completed">Completed 🎉</button>
+                  </div>
                 </td>
               </tr>
             ))}
