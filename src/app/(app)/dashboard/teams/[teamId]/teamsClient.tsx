@@ -408,11 +408,11 @@ function Goals({ teamId }: { teamId: string }) {
         </div>
       </div>
       <div className="rounded-2xl shadow-lg shadow-black/20 bg-slate-950/40 overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-slate-950/70 text-slate-300">
             <tr>
               <th className="text-left px-3 py-2">Title</th>
-              <th className="text-left px-3 py-2">Description</th>
+              <th className="text-left px-3 py-2 w-[480px]">Description</th>
               <th className="text-left px-3 py-2">Due date</th>
               <th className="text-left px-3 py-2">Status</th>
               <th className="text-right px-3 py-2">Actions</th>
@@ -425,17 +425,19 @@ function Goals({ teamId }: { teamId: string }) {
               .sort((a,b)=> ((b.starred?1:0) - (a.starred?1:0)) || ((a.status==='COMPLETE'?1:0) - (b.status==='COMPLETE'?1:0)))
               .map(g => (
               <tr key={g.id} className={`border-t border-slate-800/60 ${g.status==='COMPLETE' ? 'opacity-90' : ''}`}>
-                <td className="px-3 py-2 text-slate-200">{g.title}</td>
-                <td className="px-3 py-2 text-slate-300">{g.description || '—'}</td>
-                <td className="px-3 py-2 text-slate-300">{g.dueDate ? new Date(g.dueDate).toLocaleDateString() : '—'}</td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 text-slate-200 align-top">{g.title}</td>
+                <td className="px-3 py-2 align-top w-[480px]">
+                  <div className="max-h-16 overflow-y-auto pr-1 text-slate-300 break-words tc-scroll">{g.description || '—'}</div>
+                </td>
+                <td className="px-3 py-2 text-slate-300 align-top">{g.dueDate ? new Date(g.dueDate).toLocaleDateString() : '—'}</td>
+                <td className="px-3 py-2 align-top">
                   {g.status==='COMPLETE' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-700/30 text-emerald-300 border border-emerald-700">Complete 🎉</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Active</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-right space-x-2">
+                <td className="px-3 py-2 text-right space-x-2 whitespace-nowrap align-top">
                   <AssignDropdown teamId={teamId} currentOwnerId={g.ownerId || null} onAssign={async(userId)=>{ await fetch(`/api/teams/${teamId}/goals`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goalId: g.id, ownerId: userId }) }); await mutate() }} />
                   <button onClick={async()=>{ const next = !(g.starred||false); await fetch(`/api/teams/${teamId}/goals/${g.id}/updates`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: next }) }); await mutate(); }} className={`px-2 py-1 rounded-md border ${g.starred?'border-amber-500 text-amber-400 bg-amber-500/10':'border-slate-700 text-slate-300'} hover:bg-slate-800`} title="Favorite">★</button>
                   <button onClick={()=>setDeleteId(g.id)} className="px-2 py-1 rounded-md bg-rose-600 text-white hover:bg-rose-700" title="Delete">🗑️</button>
