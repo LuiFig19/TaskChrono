@@ -138,7 +138,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
             <div className="font-medium">Team</div>
             <div className="text-sm text-slate-400">Invite and manage members</div>
           </div>
-          <button onClick={() => setOpen((o) => ({ ...o, team: !o.team }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
+          <button data-settings-toggle onClick={() => setOpen((o) => ({ ...o, team: !o.team }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
             {open.team ? 'Hide' : 'Show'}
           </button>
         </header>
@@ -185,7 +185,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
             <div className="font-medium">Workspaces</div>
             <div className="text-sm text-slate-400">Switch between organizations you belong to</div>
           </div>
-          <button onClick={() => setOrgPickerOpen(true)} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">Switch</button>
+          <button data-settings-toggle onClick={() => setOrgPickerOpen(true)} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">Switch</button>
         </header>
       </section>
 
@@ -204,7 +204,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
             <div className="font-medium">Billing</div>
             <div className="text-sm text-slate-400">Manage subscription</div>
           </div>
-          <button onClick={() => setOpen((o) => ({ ...o, billing: !o.billing }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
+          <button data-settings-toggle onClick={() => setOpen((o) => ({ ...o, billing: !o.billing }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
             {open.billing ? 'Hide' : 'Show'}
           </button>
         </header>
@@ -229,7 +229,7 @@ export default function SettingsClient({ isAdmin, organizationId, plan }: Props)
             <div className="font-medium">Integrations</div>
             <div className="text-sm text-slate-400">Slack, Google Calendar</div>
           </div>
-          <button onClick={() => setOpen((o) => ({ ...o, integrations: !o.integrations }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
+          <button data-settings-toggle onClick={() => setOpen((o) => ({ ...o, integrations: !o.integrations }))} className="px-2 py-1 text-sm rounded border border-rose-600/30 text-rose-300 hover:bg-rose-900/20">
             {open.integrations ? 'Hide' : 'Show'}
           </button>
         </header>

@@ -23,12 +23,14 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
       <button
         aria-label={open ? 'Close menu' : 'Open menu'}
         onClick={() => setOpen(o=>!o)}
-        className="relative h-9 w-9 grid place-items-center rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800 shadow-sm transition-colors"
+        className="tc-hamburger relative h-9 w-9 grid place-items-center rounded-md border transition-colors
+          dark:border-slate-700 dark:text-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800
+          light:border-[#D8DEE4] light:bg-[#F5F7FA] light:hover:bg-[#E9ECF1] shadow-sm"
       >
         <span aria-hidden className="block relative h-3 w-5">
-          <span className={`absolute left-0 top-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 ${open ? 'translate-y-1.5 rotate-45' : ''}`}></span>
-          <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-5 bg-slate-200 transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'}`}></span>
-          <span className={`absolute left-0 bottom-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 ${open ? '-translate-y-1.5 -rotate-45' : ''}`}></span>
+          <span className={`absolute left-0 top-0 h-0.5 w-5 transition-transform duration-200 ${open ? 'translate-y-1.5 rotate-45' : ''} dark:bg-slate-200 light:bg-black`}></span>
+          <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-5 transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'} dark:bg-slate-200 light:bg-black`}></span>
+          <span className={`absolute left-0 bottom-0 h-0.5 w-5 transition-transform duration-200 ${open ? '-translate-y-1.5 -rotate-45' : ''} dark:bg-slate-200 light:bg-black`}></span>
         </span>
       </button>
       {mounted && createPortal(
@@ -46,14 +48,21 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 exit={{ x: 280, opacity: 0, scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-                className="fixed right-3 top-3 w-[280px] rounded-xl border border-indigo-600/30 shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(99,102,241,0.25),0_0_18px_rgba(99,102,241,0.18)] p-4 z-[2147483647] [background:linear-gradient(135deg,rgba(37,99,235,0.88),rgba(147,51,234,0.88))]"
+                className="fixed right-3 top-3 w-[280px] transform-gpu rounded-xl border p-4 z-[2147483647]
+                  dark:border-indigo-600/30 dark:shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(99,102,241,0.25),0_0_18px_rgba(99,102,241,0.18)] dark:[background:linear-gradient(135deg,rgba(37,99,235,0.88),rgba(147,51,234,0.88))]
+                  light:border-indigo-600/30 light:shadow-[0_16px_40px_rgba(0,0,0,0.45),0_0_0_1px_rgba(99,102,241,0.25),0_0_18px_rgba(99,102,241,0.18)] light:[background:linear-gradient(135deg,rgba(37,99,235,0.88),rgba(147,51,234,0.88))]"
+                data-mobile-menu
+                style={{ willChange: 'transform, opacity' }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-slate-200 font-medium">Quick Actions</div>
+                  <div className="text-sm font-medium dark:text-slate-200 light:text-black">Quick Actions</div>
                   <button
                     aria-label="Close menu"
                     onClick={() => setOpen(false)}
-                    className="relative h-8 w-8 grid place-items-center rounded-md border border-slate-700 text-slate-200 bg-slate-900 hover:bg-slate-800 shadow-sm transition-colors"
+                    className="relative h-8 w-8 grid place-items-center rounded-md border shadow-sm transition-colors
+                      dark:border-slate-700 dark:text-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800
+                      light:border-black/20 light:text-black light:bg-black/10 light:hover:bg-black/20"
+                    data-close-button
                   >
                     <motion.span
                       aria-hidden
@@ -62,29 +71,34 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
                       animate={{ rotate: open ? 180 : 0 }}
                       transition={{ type: 'spring', stiffness: 300, damping: 26 }}
                     >
-                      <span className={`absolute left-0 top-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 translate-y-1.5 rotate-45`}></span>
-                      <span className={`absolute left-0 bottom-0 h-0.5 w-5 bg-slate-200 transition-transform duration-200 -translate-y-1.5 -rotate-45`}></span>
+                      <span className={`absolute left-0 top-0 h-0.5 w-5 transition-transform duration-200 translate-y-1.5 rotate-45 dark:bg-slate-200 light:bg-black`}></span>
+                      <span className={`absolute left-0 bottom-0 h-0.5 w-5 transition-transform duration-200 -translate-y-1.5 -rotate-45 dark:bg-slate-200 light:bg-black`}></span>
                     </motion.span>
                   </button>
                 </div>
                 <div className="h-1 rounded-md bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-400 mb-3 opacity-90" />
-                <nav className="grid text-sm text-slate-200">
-                  <Link href="/dashboard/settings" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
-                    <span className="inline-block transition-transform group-hover:translate-x-0.5">Settings →</span>
+                <nav className="grid text-sm dark:text-slate-200 light:text-black" data-menu-items style={{ color: 'black' }}>
+                  <Link href="/dashboard/settings" data-menu-item className="group px-3 py-2 rounded transition-colors dark:hover:bg-slate-800 light:text-black !font-medium" onClick={() => setOpen(false)}>
+                    <span style={{ color: 'black' }} className="inline-block transition-transform group-hover:translate-x-0.5">Settings →</span>
                   </Link>
-                  <Link href="/dashboard/teams" className="group px-3 py-2 rounded hover:bg-slate-800 transition-colors" onClick={() => setOpen(false)}>
-                    <span className="inline-block transition-transform group-hover:translate-x-0.5">Teams →</span>
+                  <Link href="/dashboard/files" data-menu-item className="group px-3 py-2 rounded transition-colors dark:hover:bg-slate-800 light:text-black !font-medium" onClick={() => setOpen(false)}>
+                    <span style={{ color: 'black' }} className="inline-block transition-transform group-hover:translate-x-0.5">Files →</span>
                   </Link>
-                  <button
-                    className="text-left px-3 py-2 rounded hover:bg-slate-800/80 w-full"
-                    onClick={async()=>{ setOrgOpen(true); try { const r = await fetch('/api/org/list', { cache: 'no-store' }); if (r.ok) { const d = await r.json(); setOrgs(d.orgs || []) } } catch {} }}
+                  <a
+                    href="#"
+                    data-menu-item
+                    className="text-left px-3 py-2 rounded w-full transition-colors dark:hover:bg-slate-800/80 light:text-black"
+                    onClick={async(e)=>{ e.preventDefault(); setOrgOpen(true); try { const r = await fetch('/api/org/list', { cache: 'no-store' }); if (r.ok) { const d = await r.json(); setOrgs(d.orgs || []) } } catch {} }}
                   >
-                    Switch Workspace…
-                  </button>
-                  <div className="my-2 border-t border-slate-800" />
-                  <button 
-                    className="text-left px-3 py-2 rounded hover:bg-slate-800/80 w-full"
-                    onClick={async () => {
+                    <span style={{ color: 'black' }}>Switch Workspace…</span>
+                  </a>
+                  <div className="my-2 border-t dark:border-slate-800 light:border-white/20" />
+                  <a 
+                    href="#"
+                    data-menu-item
+                    className="text-left px-3 py-2 rounded w-full transition-colors dark:hover:bg-slate-800/80 light:text-black"
+                    onClick={async (e) => {
+                      e.preventDefault()
                       const ok = window.confirm('Sign out and return to the TaskChrono landing page?')
                       if (!ok) return
                       try {
@@ -95,8 +109,8 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
                       }
                     }}
                   >
-                    Sign Out <span className="text-xs opacity-70">({userEmail || ''})</span>
-                  </button>
+                    <span style={{ color: 'black' }}>Sign Out <span className="text-xs light:text-black" style={{ color: 'black' }}>({userEmail || ''})</span></span>
+                  </a>
                 </nav>
               </motion.div>
             </motion.div>

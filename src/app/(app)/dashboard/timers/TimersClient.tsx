@@ -289,9 +289,9 @@ export default function TimersClient({ userId, initialEntries, initialTimers }: 
           <input type="hidden" name="filter" value={filter} />
           <input type="hidden" name="tag" value={tagFilter} />
           <input type="hidden" name="sort" value={sort} />
-          <button name="format" value="csv" className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">CSV</button>
-          <button name="format" value="xlsx" className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Excel</button>
-          <button name="format" value="json" className="px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">JSON</button>
+          <button name="format" value="csv" data-export="csv" className="tc-export px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">CSV</button>
+          <button name="format" value="xlsx" data-export="xlsx" className="tc-export px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">Excel</button>
+          <button name="format" value="json" data-export="json" className="tc-export px-3 py-2 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">JSON</button>
         </form>
       </div>
 
@@ -564,11 +564,16 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
   const breakdown = mode === 'tags' ? breakdownByTag : breakdownByProject
   const totalMinutes = breakdown.reduce((a,b)=>a+b.minutes,0)
   const top3 = [...breakdown].sort((a,b)=>b.minutes-a.minutes).slice(0,3)
+  const isLight = typeof document !== 'undefined' ? document.documentElement.classList.contains('light') : false
+  const tickColor = isLight ? '#111827' : '#cbd5e1'
+  const tooltipStyles = isLight
+    ? { background: '#ffffff', border: '1px solid #E2E8F0', color: '#111827' }
+    : { background: '#1e293b', border: '1px solid #475569', color: '#f8fafc' }
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Productivity Breakdown */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
+      <div data-analytics-card className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="flex items-center justify-between mb-2">
           <div className="text-slate-200">Productivity breakdown</div>
           <div className="text-xs text-slate-300 flex items-center gap-1">
@@ -589,16 +594,16 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
                 <Tooltip
                   wrapperStyle={{ outline: 'none' }}
                   contentStyle={{ 
-                    background: '#1e293b', 
-                    border: '1px solid #475569', 
-                    color: '#f8fafc',
+                    background: tooltipStyles.background,
+                    border: tooltipStyles.border,
+                    color: tooltipStyles.color,
                     borderRadius: '8px',
                     padding: '8px 12px',
                     fontSize: '14px',
                     fontWeight: '500',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                   }}
-                  labelStyle={{ color: '#f8fafc', fontWeight: '600' }}
+                  labelStyle={{ color: isLight ? '#111827' : '#f8fafc', fontWeight: '600' }}
                   formatter={(v: any) => `${formatDuration(Number(v))} (${((Number(v)/totalMinutes)*100||0).toFixed(0)}%)`}
                 />
               </PieChart>
@@ -616,7 +621,7 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
       </div>
 
       {/* Weekly Timeline */}
-      <div className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
+      <div data-analytics-card className="rounded-md border border-slate-800 p-3 bg-slate-950 max-h-[480px] overflow-y-auto">
         <div className="mb-2 text-slate-200">Weekly timeline</div>
         <div style={{ height: 320 }} className="overflow-visible">
           {weeklyStacked.data.length === 0 ? (
@@ -625,23 +630,23 @@ function Analytics({ entries, timers, filter, tagFilter }: { entries: Entry[]; t
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyStacked.data} margin={{ top: 8, right: 12, bottom: 40, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                <XAxis dataKey="day" tick={{ fill: '#cbd5e1' }} />
-                <YAxis tick={{ fill: '#cbd5e1' }} unit="h" />
-                <Legend />
+                <XAxis dataKey="day" tick={{ fill: tickColor }} />
+                <YAxis tick={{ fill: tickColor }} unit="h" />
+                <Legend wrapperStyle={{ color: tickColor }} />
                 <Tooltip
                   wrapperStyle={{ outline: 'none' }}
-                  cursor={{ fill: '#111827', opacity: 0.35 }}
+                  cursor={{ fill: isLight ? '#CBD5E1' : '#111827', opacity: 0.35 }}
                   contentStyle={{ 
-                    background: '#1e293b', 
-                    border: '1px solid #475569', 
-                    color: '#f8fafc',
+                    background: tooltipStyles.background, 
+                    border: tooltipStyles.border, 
+                    color: tooltipStyles.color,
                     borderRadius: '8px',
                     padding: '8px 12px',
                     fontSize: '14px',
                     fontWeight: '500',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                   }}
-                  labelStyle={{ color: '#f8fafc', fontWeight: '600' }}
+                  labelStyle={{ color: isLight ? '#111827' : '#f8fafc', fontWeight: '600' }}
                   formatter={(v: any) => `${Number(v).toFixed(1)}h`}
                 />
                 {weeklyStacked.keys.map((k, idx) => (

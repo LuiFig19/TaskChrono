@@ -1,18 +1,19 @@
 "use client"
 import Link from 'next/link'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 export default function Header() {
   const quickshiftUrl = '/quickshift'
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
-      <div className="max-w-screen-2xl mx-auto px-4 py-3 grid grid-cols-[auto_1fr_auto] items-center gap-4">
+    <header data-app-nav data-marketing-nav className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
+      <div className="tc-nav-inner max-w-screen-2xl mx-auto px-4 grid grid-cols-[auto_1fr_auto] items-center gap-4">
         {/* Logo with gradient */}
-        <Link href="/" className="text-xl font-extrabold bg-gradient-to-r from-white via-indigo-300 to-violet-400 bg-clip-text text-transparent tracking-tight">
+        <Link href="/" className="tc-logo text-xl font-extrabold bg-gradient-to-r from-white via-indigo-300 to-violet-400 bg-clip-text text-transparent tracking-tight leading-none">
           TaskChrono
         </Link>
 
         {/* Center nav */}
-        <nav className="hidden md:flex justify-center items-center gap-1 text-[16px] font-medium tracking-wide text-slate-200">
+        <nav className="hidden md:flex justify-center items-center gap-1 text-[16px] font-medium tracking-wide">
           {[
             { href: '#features', label: 'Features' },
             { href: '#pricing', label: 'Pricing' },
@@ -33,10 +34,12 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right actions: QuickShift highlighted, then auth CTAs */}
+        {/* Right actions: Theme toggle, QuickShift highlighted, then auth CTAs */}
         <div className="flex items-center gap-2 justify-end">
+          <ThemeToggle />
           <Link
             href={quickshiftUrl}
+            data-quickshift-cta
             className="relative inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 hover:from-fuchsia-400 hover:via-violet-400 hover:to-indigo-400 transition-colors"
           >
             QuickShift

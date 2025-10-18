@@ -225,7 +225,7 @@ function ProjectsList() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       {shown.map(p => (
-        <a key={p.id} href={`/dashboard/projects/${p.id}`} className="group rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-900/80 transition-transform hover:-translate-y-0.5">
+        <a key={p.id} href={`/dashboard/projects/${p.id}`} data-proj-card className="group rounded-xl border border-slate-800 bg-slate-900 p-4 hover:bg-slate-900/80 transition-transform hover:-translate-y-0.5">
           <div className="flex items-center justify-between">
             <div className="font-medium text-white truncate mr-2">{p.name}</div>
             <div className="flex items-center gap-2 text-xs">
@@ -244,13 +244,23 @@ function ProjectsList() {
             </div>
           </div>
           <div className="text-slate-400 text-sm mt-1 line-clamp-2 min-h-[2.5rem]">{(p as any).description || 'No description'}</div>
-          <div className="mt-3 h-1.5 bg-slate-800 rounded">
-            <div
-              className="h-1.5 rounded bg-indigo-500"
-              aria-label="Project progress"
-              data-progress={Math.min(100, Math.round(((p as any).doneCount || 0) / Math.max(1,(p as any).taskCount) * 100))}
-              style={{ width: `${Math.min(100, Math.round(((p as any).doneCount || 0) / Math.max(1,(p as any).taskCount) * 100))}%` }}
-            />
+          <div className="mt-3 h-1.5 bg-slate-200 rounded overflow-hidden">
+            {(() => {
+              const pct = Math.min(100, Math.round(((p as any).doneCount || 0) / Math.max(1,(p as any).taskCount) * 100))
+              // Compute a smooth hue from red (0) -> orange -> yellow -> green (120) as completion increases
+              const hue = Math.round((pct / 100) * 120)
+              const start = `hsl(${Math.max(0,hue-10)}, 90%, 50%)`
+              const end = `hsl(${Math.min(120,hue+10)}, 90%, 45%)`
+              const bg = `linear-gradient(90deg, ${start}, ${end})`
+              return (
+                <div
+                  className="h-1.5 rounded"
+                  aria-label="Project progress"
+                  data-progress={pct}
+                  style={{ width: `${pct}%`, backgroundImage: bg, boxShadow: `0 0 6px hsla(${hue}, 90%, 45%, 0.35)` }}
+                />
+              )
+            })()}
           </div>
           <div className="text-xs text-slate-500 mt-2 flex items-center justify-between">
             <span>Status: {statusLabel((p as any).status)}</span>
@@ -340,9 +350,28 @@ function ProjectsToolbar({ view, setView }: { view: 'cards'|'kanban'|'gantt'; se
           </select>
         </div>
         <div className="ml-auto flex items-center gap-1">
-          <button onClick={()=>setView('cards')} className={`px-2.5 py-1 rounded border ${view==='cards'?'border-indigo-500 text-indigo-300':'border-slate-700 text-slate-300'} hover:bg-slate-800`}>Cards</button>
-          <button onClick={()=>setView('kanban')} className={`px-2.5 py-1 rounded border ${view==='kanban'?'border-indigo-500 text-indigo-300':'border-slate-700 text-slate-300'} hover:bg-slate-800`}>Kanban</button>
-          <button onClick={()=>setView('gantt')} className={`px-2.5 py-1 rounded border ${view==='gantt'?'border-indigo-500 text-indigo-300':'border-slate-700 text-slate-300'} hover:bg-slate-800`}>Gantt</button>
+          <button
+            onClick={()=>setView('cards')}
+            className={`view-toggle ${view==='cards'
+              ? 'is-active view-toggle--cards light:!bg-emerald-600 light:!text-white light:!border-emerald-700'
+              : 'view-toggle--cards light:!text-emerald-600 light:!border-emerald-400'}`}
+          >
+            Cards
+          </button>
+          <button
+            data-view-toggle="kanban"
+            onClick={()=>setView('kanban')}
+            className={`view-toggle view-toggle--kanban light:!bg-amber-500 light:!text-white light:!border-amber-600 ${view==='kanban' ? 'is-active' : ''}`}
+          >
+            Kanban
+          </button>
+          <button
+            data-view-toggle="gantt"
+            onClick={()=>setView('gantt')}
+            className={`view-toggle view-toggle--gantt light:!bg-rose-500 light:!text-white light:!border-rose-600 ${view==='gantt' ? 'is-active' : ''}`}
+          >
+            Gantt
+          </button>
         </div>
       </div>
     </div>
@@ -360,7 +389,7 @@ function ProjectsKanban() {
           <div className="text-sm font-medium text-white mb-2">{col.replace('_',' ')}</div>
           <div className="grid gap-2">
             {shown.filter(p => (p as any).status === col).map(p => (
-              <a key={p.id} href={`/dashboard/projects/${p.id}`} className="rounded-lg border border-slate-800 bg-slate-900 p-3 hover:bg-slate-900/80">
+              <a key={p.id} href={`/dashboard/projects/${p.id}`} data-proj-card-kanban className="rounded-lg border border-slate-800 bg-slate-900 p-3 hover:bg-slate-900/80">
                 <div className="flex items-center justify-between">
                   <div className="text-slate-200 truncate mr-2">{p.name}</div>
                   <TrashButton onClick={(e)=>{ e.preventDefault(); remove(p.id) }} />

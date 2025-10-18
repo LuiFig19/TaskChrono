@@ -26,14 +26,14 @@ export default function TeamsClient({ teamId, initialTab }: { teamId: string; in
   const { data: membersData } = useSWR(tab === 'people' ? `/api/teams/${teamId}/members` : null, fetcher)
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
-      <aside className="rounded-2xl shadow-lg shadow-black/20 bg-slate-900/60 p-4 h-[70vh] md:sticky md:top-[calc(var(--nav-h,56px)+16px)]">
+    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4" data-teams-layout>
+      <aside className="rounded-2xl shadow-lg shadow-black/20 bg-slate-900/60 p-4 h-[70vh] md:sticky md:top-[calc(var(--nav-h,56px)+16px)] flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           <input placeholder="Search teams" className="w-full px-3 py-2 rounded-md border border-slate-700 bg-slate-950 text-slate-100 text-sm" />
           <a href="/dashboard/teams/new" className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm">+ New</a>
         </div>
         <div className="text-xs text-slate-400 mb-2">Teams</div>
-        <div className="space-y-1 overflow-y-auto pr-1">
+        <div className="space-y-1 overflow-y-auto pr-1 flex-1">
           {(teamsData?.teams || []).map((t: any) => (
             <a key={t.id} href={`/dashboard/teams/${t.id}?tab=${tab}`} title={t.name} className={`block px-3 py-2 rounded-md ${t.id===teamId?'bg-slate-800':'hover:bg-slate-800/60'}`}>
               <div className="flex items-center justify-between gap-2">
@@ -184,10 +184,10 @@ function OverviewCards({ teamId }: { teamId: string }) {
         {loadingChat ? (
           <InlineSkeleton />
         ) : ((chatData?.messages||[]).length > 0) ? (
-          <div className="text-sm space-y-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 tc-scroll">
+          <div className="text-sm space-y-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 tc-scroll" data-chat-feed>
             {(chatData?.messages||[]).slice(-3).reverse().map((m:any)=> (
               <div key={m.id} className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
+                <span className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400 chat-dot" />
                 <div className="flex-1 min-w-0">
                   <div className="text-slate-200 truncate"><span className="text-slate-400">{m.userName}:</span> {m.text}</div>
                   <div className="text-[11px] text-slate-500">{timeAgo(m.ts)}</div>
@@ -201,11 +201,11 @@ function OverviewCards({ teamId }: { teamId: string }) {
       </Card>
       <div className="md:col-span-3">
         <Card title="Recent Activity">
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 tc-scroll">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 space-y-1.5 tc-scroll" data-activity-feed>
             {(activityData?.events||[]).length ? (
               (activityData!.events as any[]).map((ev:any)=> (
                 <div key={ev.id} className="flex items-start gap-2 text-sm">
-                  <span className="mt-0.5 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
+                  <span className="activity-dot mt-0.5 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400" />
                   <div className="flex-1 min-w-0">
                     <div className="text-slate-200 truncate">{ev.text}</div>
                     <div className="text-[11px] text-slate-500">{timeAgo(ev.ts)}</div>

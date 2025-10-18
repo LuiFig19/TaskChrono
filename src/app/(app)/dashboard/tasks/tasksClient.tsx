@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 
 type Task = {
   id: string
@@ -25,6 +24,7 @@ export default function TasksClient() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [projects, setProjects] = useState<ProjectGroup[]>([])
+  const [mounted, setMounted] = useState(false)
 
   const [title, setTitle] = useState("")
   const [projectName, setProjectName] = useState("")
@@ -38,12 +38,19 @@ export default function TasksClient() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [orderByProject, setOrderByProject] = useState<Record<string, string[]>>({})
   const [teamOptions, setTeamOptions] = useState<Array<{ id: string; name: string }>>([])
+  // Optional: pause refresh during transient UI interactions
+  const [refreshPausedUntil, setRefreshPausedUntil] = useState<number>(0)
 
-  const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
-  const [editingTitle, setEditingTitle] = useState("")
-  // Description editing is handled in a modal to avoid scroll jumps inside the list
-  const [descModalTask, setDescModalTask] = useState<Task | null>(null)
+  // Row jump animation (per task id): 'up' | 'down'
+  const [rowAnim, setRowAnim] = useState<Record<string, 'up' | 'down' | undefined>>({})
+
+  // Unified edit modal for a task
+  const [editTask, setEditTask] = useState<Task | null>(null)
+  const [titleDraft, setTitleDraft] = useState("")
   const [descDraft, setDescDraft] = useState("")
+  const [statusDraft, setStatusDraft] = useState<string>('TODO')
+  const [priorityDraft, setPriorityDraft] = useState<number>(3)
+  const [dueDraft, setDueDraft] = useState<string>("")
 
   type Toast = { id: string; text: string }
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -56,15 +63,23 @@ export default function TasksClient() {
   const grouped = useMemo(() => {
     const q = query.trim().toLowerCase()
     const s = statusFilter
-    return projects.map(p => ({
-      ...p,
-      tasks: p.tasks.filter(t => {
+    return projects.map(p => {
+      // filter
+      let tasks = p.tasks.filter(t => {
         const matchesQ = !q || t.title.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q)
         const matchesS = s === 'ALL' || t.status === s
         return matchesQ && matchesS
       })
-    })).filter(p => p.tasks.length > 0 || !q)
-  }, [projects, query, statusFilter])
+      // stable local order using orderByProject
+      const ord = orderByProject[p.id]
+      if (ord && ord.length > 0) {
+        const pos: Record<string, number> = {}
+        ord.forEach((id, i) => { pos[id] = i })
+        tasks = tasks.slice().sort((a, b) => (pos[a.id] ?? 1e9) - (pos[b.id] ?? 1e9))
+      }
+      return { ...p, tasks }
+    }).filter(p => p.tasks.length > 0 || !q)
+  }, [projects, query, statusFilter, orderByProject])
 
   const fetchData = useCallback(async () => {
     try {
@@ -76,18 +91,31 @@ export default function TasksClient() {
       for (const p of data.projects ?? []) {
         mapping[p.id] = p.tasks.map((t) => t.id)
       }
-      setOrderByProject(mapping)
+      // Preserve any local ordering we already have
+      setOrderByProject((prev) => {
+        const next = { ...mapping }
+        for (const k of Object.keys(prev)) {
+          if (prev[k] && prev[k].length > 0) next[k] = prev[k]
+        }
+        return next
+      })
+    } catch (_err) {
+      // Swallow transient network/server errors so UI remains responsive
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
+    setMounted(true)
     setLoading(true)
     fetchData()
-    const id = setInterval(fetchData, 4000)
+    const id = setInterval(() => {
+      if (Date.now() < refreshPausedUntil) return
+      fetchData()
+    }, 4000)
     return () => clearInterval(id)
-  }, [fetchData])
+  }, [fetchData, refreshPausedUntil])
 
   useEffect(() => {
     // load teams list for linking
@@ -170,120 +198,176 @@ export default function TasksClient() {
     } catch {}
   }
 
-  function beginEditTitle(t: Task) {
-    setEditingTitleId(t.id)
-    setEditingTitle(t.title)
+  function beginEditTask(t: Task) {
+    setEditTask(t)
+    setTitleDraft(t.title)
+    setDescDraft(t.description || '')
+    setStatusDraft(t.status)
+    setPriorityDraft(t.priority)
+    setDueDraft(t.dueDate || '')
   }
-  async function commitEditTitle(t: Task) {
-    if (!editingTitleId) return
-    const val = editingTitle.trim()
-    setEditingTitleId(null)
-    if (val && val !== t.title) {
-      await updateTask(t.id, { title: val })
+  async function commitEditTask() {
+    if (!editTask) return
+    const patch: Partial<Omit<Task,'id'|'createdAt'>> = {}
+    if (titleDraft.trim() && titleDraft.trim() !== editTask.title) patch.title = titleDraft.trim()
+    const descVal = descDraft.trim()
+    if ((descVal || null) !== (editTask.description || null)) patch.description = descVal || null
+    if (statusDraft !== editTask.status) patch.status = statusDraft
+    if (priorityDraft !== editTask.priority) patch.priority = priorityDraft
+    if ((dueDraft || null) !== (editTask.dueDate || null)) patch.dueDate = dueDraft || null
+    setEditTask(null)
+    if (Object.keys(patch).length > 0) {
+      await updateTask(editTask.id, patch)
     }
   }
-  function beginEditDesc(t: Task) {
-    setDescModalTask(t)
-    setDescDraft(t.description || '')
-  }
-  async function commitModalDesc() {
-    if (!descModalTask) return
-    const val = descDraft.trim()
-    await updateTask(descModalTask.id, { description: val || null })
-    setDescModalTask(null)
+
+  function triggerJump(taskId: string, dir: 'up' | 'down') {
+    setRowAnim((s) => ({ ...s, [taskId]: dir }))
+    setTimeout(() => setRowAnim((s) => { const n = { ...s }; delete n[taskId]; return n }), 320)
   }
 
-  function onDragEnd(result: DropResult) {
-    if (!result.destination) return
-    const [_, projectId] = result.source.droppableId.split(':')
-    const [__ , destProjectId] = result.destination.droppableId.split(':')
-    if (projectId !== destProjectId) return
-    const proj = projectId
+  function moveTask(projectId: string, taskId: string, dir: 'up' | 'down') {
     setOrderByProject((cur) => {
+      const list = cur[projectId] || (projects.find(p => p.id === projectId)?.tasks.map(t => t.id) || [])
+      const idx = list.indexOf(taskId)
+      if (idx < 0) return cur
+      const to = dir === 'up' ? Math.max(0, idx - 1) : Math.min(list.length - 1, idx + 1)
+      if (to === idx) return cur
       const next = { ...cur }
-      const ids = Array.from(next[proj] || [])
-      const [removed] = ids.splice(result.source.index, 1)
-      ids.splice(result.destination.index, 0, removed)
-      next[proj] = ids
+      const arr = Array.from(list)
+      const [removed] = arr.splice(idx, 1)
+      arr.splice(to, 0, removed)
+      next[projectId] = arr
       return next
     })
     setProjects((cur) => cur.map((p) => {
-      if (p.id !== proj) return p
-      const ids = orderByProject[proj] || p.tasks.map((t) => t.id)
-      const arr = Array.from(ids)
-      const [removed] = arr.splice(result.source.index, 1)
-      arr.splice(result.destination.index, 0, removed)
+      if (p.id !== projectId) return p
+      const ids = orderByProject[projectId] || p.tasks.map(t => t.id)
+      const list = Array.from(ids)
+      const i = list.indexOf(taskId)
+      if (i === -1) return p
+      const j = dir === 'up' ? Math.max(0, i - 1) : Math.min(list.length - 1, i + 1)
+      if (i === j) return p
+      const arr = Array.from(list)
+      const [removed] = arr.splice(i, 1)
+      arr.splice(j, 0, removed)
       const byId: Record<string, Task> = {}
       for (const t of p.tasks) byId[t.id] = t
-      return { ...p, tasks: arr.map((id) => byId[id]).filter(Boolean) }
+      triggerJump(taskId, dir)
+      return { ...p, tasks: arr.map(id => byId[id]).filter(Boolean) }
     }))
   }
 
   function Project({ p }: { p: ProjectGroup }) {
+    if (!mounted) {
+      return (
+        <div className="rounded-xl border border-slate-800 bg-slate-900 no-global-hover">
+          <button onClick={() => setCollapsed((c) => ({ ...c, [p.id]: !c[p.id] }))} className="w-full text-left px-4 py-2 flex items-center justify-between">
+            <div className="font-medium text-white">Project: {p.name}</div>
+            <span className="text-xs text-slate-400">{collapsed[p.id] ? 'Expand' : 'Collapse'}</span>
+          </button>
+          {collapsed[p.id] ? null : (
+            <ul className="dark:divide-y dark:divide-slate-800 light:space-y-2">
+              {p.tasks.map((t) => (
+                <li key={t.id} className={`px-3 py-3 flex items-start justify-between gap-3 rounded-lg border ${t.status==='DONE' ? 'dark:bg-emerald-900/30 dark:border-emerald-800 light:bg-emerald-200 light:border-emerald-300' : t.status==='BLOCKED' ? 'dark:bg-rose-900/30 dark:border-rose-800 light:bg-rose-200 light:border-rose-300' : t.status==='IN_PROGRESS' ? 'dark:bg-amber-900/30 dark:border-amber-800 light:bg-amber-200 light:border-amber-300' : 'light:bg-white light:border-slate-200 dark:border-slate-800'}`}>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-slate-200 break-words">
+                      {t.title}
+                      <button aria-label="Edit task" title="Edit task" onClick={()=>beginEditTask(t)} className="ml-2 text-xs px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
+                    </div>
+                    {t.description ? (
+                      <div className="text-xs text-slate-400 mt-1 break-words">{t.description}</div>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span aria-label="Task status" title="Press Edit to change status" className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full border text-center select-none ${t.status==='DONE' ? 'dark:border-emerald-800 dark:text-emerald-300 light:border-emerald-400 light:text-emerald-800' : t.status==='BLOCKED' ? 'dark:border-rose-800 dark:text-rose-300 light:border-rose-400 light:text-rose-800' : t.status==='IN_PROGRESS' ? 'dark:border-amber-800 dark:text-amber-300 light:border-amber-400 light:text-amber-800' : 'dark:border-slate-700 dark:text-slate-300 light:border-slate-300 light:text-slate-700'}`}>{t.status || 'TODO'}</span>
+                    <span className="rounded border border-slate-700 px-2 py-0.5 text-slate-300">P{t.priority}</span>
+                    {t.dueDate ? <span className="rounded border border-slate-700 px-2 py-0.5 text-slate-300">Due {new Date(t.dueDate).toLocaleDateString()}</span> : null}
+                    <button onClick={()=>deleteTask(t.id)} title="Delete task" aria-label="Delete task" className="p-1.5 rounded border border-rose-700 hover:bg-rose-900/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-rose-500"><path fillRule="evenodd" d="M10.5 3a1 1 0 00-.894.553L9.118 4.5H6a.75.75 0 000 1.5h12a.75.75 0 000-1.5h-3.118l-.488-.947A1 1 0 0013.5 3h-3zm-4 5.25a.75.75 0 011.5 0v9.5a.75.75 0 01-1.5 0v-9.5zm5.25 0a.75.75 0 011.5 0v9.5a.75.75 0 01-1.5 0v-9.5zm6.75 0a.75.75 0 00-1.5 0v9.5a.75.75 0 001.5 0v-9.5z" clipRule="evenodd"/></svg>
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )
+    }
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 no-global-hover">
         <button onClick={() => setCollapsed((c) => ({ ...c, [p.id]: !c[p.id] }))} className="w-full text-left px-4 py-2 flex items-center justify-between">
           <div className="font-medium text-white">Project: {p.name}</div>
           <span className="text-xs text-slate-400">{collapsed[p.id] ? 'Expand' : 'Collapse'}</span>
         </button>
         {collapsed[p.id] ? null : (
-        <Droppable droppableId={`proj:${p.id}`} type="TASK">
-          {(dropProvided) => (
-            <ul ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="divide-y divide-slate-800">
-              {p.tasks.map((t, idx) => (
-                <Draggable draggableId={`task:${t.id}`} index={idx} key={t.id}>
-                  {(dragProvided) => (
-                    <li ref={dragProvided.innerRef} {...dragProvided.draggableProps} {...dragProvided.dragHandleProps} className="px-4 py-3 flex items-start justify-between gap-3">
+            <ul className="dark:divide-y dark:divide-slate-800 light:space-y-2">
+              {p.tasks.map((t, idx) => {
+                const isFirst = idx === 0
+                const isLast = idx === p.tasks.length - 1
+                const jumpCls = rowAnim[t.id] === 'up' ? 'tc-jump-up' : rowAnim[t.id] === 'down' ? 'tc-jump-down' : ''
+                return (
+                  <li key={t.id} data-task-row data-task-status={t.status} className={`tc-task-row px-3 py-3 flex items-start justify-between gap-3 transition-colors rounded-lg border ${jumpCls} ${t.status==='DONE' ? 'dark:bg-emerald-900/30 dark:border-emerald-800 light:bg-emerald-200 light:border-emerald-300' : t.status==='BLOCKED' ? 'dark:bg-rose-900/30 dark:border-rose-800 light:bg-rose-200 light:border-rose-300' : t.status==='IN_PROGRESS' ? 'dark:bg-amber-900/30 dark:border-amber-800 light:bg-amber-200 light:border-amber-300' : 'light:bg-white light:border-slate-200 dark:border-slate-800'}`}>
                       <div className="min-w-0 flex-1">
-                        {editingTitleId === t.id ? (
-                          <input
-                            autoFocus
-                            title="Edit title"
-                            className="w-full rounded-md bg-transparent border border-slate-700 px-2 py-1 text-slate-200"
-                            value={editingTitle}
-                            onChange={(e)=>setEditingTitle(e.target.value)}
-                            onBlur={()=>commitEditTitle(t)}
-                            onKeyDown={(e)=>{ if (e.key==='Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur() } }}
-                          />
-                        ) : (
-                          <div className="text-slate-200 break-words">
-                            {t.title}
-                            <button aria-label="Edit title" title="Edit title" onClick={()=>beginEditTitle(t)} className="ml-2 text-xs px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
-                          </div>
-                        )}
+                        <div className="text-slate-200 break-words">
+                          {t.title}
+                          <button aria-label="Edit task" title="Edit task" onClick={()=>beginEditTask(t)} className="ml-2 text-xs px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
+                        </div>
                         {t.description ? (
-                          <div className="text-xs text-slate-400 mt-1 break-words">
-                            {t.description}
-                            <button aria-label="Edit description" title="Edit description" onClick={()=>beginEditDesc(t)} className="ml-1 text-[10px] px-1 rounded border border-slate-700 hover:bg-slate-800">Edit</button>
-                          </div>
-                        ) : (
-                          <button onClick={()=>beginEditDesc(t)} className="text-xs text-slate-400 hover:text-slate-300">+ Add description</button>
-                        )}
+                          <div className="text-xs text-slate-400 mt-1 break-words">{t.description}</div>
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        <label className="sr-only" htmlFor={`status-${t.id}`}>Status</label>
-                <select id={`status-${t.id}`} title="Task status" aria-label="Task status" value={t.status} onChange={(e)=>updateTask(t.id, { status: e.target.value })} className="rounded border border-slate-700 bg-slate-900 text-slate-200 px-1 py-0.5">
-                          {['TODO','IN_PROGRESS','DONE','BLOCKED'].map(s=> <option key={s} value={s}>{s}</option>)}
-                        </select>
+                        {/* Move up/down arrows */}
+                        <button
+                          title="Move up"
+                          aria-label="Move task up"
+                          disabled={isFirst}
+                          onClick={() => moveTask(p.id, t.id, 'up')}
+                          className="p-1 rounded border border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-40"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M10 4a.75.75 0 01.53.22l5 5a.75.75 0 11-1.06 1.06L10 5.81 5.53 10.28a.75.75 0 11-1.06-1.06l5-5A.75.75 0 0110 4z" clipRule="evenodd"/></svg>
+                        </button>
+                        <button
+                          title="Move down"
+                          aria-label="Move task down"
+                          disabled={isLast}
+                          onClick={() => moveTask(p.id, t.id, 'down')}
+                          className="p-1 rounded border border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-40"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M10 16a.75.75 0 01-.53-.22l-5-5a.75.75 0 111.06-1.06L10 14.19l4.47-4.47a.75.75 0 111.06 1.06l-5 5A.75.75 0 0110 16z" clipRule="evenodd"/></svg>
+                        </button>
+                        <span
+                          aria-label="Task status"
+                          title="Press Edit to change status"
+                          className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium select-none shadow-sm ${t.status==='DONE'
+                            ? 'bg-emerald-600 text-white dark:bg-emerald-600'
+                            : t.status==='BLOCKED'
+                            ? 'bg-rose-600 text-white dark:bg-rose-600'
+                            : t.status==='IN_PROGRESS'
+                            ? 'bg-amber-400 text-slate-900 dark:bg-amber-400'
+                            : 'bg-slate-600 text-white dark:bg-slate-600'}`}
+                        >
+                          {t.status || 'TODO'}
+                        </span>
                         <span className="rounded border border-slate-700 px-2 py-0.5 text-slate-300">P{t.priority}</span>
                         {t.dueDate ? <span className="rounded border border-slate-700 px-2 py-0.5 text-slate-300">Due {new Date(t.dueDate).toLocaleDateString()}</span> : null}
-                        <button onClick={()=>deleteTask(t.id)} className="rounded border border-rose-700 text-rose-300 px-2 py-0.5 hover:bg-rose-900/30">Delete</button>
+                        <button onClick={()=>deleteTask(t.id)} title="Delete task" aria-label="Delete task" className="tc-widget-delete p-1.5 text-rose-500 hover:text-rose-400 focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                            <path fillRule="evenodd" d="M10.5 3a1 1 0 00-.894.553L9.118 4.5H6a.75.75 0 000 1.5h12a.75.75 0 000-1.5h-3.118l-.488-.947A1 1 0 0013.5 3h-3zm-4 5.25a.75.75 0 011.5 0v9.5a.75.75 0 01-1.5 0v-9.5zm5.25 0a.75.75 0 011.5 0v9.5a.75.75 0 01-1.5 0v-9.5zm6.75 0a.75.75 0 00-1.5 0v9.5a.75.75 0 001.5 0v-9.5z" clipRule="evenodd"/>
+                          </svg>
+                        </button>
                       </div>
                     </li>
-                  )}
-                </Draggable>
-              ))}
-              {dropProvided.placeholder}
+                )})}
             </ul>
-          )}
-        </Droppable>
         )}
       </div>
     )
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+      <>
       <div className="grid lg:grid-cols-[1.1fr_1fr] gap-6 relative">
         {/* Toasts */}
         <div className="pointer-events-none fixed right-4 top-16 z-50 space-y-2">
@@ -349,8 +433,8 @@ export default function TasksClient() {
               <input type="date" value={dueDate} onChange={(e)=>setDueDate(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" title="Due date" placeholder="YYYY-MM-DD" />
             </div>
             <div>
-              <label className="text-xs text-slate-400">Link to team (optional)</label>
-              <select value={teamId} onChange={(e)=>setTeamId(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200">
+              <label htmlFor="link-to-team" className="text-xs text-slate-400">Link to team (optional)</label>
+              <select id="link-to-team" value={teamId} onChange={(e)=>setTeamId(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200">
                 <option value="">No team</option>
                 {/* options fetched client-side */}
                 {teamOptions.map((t)=> (
@@ -377,7 +461,7 @@ export default function TasksClient() {
             {grouped.length === 0 ? (
               <div className="text-sm text-slate-400">No tasks yet. Add your first task.</div>
             ) : (
-              grouped.map(p => <Project key={p.id + p.name} p={p} />)
+              grouped.map(p => <Project key={p.id} p={p} />)
             )}
           </div>
         </div>
@@ -391,43 +475,55 @@ export default function TasksClient() {
             {grouped.length === 0 ? (
               <div className="text-sm text-slate-400">No tasks yet.</div>
             ) : (
-              grouped.map(p => <Project key={'m-' + p.id + p.name} p={p} />)
+              grouped.map(p => <Project key={'m-' + p.id} p={p} />)
             )}
           </div>
         </div>
       </section>
       </div>
-      {descModalTask ? (
+      {editTask ? (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
+          <div className="w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 shadow-xl transition-transform duration-200 ease-out transform">
             <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div className="text-white font-medium">Edit Task</div>
-              <button onClick={()=>setDescModalTask(null)} className="text-slate-400 hover:text-slate-200 px-2 py-1">Close</button>
+              <button onClick={()=>setEditTask(null)} className="text-slate-400 hover:text-slate-200 px-2 py-1">Close</button>
             </div>
             <div className="p-4 space-y-3">
-              <div>
-                <div className="text-sm text-slate-400">Title</div>
-                <div className="text-slate-200 font-medium break-words">{descModalTask.title}</div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-title" className="text-sm text-slate-400">Title</label>
+                  <input id="edit-title" value={titleDraft} onChange={(e)=>setTitleDraft(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" />
+                </div>
+                <div>
+                  <label htmlFor="edit-status" className="text-sm text-slate-400">Status</label>
+                  <select id="edit-status" value={statusDraft} onChange={(e)=>setStatusDraft(e.target.value)} className="mt-1 w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-slate-200">
+                    {['TODO','IN_PROGRESS','DONE','BLOCKED'].map(s=> <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="text-sm text-slate-400">Description</label>
-                <textarea
-                  value={descDraft}
-                  onChange={(e)=>setDescDraft(e.target.value)}
-                  rows={10}
-                  className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200"
-                  placeholder="Add details"
-                />
+                <textarea value={descDraft} onChange={(e)=>setDescDraft(e.target.value)} rows={6} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" placeholder="Add details" />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-priority" className="text-sm text-slate-400">Priority (1-5)</label>
+                  <input id="edit-priority" type="number" min={1} max={5} value={priorityDraft} onChange={(e)=>setPriorityDraft(Number(e.target.value)||3)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" />
+                </div>
+                <div>
+                  <label htmlFor="edit-due" className="text-sm text-slate-400">Due date</label>
+                  <input id="edit-due" type="date" value={dueDraft} onChange={(e)=>setDueDraft(e.target.value)} className="mt-1 w-full rounded-md bg-transparent border border-slate-700 px-3 py-2 text-slate-200" />
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-800">
-              <button onClick={()=>setDescModalTask(null)} className="px-3 py-2 rounded-md border border-slate-700 text-slate-300 hover:bg-slate-800">Cancel</button>
-              <button onClick={commitModalDesc} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Save</button>
+              <button onClick={()=>setEditTask(null)} className="px-3 py-2 rounded-md border border-slate-700 text-slate-300 hover:bg-slate-800">Cancel</button>
+              <button onClick={commitEditTask} className="px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-500">Save Changes</button>
             </div>
           </div>
         </div>
       ) : null}
-    </DragDropContext>
+      </>
   )
 }
 

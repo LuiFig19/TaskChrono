@@ -65,16 +65,16 @@ export default function MonthGrid({ events, baseDate, onSelect }: { events: Even
         const key = d.toDateString()
         const meta = dayMeta.get(key) || null
         const clsMap: Record<string, { bg: string; ring: string; dot: string }> = {
-          // Brighter, more distinct palette that matches the dashboard widget
-          meeting: { bg: 'bg-blue-500/30', ring: 'ring-blue-400/60', dot: 'bg-blue-500' },
-          release: { bg: 'bg-lime-500/30', ring: 'ring-lime-400/60', dot: 'bg-lime-500' },
-          invoice: { bg: 'bg-rose-500/30', ring: 'ring-rose-400/60', dot: 'bg-rose-500' },
-          review: { bg: 'bg-violet-500/30', ring: 'ring-violet-400/60', dot: 'bg-violet-500' },
-          demo: { bg: 'bg-teal-500/30', ring: 'ring-teal-400/60', dot: 'bg-teal-500' },
-          deadline: { bg: 'bg-amber-500/30', ring: 'ring-amber-400/60', dot: 'bg-amber-500' },
-          personal: { bg: 'bg-emerald-500/30', ring: 'ring-emerald-400/60', dot: 'bg-emerald-500' },
-          urgent: { bg: 'bg-red-600/30', ring: 'ring-red-500/60', dot: 'bg-red-600' },
-          general: { bg: 'bg-fuchsia-500/30', ring: 'ring-fuchsia-400/60', dot: 'bg-fuchsia-500' },
+          // Semi-transparent by default; force SOLID in LIGHT MODE to match dashboard widget
+          meeting:  { bg: 'bg-blue-500/30 light:bg-blue-500',       ring: 'ring-blue-400/60 light:ring-blue-400',       dot: 'bg-blue-500' },
+          release:  { bg: 'bg-lime-500/30 light:bg-lime-500',       ring: 'ring-lime-400/60 light:ring-lime-400',       dot: 'bg-lime-500' },
+          invoice:  { bg: 'bg-rose-500/30 light:bg-rose-500',       ring: 'ring-rose-400/60 light:ring-rose-400',       dot: 'bg-rose-500' },
+          review:   { bg: 'bg-violet-500/30 light:bg-violet-500',   ring: 'ring-violet-400/60 light:ring-violet-400',   dot: 'bg-violet-500' },
+          demo:     { bg: 'bg-teal-500/30 light:bg-teal-500',       ring: 'ring-teal-400/60 light:ring-teal-400',       dot: 'bg-teal-500' },
+          deadline: { bg: 'bg-amber-500/30 light:bg-amber-500',     ring: 'ring-amber-400/60 light:ring-amber-400',     dot: 'bg-amber-500' },
+          personal: { bg: 'bg-emerald-500/30 light:bg-emerald-500', ring: 'ring-emerald-400/60 light:ring-emerald-400', dot: 'bg-emerald-500' },
+          urgent:   { bg: 'bg-red-600/30 light:bg-red-600',         ring: 'ring-red-500/60 light:ring-red-500',         dot: 'bg-red-600' },
+          general:  { bg: 'bg-fuchsia-500/30 light:bg-fuchsia-500', ring: 'ring-fuchsia-400/60 light:ring-fuchsia-400', dot: 'bg-fuchsia-500' },
         }
         return (
           <button

@@ -90,8 +90,8 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05, duration: 0.5 }}
-              className={`relative rounded-2xl border p-6 bg-white/60 backdrop-blur-sm ${
-                tier.highlight ? 'ring-2 ring-indigo-500 shadow-xl' : 'shadow-sm'
+              className={`pricing-card relative rounded-2xl border p-6 bg-white/60 backdrop-blur-sm ${
+                tier.highlight ? 'pricing-card--highlight ring-2 ring-indigo-500 shadow-xl' : 'shadow-sm'
               }`}
             >
               {tier.highlight && (
@@ -100,8 +100,8 @@ export default function Pricing() {
                 </span>
               )}
               <div className="text-lg font-semibold">{tier.name}</div>
-              <div className="text-3xl mt-1">{tier.price}</div>
-              <div className="text-sm text-gray-600 mt-1">{tier.blurb}</div>
+              <div className="price text-3xl mt-1">{tier.price}</div>
+              <div className="blurb text-sm text-gray-600 mt-1">{tier.blurb}</div>
               <ul className="mt-5 space-y-2 text-sm">
                 {tier.features.map((f) => (
                   <li key={f.label} className="flex items-center gap-2">

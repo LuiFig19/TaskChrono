@@ -139,8 +139,13 @@ export default function ProjectProgressWidget() {
       </div>
       {/* Footer area is fixed at the bottom and always fully visible */}
       <div className="pt-2 shrink-0 sticky bottom-0 bg-transparent">
-        <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-2 h-10 flex items-center justify-center">
-          <button onClick={addBar} className="px-3 py-1 rounded-md border border-slate-700 text-slate-200 hover:bg-slate-800">
+        <div className="rounded-md border border-dashed border-slate-700 bg-slate-900/40 p-2 h-10 flex items-center justify-center dark:border-slate-700 dark:bg-slate-900/40 light:border-[#D0D4DA] light:bg-transparent">
+          <button
+            data-progress-add
+            onClick={addBar}
+            className="px-3 py-1 rounded-full border bg-blue-600 text-white border-blue-500 hover:bg-blue-700
+              dark:rounded-md dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white dark:border-blue-500"
+          >
             + Add Progress Bar
           </button>
         </div>

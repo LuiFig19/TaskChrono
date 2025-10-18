@@ -41,6 +41,7 @@ export default function RadialActions({ plan }: { plan: Plan }) {
 
       {/* Horizontal action row */}
       <div
+        data-actions-menu
         className={`absolute left-full top-1/2 -translate-y-1/2 ml-3 flex flex-nowrap items-center gap-2 z-[100000] origin-left transition-transform transition-opacity duration-200 ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
       >
         {/* Widgets */}
@@ -89,6 +90,7 @@ export default function RadialActions({ plan }: { plan: Plan }) {
         {/* Upload File */}
         <div className="relative z-[100000]">
           <button
+            data-action="upload"
             className={`${baseBtn} bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-400`}
             onClick={(e) => { e.stopPropagation(); goFiles(); setOpen(false); setSubmenu(null) }}
             title="Files"

@@ -46,7 +46,7 @@ export default function LandingClient() {
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">From time tracking to project management, we provide all the tools your business needs to stay organized and profitable.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
+            {[ 
               { icon: '💬', title: 'Real‑time Team Chat (New)', description: 'Collaborate instantly with channel-based chat, live streaming updates, and message likes. All messages are saved and searchable.' },
               { icon: '🧩', title: 'Draggable, Customizable Dashboard (New)', description: 'Personalize your workspace with drag‑and‑drop widgets. Reorder, add or remove cards — your layout is saved across sessions.' },
               { icon: '⏱️', title: 'One-Click Time Tracking', description: 'Start and stop timers with a single click. Track time across multiple projects and tasks effortlessly.' },
@@ -54,7 +54,7 @@ export default function LandingClient() {
               { icon: '📈', title: 'Real-Time Analytics', description: 'Get instant insights into productivity, project profitability, and team performance with detailed reports.' },
               { icon: '📦', title: 'Inventory Tracking', description: 'Monitor stock levels, track usage across projects, and manage supply chains efficiently.' },
             ].map((f) => (
-              <MotionDiv key={f.title} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 250, damping: 18 }} className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-700">
+              <MotionDiv key={f.title} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 250, damping: 18 }} className="tc-feature-card bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-700">
                 <div className="text-4xl mb-4">{f.icon}</div>
                 <h3 className="text-xl font-semibold text-white mb-3">{f.title}</h3>
                 <p className="text-slate-300 leading-relaxed">{f.description}</p>
