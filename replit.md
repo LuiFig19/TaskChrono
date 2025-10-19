@@ -5,6 +5,16 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Complete Onboarding Flow with Stripe Integration (October 19, 2025) ✅ COMPLETED
+- **Non-Persistent Sessions**: Configured Better-auth sessions to expire when browser closes (removed expiresIn/updateAge, using only cookieCache with maxAge:0)
+- **Fresh Signup Flow**: Tier selection now redirects to register page, not onboarding - ensures new users always create accounts first
+- **14-Day Free Trial Messaging**: Added clear trial messaging on register page for Business ($5/user/mo) and Enterprise ($12/user/mo) tiers
+- **Stripe Checkout Integration**: After workspace creation, paid tiers redirect to Stripe checkout with 14-day trial automatically configured
+- **Beautiful Activation Page**: Created post-payment success page with green checkmark, trial details, and "Go to Dashboard" CTA
+- **Dashboard Migration**: Fully migrated dashboard from NextAuth to Better-auth - users without organizations redirect to onboarding
+- **Complete Flow**: Landing → Get Started → Select Tier → Register → Create Workspace → Stripe (if paid) → Activation → Dashboard
+- **No Auto-Login**: Sessions don't persist across browser sessions - users must explicitly sign in each time
+
 ### Database Schema Fix (October 19, 2025) ✅ COMPLETED
 - **Critical Bug**: Fixed Prisma client forcing `schema=taskchrono` instead of using default `public` schema
 - **Root Cause**: `src/lib/prisma.ts` had `ensureSchemaParam()` function that appended `schema=taskchrono` to DATABASE_URL
@@ -49,8 +59,8 @@ TaskChrono is a comprehensive time tracking and project management application b
 ### Technology Stack
 - **Framework**: Next.js 15.5.0 with App Router
 - **Database**: PostgreSQL (via Prisma ORM)
-- **Authentication**: NextAuth.js with Google OAuth and credential-based auth
-- **Payments**: Stripe integration for subscription billing
+- **Authentication**: Better-auth with Google OAuth and email/password auth
+- **Payments**: Stripe integration for subscription billing with 14-day free trials
 - **Real-time**: Socket.io for live updates
 - **UI**: Tailwind CSS 4, Framer Motion, Lucide icons
 - **Forms**: React Hook Form with Zod validation
@@ -68,7 +78,7 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ### Database Schema
 Comprehensive Prisma schema including:
-- User management and authentication (NextAuth models)
+- User management and authentication (Better-auth models)
 - Organizations and teams with member roles
 - Projects, tasks, and time entries
 - Invoicing and billing
