@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = session.user.id
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
   if (!membership?.organization) return NextResponse.json({ error: 'Missing organization' }, { status: 400 })
   const org = membership.organization

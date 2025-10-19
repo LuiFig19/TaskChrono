@@ -6,18 +6,20 @@ import { headers } from 'next/headers'
 
 export default async function RegisterPage(
   props:
-    | { searchParams?: { callbackUrl?: string } }
-    | { searchParams: Promise<{ callbackUrl?: string }> }
+    | { searchParams?: { callbackUrl?: string; plan?: string } }
+    | { searchParams: Promise<{ callbackUrl?: string; plan?: string }> }
 ) {
-  let params: { callbackUrl?: string } = {}
+  let params: { callbackUrl?: string; plan?: string } = {}
   try {
     const maybe = (props as any).searchParams
     params = typeof maybe?.then === 'function' ? await maybe : maybe || {}
   } catch {}
+  
+  const plan = params.plan || 'FREE'
   const dst =
     typeof params.callbackUrl === 'string' && params.callbackUrl
       ? params.callbackUrl
-      : '/dashboard'
+      : `/onboarding?plan=${plan}`
 
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -37,7 +39,12 @@ export default async function RegisterPage(
             <span className="tc-animated-gradient text-2xl font-extrabold">TaskChrono</span>
           </div>
           <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-slate-300 mt-2">Sign up to get started with TaskChrono</p>
+          <p className="text-slate-300 mt-2">
+            {plan === 'FREE' && 'Sign up to get started with TaskChrono'}
+            {plan === 'BUSINESS' && '14-day free trial • $5/user/month after trial'}
+            {plan === 'ENTERPRISE' && '14-day free trial • $12/user/month after trial'}
+            {plan === 'CUSTOM' && 'Contact us for custom pricing'}
+          </p>
           
           <form action={registerLocalAction} className="mt-6 grid gap-4">
             <label className="grid gap-2">

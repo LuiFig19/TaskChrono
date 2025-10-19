@@ -107,7 +107,7 @@ export default function GetStartedPage() {
             {tiers.map((t) => (
               <m.div variants={item} key={t.key}>
                 <Link
-                  href={`/onboarding?plan=${t.key}`}
+                  href={`/register?plan=${t.key}`}
                   className="group relative block h-full rounded-2xl border border-slate-800 bg-slate-900/60 p-6 hover:border-slate-700 hover:shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_10px_40px_-10px_rgba(0,0,0,0.7)] transition-all duration-300"
                   aria-label={`Select ${t.name} plan`}
                 >

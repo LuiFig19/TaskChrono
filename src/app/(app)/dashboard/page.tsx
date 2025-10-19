@@ -1,5 +1,5 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import DashboardGrid from './_components/DashboardGrid'
@@ -8,7 +8,9 @@ import RadialActions from './_components/RadialActions'
 import ResetLayoutButton from './_components/ResetLayoutButton'
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) {
     redirect('/login')
   }
@@ -16,30 +18,15 @@ export default async function DashboardPage() {
   let membership: any = null
   try {
     membership = await prisma.organizationMember.findFirst({
-      where: { userId: (session.user as unknown as { id: string }).id },
+      where: { userId: session.user.id },
       include: { organization: true },
     })
   } catch {}
   if (!membership?.organization) {
-    // Try to provision in the background; do not block rendering
-    const userId = (session.user as any)?.id as string | undefined
-    const userName = (session.user as any)?.name as string | undefined
-    const workspaceName = userName ? `${userName.split(' ')[0]}'s Workspace` : 'My Workspace'
-    if (userId) {
-      ;(async () => {
-        try {
-          const org = await prisma.organization.create({
-            data: { name: workspaceName, planTier: 'FREE' as any, createdById: userId, trialEndsAt: new Date(Date.now() + 14*24*60*60*1000) },
-          })
-          await prisma.organizationMember.upsert({
-            where: { organizationId_userId: { organizationId: org.id, userId } },
-            create: { organizationId: org.id, userId, role: 'OWNER' as any },
-            update: { role: 'OWNER' as any },
-          })
-        } catch {}
-      })()
-    }
+    // Redirect to onboarding if no organization
+    redirect('/onboarding?plan=FREE')
   }
+
   const plan = (membership?.organization?.planTier as any) ?? 'FREE'
   return (
     <div className="max-w-screen-2xl mx-auto px-4 pt-6 pb-6">
