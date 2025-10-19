@@ -20,7 +20,7 @@ export default function DashboardHeader({ plan, userEmail }: DashboardHeaderProp
       <div className="tc-nav-inner max-w-screen-2xl mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-2.5">
         <div className="leading-none">
           <Link href="/dashboard" className="tc-logo text-lg font-extrabold bg-clip-text text-transparent tracking-tight leading-none" suppressHydrationWarning>
-            TaskChrono <span className={`ml-2 text-xs align-top ${plan==='FREE'?'text-emerald-400':plan==='BUSINESS'?'text-rose-400':plan==='ENTERPRISE'?'text-violet-400':'text-indigo-300'}`}>{plan.toLowerCase()}</span>
+            TaskChrono <span className={`ml-2 text-xs align-top ${plan==='FREE'?'text-emerald-400':plan==='BUSINESS'?'text-blue-400':plan==='ENTERPRISE'?'text-orange-400':'text-indigo-300'}`}>{plan.toLowerCase()}</span>
           </Link>
           {/* Company name under logo */}
           <CompanySubtext />

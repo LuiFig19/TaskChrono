@@ -1,18 +1,10 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/better-auth'
-import Link from 'next/link'
 
 export default async function ActivationPage(
   props: { searchParams?: { plan?: string } } | { searchParams: Promise<{ plan?: string }> }
 ) {
-  let planParam: string | undefined
-  try {
-    const maybe = (props as any).searchParams
-    const sp = typeof maybe?.then === 'function' ? await maybe : (maybe || {})
-    planParam = sp?.plan
-  } catch {}
-
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -21,9 +13,10 @@ export default async function ActivationPage(
     redirect('/login')
   }
 
-  const plan = planParam || 'BUSINESS'
+  redirect('/dashboard')
+}
 
-  return (
+const OldActivationPageContent = () => (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 opacity-40 animate-pulse bg-[radial-gradient(ellipse_60%_60%_at_20%_20%,rgba(99,102,241,0.25),transparent_60%),radial-gradient(ellipse_50%_50%_at_80%_30%,rgba(37,99,235,0.25),transparent_60%)]" />
       
