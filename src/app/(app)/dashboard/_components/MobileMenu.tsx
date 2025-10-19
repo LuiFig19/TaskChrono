@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createPortal } from 'react-dom'
+import { authClient } from '@/lib/better-auth-client'
 
 type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
 
@@ -102,9 +103,22 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
                       const ok = window.confirm('Sign out and return to the TaskChrono landing page?')
                       if (!ok) return
                       try {
-                        await fetch('/api/auth/signout', { method: 'POST' })
+                        await authClient.signOut()
+                        document.cookie.split(";").forEach(c => {
+                          const [name] = c.split("=");
+                          if (name.trim().startsWith('taskchrono')) {
+                            document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                          }
+                        });
                         window.location.href = '/'
-                      } catch {
+                      } catch (error) {
+                        console.error('Signout error:', error)
+                        document.cookie.split(";").forEach(c => {
+                          const [name] = c.split("=");
+                          if (name.trim().startsWith('taskchrono')) {
+                            document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                          }
+                        });
                         window.location.href = '/'
                       }
                     }}
