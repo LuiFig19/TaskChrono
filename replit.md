@@ -9,7 +9,11 @@ TaskChrono is a comprehensive time tracking and project management application b
 - **Critical Bug**: Fixed Prisma client forcing `schema=taskchrono` instead of using default `public` schema
 - **Root Cause**: `src/lib/prisma.ts` had `ensureSchemaParam()` function that appended `schema=taskchrono` to DATABASE_URL
 - **Fix**: Removed schema-forcing logic to allow Prisma to use default `public` schema
-- **Result**: Better-auth signup now works correctly without "User table doesn't exist" errors
+- **Better-auth Schema Alignment**: Updated Prisma models to match Better-auth requirements:
+  - User model: Changed `emailVerified` from `DateTime?` to `Boolean @default(false)`
+  - Account model: Added `accountId`, `password` fields and set `providerUserId` default
+  - Session model: Added `ipAddress` and `userAgent` fields
+- **Result**: Better-auth signup now works correctly - users can create accounts with email/password
 
 ### Beautiful Authentication UI (October 19, 2025) ✅ COMPLETED
 - **Signup Page**: Redesigned with gradient background (slate-900 to blue-950), animated glow effects
