@@ -18,9 +18,20 @@ export default async function OnboardingPage(
   })
   if (!session?.user) {
     const plan = planParam || 'FREE'
-    const cb = encodeURIComponent(`/onboarding?plan=${plan}`)
-    redirect(`/register?callbackUrl=${cb}`)
+    const cb = `/onboarding?plan=${plan}`
+    redirect(`/register?callbackUrl=${encodeURIComponent(cb)}`)
   }
+
+  // Check if user already has an organization - redirect to dashboard if they do
+  const { prisma } = await import('@/lib/prisma')
+  const existingMembership = await prisma.organizationMember.findFirst({
+    where: { userId: session.user.id },
+    include: { organization: true }
+  })
+  if (existingMembership) {
+    redirect('/dashboard')
+  }
+
   const plan = planParam || 'FREE'
   const planLabel = (() => {
     const upper = String(plan).toUpperCase()
