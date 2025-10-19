@@ -5,6 +5,19 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Better-auth Integration (October 19, 2025) ✅ COMPLETED
+- **Primary Authentication**: Migrated from NextAuth.js to Better-auth as the primary authentication system
+- **Email/Password Auth**: Implemented Better-auth email/password authentication with secure signup and login
+- **Google OAuth**: Configured Google OAuth integration through Better-auth
+- **Database Schema**: Updated Prisma schema with Better-auth compatible field mappings
+  - Account model: Uses `providerUserId` for social auth accounts
+  - Session model: Uses `token` and `expiresAt` fields
+  - Both models include `createdAt` and `updatedAt` timestamps
+- **API Routes**: Created Better-auth API handler at `/api/auth/[...all]/`
+- **Client Integration**: Set up Better-auth React hooks for client-side authentication
+- **Middleware**: Updated to use Better-auth session validation for protected routes
+- **Components**: Migrated login, register, and dashboard components to use Better-auth
+
 ### Migration from Vercel to Replit (October 19, 2025) ✅ COMPLETED
 - **Port Configuration**: Updated all dev and start scripts to use port 5000 with 0.0.0.0 binding for Replit compatibility
 - **Database**: Connected to Replit PostgreSQL (Neon-backed) and ran Prisma migrations successfully with `npx prisma db push`
