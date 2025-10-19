@@ -2,14 +2,16 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
 import { ensureUserOrg } from '@/lib/org'
 import { addSubscriber, removeSubscriber } from '@/lib/chatStore'
 import { prisma } from '@/lib/prisma'
+import { headers } from 'next/headers'
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) return new NextResponse('Unauthorized', { status: 401 })
   const { organizationId } = await ensureUserOrg()
   const { searchParams } = new URL(req.url)

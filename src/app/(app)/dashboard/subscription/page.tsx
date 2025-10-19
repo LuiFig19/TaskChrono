@@ -1,11 +1,14 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
 import { prisma } from '@/lib/prisma'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export default async function SubscriptionPage({ searchParams }: { searchParams?: { upgrade?: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return null
-  const userId = (session.user as any).id as string
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  if (!session?.user) redirect('/login?callbackUrl=/dashboard/subscription')
+  const userId = session.user.id
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
   const plan = membership?.organization?.planTier || 'FREE'
 

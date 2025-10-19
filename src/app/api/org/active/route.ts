@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
 import { prisma } from '@/lib/prisma'
+import { headers } from 'next/headers'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    })
     if (!session?.user) return NextResponse.json({ id: null, name: null, brandColor: null }, { status: 401 })
-    const userId = (session.user as any).id as string
+    const userId = session.user.id
     const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
     const org = membership?.organization
     if (!org) return NextResponse.json({ id: null, name: null, brandColor: null })

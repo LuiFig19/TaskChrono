@@ -2,14 +2,16 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
 import { prisma } from '@/lib/prisma'
 import { addTimerSubscriber, removeTimerSubscriber, broadcastTimer } from '@/lib/timerStore'
 import { getCurrentUserAndOrg } from '@/lib/org'
+import { headers } from 'next/headers'
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -19,19 +21,21 @@ export async function POST(request: Request) {
   const entry = await prisma.timeEntry.create({
     data: {
       organizationId: (await getCurrentUserAndOrg()).organizationId!,
-      userId: (session.user as any).id,
+      userId: session.user.id,
       taskId,
       startedAt: startedAt ? new Date(startedAt) : new Date(),
     },
   })
-  broadcastTimer((session.user as any).id, 'changed', { id: entry.id })
+  broadcastTimer(session.user.id, 'changed', { id: entry.id })
   return NextResponse.json(entry)
 }
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user) return new NextResponse('Unauthorized', { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = session.user.id
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder()
