@@ -9,7 +9,7 @@ export default async function ActivationPage({ searchParams }: { searchParams?: 
     headers: await headers()
   })
   if (!session?.user) {
-    redirect('/login')
+    redirect('/register')
   }
   const plan = searchParams?.plan || 'FREE'
   return (

@@ -14,7 +14,7 @@ export async function createOrganizationAction(formData: FormData) {
   })
   if (!session?.user?.id) {
     const callbackPath = `/onboarding?plan=${encodeURIComponent(plan)}&name=${encodeURIComponent(name)}&emails=${encodeURIComponent(emailCsv)}`
-    redirect(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`)
+    redirect(`/register?callbackUrl=${encodeURIComponent(callbackPath)}`)
   }
   if (!name) {
     throw new Error('Organization name is required')
@@ -116,7 +116,7 @@ export async function finalizeOrganizationAction(formData: FormData) {
     headers: await headers()
   })
   if (!session?.user?.id) {
-    redirect('/login')
+    redirect('/register')
   }
   const userId = session.user.id
   const name = String(formData.get('name') || '').trim()

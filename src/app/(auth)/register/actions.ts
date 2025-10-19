@@ -9,6 +9,7 @@ export async function registerLocalAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
   const name = String(formData.get("name") || "").trim();
+  const callbackUrl = String(formData.get("callbackUrl") || "/dashboard");
 
   if (!email || !password) {
     throw new Error("Email and password are required");
@@ -65,7 +66,7 @@ export async function registerLocalAction(formData: FormData) {
       });
     }
 
-    redirect("/dashboard");
+    redirect(callbackUrl);
   } catch (error: any) {
     console.error("Registration error:", error);
     throw new Error(error?.message || "Failed to register. Please try again.");

@@ -19,7 +19,7 @@ export default async function OnboardingPage(
   if (!session?.user) {
     const plan = planParam || 'FREE'
     const cb = encodeURIComponent(`/onboarding?plan=${plan}`)
-    redirect(`/login?callbackUrl=${cb}`)
+    redirect(`/register?callbackUrl=${cb}`)
   }
   const plan = planParam || 'FREE'
   const planLabel = (() => {
