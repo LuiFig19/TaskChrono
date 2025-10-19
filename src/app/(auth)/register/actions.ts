@@ -30,11 +30,7 @@ export async function registerLocalAction(formData: FormData) {
   } catch (error: any) {
     console.error("Registration error:", error);
     
-    if (error?.code === 'P2002' || error?.message?.includes('Unique constraint')) {
-      throw new Error("This email is already registered. Please sign in instead or use a different email.");
-    }
-    
-    if (error?.message?.includes('already exists') || error?.message?.includes('duplicate')) {
+    if (error?.message?.includes('email') && (error?.message?.includes('already exists') || error?.message?.includes('duplicate'))) {
       throw new Error("This email is already registered. Please sign in instead or use a different email.");
     }
     
