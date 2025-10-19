@@ -1,23 +1,33 @@
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { SignIn, CredentialsForm } from './signin'
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { auth } from "@/lib/better-auth";
+import { headers } from "next/headers";
+import { SignIn, CredentialsForm } from "./signin";
 
 export default async function LoginPage(
-  props: { searchParams?: { callbackUrl?: string } } | { searchParams: Promise<{ callbackUrl?: string }> }
+  props:
+    | { searchParams?: { callbackUrl?: string } }
+    | { searchParams: Promise<{ callbackUrl?: string }> }
 ) {
-  let params: { callbackUrl?: string } = {}
+  let params: { callbackUrl?: string } = {};
   try {
-    const maybe = (props as any).searchParams
-    params = typeof maybe?.then === 'function' ? await maybe : (maybe || {})
+    const maybe = (props as any).searchParams;
+    params =
+      typeof maybe?.then === "function" ? await maybe : maybe || {};
   } catch {}
-  const dst = typeof params.callbackUrl === 'string' && params.callbackUrl ? params.callbackUrl : '/dashboard'
+  const dst =
+    typeof params.callbackUrl === "string" && params.callbackUrl
+      ? params.callbackUrl
+      : "/dashboard";
 
-  const session = await getServerSession(authOptions)
-  if (session?.user) redirect(dst)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  const hasGoogle = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET
+  if (session?.user) redirect(dst);
+
+  const hasGoogle =
+    !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
@@ -36,11 +46,12 @@ export default async function LoginPage(
         </div>
 
         <div className="mt-6 text-xs text-gray-500">
-          New here? <Link href="/register" className="underline">Create a local admin</Link>
+          New here?{" "}
+          <Link href="/register" className="underline">
+            Create a local admin
+          </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-
