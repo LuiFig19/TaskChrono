@@ -45,7 +45,9 @@ model Account {
   id             String    @id @default(cuid())
   userId         String
   providerId     String    @map("provider")
-  providerUserId String    @map("providerAccountId")
+  providerUserId String    @default("") @map("providerAccountId")
+  accountId      String?
+  password       String?
   refreshToken   String?   @map("refresh_token")
   accessToken    String?   @map("access_token")
   expiresAt      DateTime? @map("expires_at")
