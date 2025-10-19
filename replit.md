@@ -31,7 +31,7 @@ TaskChrono is a comprehensive time tracking and project management application b
   - Both models include `createdAt` and `updatedAt` timestamps
 - **API Routes**: Created Better-auth API handler at `/api/auth/[...all]/`
 - **Client Integration**: Set up Better-auth React hooks for client-side authentication
-- **Middleware**: Updated to use Better-auth session validation for protected routes
+- **Middleware**: Fixed Edge Runtime compatibility by using cookie-based session checking instead of Prisma queries
 - **Components**: Migrated login, register, dashboard, and onboarding components to use Better-auth
 - **Onboarding Flow**: Complete user journey from landing → tier selection → Better-auth signup/login → organization creation → dashboard
 
