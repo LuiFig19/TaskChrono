@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/better-auth'
 import Link from 'next/link'
 import { createOrganizationAction } from './actions'
 
@@ -13,9 +13,10 @@ export default async function OnboardingPage(
     const sp = typeof maybe?.then === 'function' ? await maybe : (maybe || {})
     planParam = sp?.plan
   } catch {}
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   if (!session?.user) {
-    // Route to our login page instead of direct Google to avoid adapter issues in local dev
     const plan = planParam || 'FREE'
     const cb = encodeURIComponent(`/onboarding?plan=${plan}`)
     redirect(`/login?callbackUrl=${cb}`)

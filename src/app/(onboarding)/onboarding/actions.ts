@@ -1,7 +1,7 @@
 "use server"
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/better-auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 
@@ -9,7 +9,9 @@ export async function createOrganizationAction(formData: FormData) {
   const name = String(formData.get('name') || '').trim()
   const plan = String(formData.get('plan') || 'FREE') as 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
   const emailCsv = String(formData.get('emails') || '').trim()
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   if (!session?.user?.id) {
     const callbackPath = `/onboarding?plan=${encodeURIComponent(plan)}&name=${encodeURIComponent(name)}&emails=${encodeURIComponent(emailCsv)}`
     redirect(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`)
@@ -110,7 +112,9 @@ export async function createOrganizationAction(formData: FormData) {
 }
 
 export async function finalizeOrganizationAction(formData: FormData) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   if (!session?.user?.id) {
     redirect('/login')
   }

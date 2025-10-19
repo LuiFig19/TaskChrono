@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/better-auth'
 import Link from 'next/link'
 import { finalizeOrganizationAction } from '../actions'
 
 export default async function ActivationPage({ searchParams }: { searchParams?: { plan?: string } }) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
   if (!session?.user) {
     redirect('/login')
   }
