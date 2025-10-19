@@ -67,8 +67,8 @@ export async function createOrganizationAction(formData: FormData) {
 
   // For paid tiers, create or reuse Stripe customer and redirect to Checkout with 14‑day trial
   if (!stripe || !org) {
-    // Fallback: go to subscription page for manual upgrade if Stripe isn't configured
-    redirect('/dashboard/subscription')
+    // Fallback: go to dashboard if Stripe isn't configured
+    redirect('/dashboard')
   }
 
   // Ensure Stripe customer exists for this organization
@@ -87,8 +87,8 @@ export async function createOrganizationAction(formData: FormData) {
   // Resolve the price id based on selected tier
   const priceId = plan === 'BUSINESS' ? (process.env.STRIPE_PRICE_BUSINESS || '') : (process.env.STRIPE_PRICE_ENTERPRISE || '')
   if (!priceId) {
-    // If prices not configured, land on subscription page
-    redirect('/dashboard/subscription')
+    // If prices not configured, go to dashboard
+    redirect('/dashboard')
   }
 
   // Seats default: owner + invited emails (adjustable in Checkout)

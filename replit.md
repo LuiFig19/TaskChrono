@@ -10,10 +10,11 @@ TaskChrono is a comprehensive time tracking and project management application b
 - **Fresh Signup Flow**: Tier selection now redirects to register page, not onboarding - ensures new users always create accounts first
 - **14-Day Free Trial Messaging**: Added clear trial messaging on register page for Business ($5/user/mo) and Enterprise ($12/user/mo) tiers
 - **Stripe Checkout Integration**: After workspace creation, paid tiers redirect to Stripe checkout with 14-day trial automatically configured
-- **Beautiful Activation Page**: Created post-payment success page with green checkmark, trial details, and "Go to Dashboard" CTA
+- **Direct Dashboard Access**: After signup/onboarding, users go directly to dashboard - no intermediate subscription or activation pages
 - **Dashboard Migration**: Fully migrated dashboard from NextAuth to Better-auth - users without organizations redirect to onboarding
-- **Complete Flow**: Landing → Get Started → Select Tier → Register → Create Workspace → Stripe (if paid) → Activation → Dashboard
+- **Complete Flow**: Landing → Get Started → Select Tier → Register → Create Workspace → Dashboard (Stripe checkout skipped if prices not configured)
 - **No Auto-Login**: Sessions don't persist across browser sessions - users must explicitly sign in each time
+- **Tier Colors**: Plan badges in header display correctly - FREE (green), BUSINESS (blue), ENTERPRISE (orange)
 
 ### Database Schema Fix (October 19, 2025) ✅ COMPLETED
 - **Critical Bug**: Fixed Prisma client forcing `schema=taskchrono` instead of using default `public` schema
