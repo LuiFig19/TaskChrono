@@ -27,10 +27,10 @@ export async function registerLocalAction(formData: FormData) {
     if (!signUpResult || !signUpResult.user) {
       throw new Error("Failed to create user account");
     }
-
-    redirect(callbackUrl);
   } catch (error: any) {
     console.error("Registration error:", error);
     throw new Error(error?.message || "Failed to register. Please try again.");
   }
+
+  redirect(callbackUrl);
 }
