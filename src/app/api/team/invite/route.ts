@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { createOrgInviteToken } from '@/lib/invites'
 
@@ -8,9 +7,9 @@ import { createOrgInviteToken } from '@/lib/invites'
 // Creates or finds a placeholder user but does NOT auto-add membership.
 // Returns a signed token that frontend can email via Gmail deep link.
 export async function POST(request: Request) {
-	const session = await getServerSession(authOptions)
+	const { error, user } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = (session.user as any).id as string
+	const userId = user.id as string
 
 	// Find inviter's active organization
 	const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })

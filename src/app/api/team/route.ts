@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 
 // Returns members of the active organization for the current user.
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ members: [] }, { status: 401 })
 
   const { organizationId } = await getCurrentUserAndOrg()

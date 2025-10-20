@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { broadcastActivity } from '@/lib/activity'
 
@@ -19,9 +18,9 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const { error, user } = await requireApiAuth()
+  if (error) return error
+  const userId = user.id as string
   let organizationId: string | null = null
   try {
     organizationId = await getActiveOrganizationId(userId)
@@ -69,9 +68,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const { error, user } = await requireApiAuth()
+  if (error) return error
+  const userId = user.id as string
   let organizationId: string | null = null
   try {
     organizationId = await getActiveOrganizationId(userId)

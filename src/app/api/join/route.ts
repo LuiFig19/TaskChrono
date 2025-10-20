@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOrgInviteToken } from '@/lib/invites'
 import { broadcastActivity } from '@/lib/activity'
@@ -10,12 +9,12 @@ export async function GET(req: Request) {
 	const token = url.searchParams.get('token') || ''
 	const payload = verifyOrgInviteToken(token)
 	if (!payload) return NextResponse.json({ ok: false, reason: 'invalid_or_expired' }, { status: 400 })
-	const session = await getServerSession(authOptions)
+	const { error, user } = await requireApiAuth()
 	// If not signed in, instruct client to show signup popup
 	if (!session?.user) {
 		return NextResponse.json({ ok: true, needsAuth: true, orgId: payload.orgId, email: payload.email })
 	}
-	const userId = (session.user as any).id as string
+	const userId = user.id as string
 	// Create membership if missing, do not delete other memberships
 	try {
 		await prisma.organizationMember.create({ data: { organizationId: payload.orgId, userId, role: 'MEMBER' as any } })

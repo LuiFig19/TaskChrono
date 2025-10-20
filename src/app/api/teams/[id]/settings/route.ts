@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { isAdmin, getUserTeamRole } from '@/lib/team'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const m = await prisma.teamMembership.findFirst({ where: { teamId: id, userId } })
   if (!m) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -17,9 +16,9 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!isAdmin(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -32,9 +31,9 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 }
 
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!isAdmin(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

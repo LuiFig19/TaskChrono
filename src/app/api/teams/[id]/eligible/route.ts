@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ users: [] }, { status: 401 })
   const { organizationId } = await getCurrentUserAndOrg()
   const { id: teamId } = await context.params

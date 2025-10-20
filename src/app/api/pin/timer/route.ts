@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions)
+    const { error, user } = await requireApiAuth()
     if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
-    const userId = (session.user as unknown as { id: string }).id
+    const userId = user.id
     const pref = await prisma.userPreference.findUnique({ where: { userId } })
     const order = (pref?.dashboardWidgets as unknown as string[] | null) ?? []
     const next = order.includes('timer_active') ? order : [...order, 'timer_active']

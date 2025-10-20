@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { broadcastActivity } from '@/lib/activity'
 import { recomputeProjectStatus } from '@/lib/projectStatus'
@@ -14,10 +13,10 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { error, user } = await requireApiAuth()
+  if (error) return error
 
-  const userId = (session.user as unknown as { id: string }).id
+  const userId = user.id
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ projects: [] })
   const url = new URL(request.url)
@@ -52,9 +51,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as unknown as { id: string }).id
+  const { error, user } = await requireApiAuth()
+  if (error) return error
+  const userId = user.id
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
 

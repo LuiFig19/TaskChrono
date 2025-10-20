@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { broadcastActivity } from '@/lib/activity'
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ notes: [] }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
   if (!member) return NextResponse.json({ notes: [] }, { status: 403 })
@@ -18,9 +17,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
   if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -37,9 +36,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
   if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

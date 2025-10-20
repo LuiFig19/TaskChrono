@@ -2,15 +2,14 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ widgets: null }, { status: 401 })
-  const userId = (session.user as unknown as { id: string }).id
+  const userId = user.id
   const pref = await prisma.userPreference.findUnique({ where: { userId } })
   const { organizationId } = await getCurrentUserAndOrg()
   const raw = pref?.dashboardWidgets as any
@@ -29,9 +28,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
-  const userId = (session.user as unknown as { id: string }).id
+  const userId = user.id
   const body = await request.json().catch(() => ({})) as { order?: string[]; progressIds?: string[]; rglLayout?: any[] }
   const { organizationId } = await getCurrentUserAndOrg()
   const orgKey = organizationId || 'default'

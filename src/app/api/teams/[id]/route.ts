@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 async function requireMember(userId: string, teamId: string) {
@@ -9,9 +8,9 @@ async function requireMember(userId: string, teamId: string) {
 }
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   // Ensure creator is auto-added as ADMIN if missing
   const team = await prisma.team.findUnique({ where: { id } })
@@ -28,9 +27,9 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 }
 
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
+  const { error, user } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session.user as any).id as string
+  const userId = user.id as string
   const { id } = await context.params
   // Only admins can delete
   const membership = await prisma.teamMembership.findFirst({ where: { teamId: id, userId }, select: { role: true } })
