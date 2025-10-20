@@ -5,6 +5,13 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Register Page Auto-Login Fix (October 20, 2025) ✅ COMPLETED
+- **Issue Fixed**: Users were being automatically signed in when trying to create new accounts during Get Started flow
+- **Solution**: Removed auto-redirect from register page that prevented new account creation
+- **New Behavior**: Users with existing sessions now see a warning with "Sign out to create a new account" button
+- **UX Improvement**: Clear, explicit control over session management during account creation
+- **Flow**: Landing → Get Started → Select Tier → Register → (Sign Out if needed) → Create New Account → Onboarding
+
 ### Complete NextAuth Removal (October 20, 2025) ✅ COMPLETED
 - **NextAuth Removed**: Completely removed NextAuth.js from the codebase - Better Auth is now the sole authentication system
 - **Package Cleanup**: Uninstalled `next-auth` and `@auth/prisma-adapter` packages
