@@ -5,6 +5,15 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Complete NextAuth Removal (October 20, 2025) ✅ COMPLETED
+- **NextAuth Removed**: Completely removed NextAuth.js from the codebase - Better Auth is now the sole authentication system
+- **Package Cleanup**: Uninstalled `next-auth` and `@auth/prisma-adapter` packages
+- **API Routes Migration**: Migrated all 54 API routes from NextAuth to Better Auth using new `requireApiAuth()` helper
+- **Popup Components**: Updated auth popup pages to use Better Auth client hooks
+- **Configuration Files**: Removed `src/lib/auth.ts` and `src/types/next-auth.d.ts`
+- **No Breaking Changes**: All existing authentication flows (email/password, Google OAuth) continue to work seamlessly
+- **Environment Variables**: Better Auth uses existing `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` variables
+
 ### Complete Onboarding Flow with Stripe Integration (October 19, 2025) ✅ COMPLETED
 - **Non-Persistent Sessions**: Configured Better-auth sessions to expire when browser closes (removed expiresIn/updateAge, using only cookieCache with maxAge:0)
 - **Fresh Signup Flow**: Tier selection now redirects to register page, not onboarding - ensures new users always create accounts first
@@ -92,13 +101,15 @@ Comprehensive Prisma schema including:
 ### Required Environment Variables
 All configured in Replit Secrets:
 - `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
-- `NEXTAUTH_SECRET`: Session encryption key
-- `NEXTAUTH_URL`: Application URL
-- `GOOGLE_CLIENT_ID`: Google OAuth client ID
-- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
+- `GOOGLE_CLIENT_ID`: Google OAuth client ID (used by Better Auth)
+- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret (used by Better Auth)
 - `STRIPE_SECRET_KEY`: Stripe API key
 - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
 - `RESEND_API_KEY`: Email service API key
+
+### Legacy Environment Variables (Can be removed)
+- `NEXTAUTH_SECRET`: No longer used - Better Auth handles session encryption internally
+- `NEXTAUTH_URL`: No longer used - Better Auth auto-detects URLs
 
 ### Optional Variables
 - `RESEND_FROM`: Email sender address

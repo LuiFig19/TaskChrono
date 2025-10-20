@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn, signOut } from 'next-auth/react'
+import { signIn, signOut } from '@/lib/better-auth-client'
 import { useEffect } from 'react'
 
 export default function LoginPopup({ signedIn, callbackUrl }: { signedIn: boolean; callbackUrl: string }) {
@@ -21,7 +21,7 @@ export default function LoginPopup({ signedIn, callbackUrl }: { signedIn: boolea
           {signedIn ? (
             <>
               <button className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800" onClick={()=>window.location.href = callbackUrl}>Go to Dashboard</button>
-              <button className="px-3 py-2 rounded border border-rose-700 text-rose-300 hover:bg-rose-900/30" onClick={()=>signOut({ callbackUrl: '/' })}>Sign Out</button>
+              <button className="px-3 py-2 rounded border border-rose-700 text-rose-300 hover:bg-rose-900/30" onClick={async ()=>{ await signOut(); window.location.href = '/' }}>Sign Out</button>
             </>
           ) : (
             <button

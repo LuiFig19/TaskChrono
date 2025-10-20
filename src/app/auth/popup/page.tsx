@@ -1,13 +1,12 @@
 "use client"
 
 import React from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn } from '@/lib/better-auth-client'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export default function Popup() {
   const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
   const dst = url?.searchParams.get('dst') || '/dashboard'
-  const callback = `/auth/popup-complete?dst=${encodeURIComponent(dst)}`
   const [busyGoogle, setBusyGoogle] = React.useState(false)
   const [busyEmail, setBusyEmail] = React.useState(false)
   const [email, setEmail] = React.useState('')
@@ -20,13 +19,12 @@ export default function Popup() {
     setBusyEmail(true)
     setError(null)
     try {
-      const result = await signIn('credentials', {
-        redirect: false,
+      const result = await signIn.email({
         email,
         password,
-        callbackUrl: callback,
+        callbackURL: dst,
       })
-      if (result?.error) {
+      if (result.error) {
         setError('Invalid email or password')
         return
       }
@@ -35,8 +33,23 @@ export default function Popup() {
       try { window.close() } catch {}
       // Fallback navigate if the popup couldn't close
       setTimeout(() => { window.location.href = dst }, 150)
+    } catch (err) {
+      setError('Sign in failed')
     } finally {
       setBusyEmail(false)
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setBusyGoogle(true)
+    try {
+      await signIn.social({
+        provider: 'google',
+        callbackURL: dst,
+      })
+    } catch (err) {
+      setError('Google sign in failed')
+      setBusyGoogle(false)
     }
   }
 
@@ -69,7 +82,7 @@ export default function Popup() {
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => { setBusyGoogle(true); signIn('google', { callbackUrl: callback, redirect: true }) }}
+                  onClick={handleGoogleSignIn}
                   className="w-full px-4 py-2 rounded-md bg-white text-black hover:shadow-lg transition-colors duration-200 cursor-pointer disabled:opacity-70"
                   disabled={busyEmail || busyGoogle}
                 >
