@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org'
 import LockedFeature from '../_components/locked'
 import { prisma } from '@/lib/prisma'
 import { createFileRecord, deleteFileRecord } from './actions'
 
 export default async function FilesPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/login')
   const plan = await getUserPlanServer()
   const { organizationId } = await getCurrentUserAndOrg()

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org'
 import InvoiceClient from './InvoicesClient'
@@ -9,7 +9,7 @@ import LockedFeature from '../_components/locked'
 function cents(n: number) { return (n/100).toFixed(2) }
 
 export default async function InvoicesPage({ searchParams }: { searchParams?: { q?: string, status?: string } }) {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/login')
   const plan = await getUserPlanServer()
   if (plan === 'FREE') return (

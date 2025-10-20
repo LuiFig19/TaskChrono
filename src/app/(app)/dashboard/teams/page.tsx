@@ -1,5 +1,5 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
@@ -7,11 +7,11 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export default async function TeamsIndexPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/login')
 
   // Load the user's teams server-side so the list is present on first paint
-  const userId = (session.user as any).id as string
+  const userId = session.user.id
   const memberships = await prisma.teamMembership.findMany({
     where: { userId },
     include: { team: true },

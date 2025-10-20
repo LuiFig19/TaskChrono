@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 import TimersClient from './TimersClient'
 
 export default async function TimersPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect('/login')
   const { organizationId, userId } = await getCurrentUserAndOrg()
   const entries = organizationId && userId ? await prisma.timeEntry.findMany({ where: { organizationId, userId }, orderBy: { startedAt: 'desc' } }) : []

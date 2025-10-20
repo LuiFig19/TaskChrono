@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import ProjectsClient from './projectsClient'
 
 export default async function ProjectsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) {
     redirect('/login')
   }

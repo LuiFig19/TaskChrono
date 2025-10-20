@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import Chart from '../_components/Chart'
 import { getUserPlanServer } from '@/lib/org'
 import LockedFeature from '../_components/locked'
 
 export default async function AnalyticsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) {
     redirect('/login')
   }

@@ -1,16 +1,16 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import SettingsClient from './settingsClient'
 
 export default async function SettingsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) {
     redirect('/login')
   }
   const membership = await prisma.organizationMember.findFirst({
-    where: { userId: (session.user as unknown as { id: string }).id },
+    where: { userId: session.user.id },
     include: { organization: true },
   })
   const isAdmin = membership?.role === 'OWNER' || membership?.role === 'ADMIN'
