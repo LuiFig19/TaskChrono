@@ -5,10 +5,10 @@ import { broadcastActivity } from '@/lib/activity'
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ notes: [] }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ notes: [] }, { status: 403 })
+  if (!member) return error
   const { searchParams } = new URL(request.url)
   const pinned = searchParams.get('pinned') === 'true'
   const notes = await prisma.teamNote.findMany({ where: { teamId: id, pinned: pinned ? true : undefined }, orderBy: { updatedAt: 'desc' } })
@@ -17,10 +17,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const body = await request.json().catch(()=>({})) as { title?: string; contentMd?: string; pinned?: boolean }
   const title = String(body.title||'Untitled').trim()
   const contentMd = String(body.contentMd||'')
@@ -35,13 +35,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const { searchParams } = new URL(request.url)
   const noteId = String(searchParams.get('noteId') || '')
-  if (!noteId) return NextResponse.json({ error: 'Missing noteId' }, { status: 400 })
+  if (!noteId) return error
   await prisma.teamNote.deleteMany({ where: { id: noteId, teamId: id } })
   try {
     const user = await prisma.user.findUnique({ where: { id: userId } })

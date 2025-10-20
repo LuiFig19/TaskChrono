@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const body = await request.json().catch(() => ({})) as { name?: string; description?: string | null; status?: string; budgetCents?: number }
 
   // Normalize status values from UI labels (e.g. "ON HOLD") to enum values ("ON_HOLD")
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   await prisma.project.delete({ where: { id: params.id } })
   return NextResponse.json({ ok: true })
 }

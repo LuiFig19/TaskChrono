@@ -5,10 +5,10 @@ import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(request: Request, context: { params: Promise<{ id: string; goalId: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id, goalId } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const body = await request.json().catch(()=>({})) as { note?: string; progress?: number; starred?: boolean }
   const noteVal = typeof body.starred === 'boolean' ? (body.starred ? 'STARRED' : 'UNSTARRED') : (body.note || null)
   const update = await prisma.teamGoalUpdate.create({ data: { goalId, authorId: userId, note: noteVal, progress: typeof body.progress === 'number' ? body.progress : null } })

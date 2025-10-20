@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
 	const body = await request.json().catch(() => ({})) as any
   const role = (session.user as any).role as string | undefined
   if (role !== 'ADMIN' && role !== 'MANAGER') {
@@ -12,17 +12,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 
   // Validation & sanitization
-  if (body.quantity != null && !Number.isFinite(body.quantity)) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 })
-  if (body.minQuantity != null && !Number.isFinite(body.minQuantity)) return NextResponse.json({ error: 'Invalid minQuantity' }, { status: 400 })
-  if (body.costCents != null && !Number.isFinite(body.costCents)) return NextResponse.json({ error: 'Invalid cost' }, { status: 400 })
-  if (body.priceCents != null && !Number.isFinite(body.priceCents)) return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
+  if (body.quantity != null && !Number.isFinite(body.quantity)) return error
+  if (body.minQuantity != null && !Number.isFinite(body.minQuantity)) return error
+  if (body.costCents != null && !Number.isFinite(body.costCents)) return error
+  if (body.priceCents != null && !Number.isFinite(body.priceCents)) return error
 
   // Enforce SKU uniqueness per org if updating SKU
   if (typeof body.sku === 'string' && body.sku.trim()) {
     const existing = await prisma.inventoryItem.findUnique({ where: { id: params.id }, select: { organizationId: true } })
     if (existing) {
       const conflict = await prisma.inventoryItem.findFirst({ where: { organizationId: existing.organizationId, sku: body.sku.trim(), NOT: { id: params.id } }, select: { id: true } })
-      if (conflict) return NextResponse.json({ error: 'SKU already exists' }, { status: 409 })
+      if (conflict) return error
     }
   }
 
@@ -75,7 +75,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
 	const role = (session.user as any).role as string | undefined
 	if (role !== 'ADMIN' && role !== 'MANAGER') {
 		return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

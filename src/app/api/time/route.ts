@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  if (!session?.user) {
+  if (error) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const body = await request.json()
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  if (!session?.user) return new NextResponse('Unauthorized', { status: 401 })
+  if (error) return new NextResponse('Unauthorized', { status: 401 })
   const userId = session.user.id
   const stream = new ReadableStream({
     start(controller) {

@@ -10,9 +10,9 @@ async function getActiveOrganizationId(userId: string) {
 
 export async function PATCH(_req: Request, { params }: { params: { id: string } }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const organizationId = await getActiveOrganizationId(userId)
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
   const body = await _req.json().catch(() => ({})) as { title?: string; description?: string | null; status?: string; priority?: number; dueDate?: string | null; teamId?: string | null }
   const updated = await prisma.task.update({
     where: { id: params.id },
@@ -31,9 +31,9 @@ export async function PATCH(_req: Request, { params }: { params: { id: string } 
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const organizationId = await getActiveOrganizationId(userId)
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
   const existing = await prisma.task.findUnique({ where: { id: params.id }, select: { projectId: true } })
   await prisma.task.delete({ where: { id: params.id } })
   if (existing?.projectId) { try { await recomputeProjectStatus(existing.projectId) } catch {} }

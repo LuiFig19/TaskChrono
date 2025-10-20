@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 	const url = new URL(req.url)
 	const dashboard = parseDashboard(url)
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ layout: null, dashboard }, { status: 200 })
+	if (error) return error
 	const row = await prisma.widgetLayout.findUnique({ where: { userId_dashboard: { userId, dashboard } } })
 	return NextResponse.json({ layout: (row?.layout as any) ?? null, dashboard }, { status: 200 })
 }
@@ -24,9 +24,9 @@ export async function PUT(req: Request) {
 	const url = new URL(req.url)
 	const dashboard = parseDashboard(url)
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
+	if (error) return error
 	const body = await req.json().catch(() => ({})) as { layout?: any[] }
-	if (!Array.isArray(body.layout)) return NextResponse.json({ ok: false }, { status: 400 })
+	if (!Array.isArray(body.layout)) return error
 	await prisma.widgetLayout.upsert({
 		where: { userId_dashboard: { userId, dashboard } },
 		update: { layout: body.layout as any },
@@ -39,7 +39,7 @@ export async function DELETE(req: Request) {
 	const url = new URL(req.url)
 	const dashboard = parseDashboard(url)
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
+	if (error) return error
 	await prisma.widgetLayout.delete({ where: { userId_dashboard: { userId, dashboard } } }).catch(() => null)
 	return NextResponse.json({ ok: true }, { status: 200 })
 }

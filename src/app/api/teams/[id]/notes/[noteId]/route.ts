@@ -5,21 +5,21 @@ import { broadcastActivity } from '@/lib/activity'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string; noteId: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id, noteId } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const note = await prisma.teamNote.findFirst({ where: { id: noteId, teamId: id } })
-  if (!note) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!note) return error
   return NextResponse.json({ id: note.id, title: note.title, contentMd: note.contentMd || '' })
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string; noteId: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id, noteId } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const body = await request.json().catch(()=>({})) as { title?: string; contentMd?: string }
   await prisma.teamNote.updateMany({ where: { id: noteId, teamId: id }, data: { title: body.title, contentMd: body.contentMd } })
   try {

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const entries = await prisma.timeEntry.findMany({
     where: { userId },
     orderBy: { startedAt: 'desc' },
@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   let format: 'json'|'xlsx'|'csv' = 'json'
   let filter: string | undefined
   let tag: string | undefined

@@ -4,20 +4,20 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
-  if (!membership?.organization) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!membership?.organization) return error
   const org = membership.organization
 
   // Enforce FREE tier member cap: up to 4 members
   if (org.planTier === 'FREE') {
     const count = await prisma.organizationMember.count({ where: { organizationId: org.id } })
-    if (count >= 4) return NextResponse.json({ error: 'Free tier allows up to 4 members' }, { status: 403 })
+    if (count >= 4) return error
   }
 
   const body = await request.json().catch(() => ({})) as { email?: string; role?: 'OWNER'|'ADMIN'|'MANAGER'|'MEMBER' }
   const email = String(body.email || '').trim().toLowerCase()
-  if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
+  if (!email) return error
 
   // Find or create user skeleton
   let user = await prisma.user.findUnique({ where: { email } })

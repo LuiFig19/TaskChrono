@@ -5,9 +5,9 @@ import { getCurrentUserAndOrg, ensureUserOrg } from '@/lib/org'
 
 export async function GET(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ events: [] }, { status: 200 })
+  if (error) return error
   const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) return NextResponse.json({ events: [] }, { status: 200 })
+  if (!organizationId) return error
   const url = new URL(request.url)
   const startStr = url.searchParams.get('start')
   const endStr = url.searchParams.get('end')
@@ -23,15 +23,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   // Ensure the user has an organization in production too (prevents the
   // "optimistic then disappears" behavior when membership is missing)
   const { organizationId } = await ensureUserOrg()
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
   const body = await request.json().catch(() => ({})) as { title?: string; startsAt?: string; endsAt?: string | null; description?: string | null }
   const title = String(body.title || '').trim()
   const startsAt = body.startsAt ? new Date(body.startsAt) : null
-  if (!title || !startsAt) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+  if (!title || !startsAt) return error
   const defaultEnd = new Date(startsAt.getTime() + 60 * 60 * 1000)
   const evt = await prisma.calendarEvent.create({
     data: {

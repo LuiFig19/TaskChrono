@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!member) return error
   const { searchParams } = new URL(request.url)
   const range = searchParams.get('range') || 'week'
   // Determine date window
@@ -24,7 +24,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   // Team members
   const memberships = await prisma.teamMembership.findMany({ where: { teamId: id }, include: { user: true } })
   const userIds = memberships.map((m) => m.userId)
-  if (userIds.length === 0) return NextResponse.json({ range, byUser: [], byDay: [] })
+  if (userIds.length === 0) return error
   // Pull entries for members
   const entries = await prisma.timeEntry.findMany({
     where: {

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
   } catch {}
 
-  if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+  if (!body) return error
 
   const desiredTier = body.tier || 'ENTERPRISE'
   if (!['FREE', 'BUSINESS', 'ENTERPRISE', 'CUSTOM'].includes(desiredTier)) {
@@ -53,11 +53,11 @@ export async function POST(req: Request) {
       let targetUserId = body.userId
       if (!targetUserId && body.email) {
         const user = await prisma.user.findUnique({ where: { email: body.email } })
-        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (!user) return error
         targetUserId = user.id
       }
 
-      if (!targetUserId) return NextResponse.json({ error: 'Missing email or userId' }, { status: 400 })
+      if (!targetUserId) return error
 
       const memberships = await prisma.organizationMember.findMany({
         where: { userId: targetUserId },

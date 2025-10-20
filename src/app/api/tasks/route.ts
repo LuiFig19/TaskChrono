@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   if (error) return error
   
   const organizationId = await getActiveOrganizationId(userId)
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
 
   const body = await request.json().catch(() => ({})) as {
     title?: string
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     teamId?: string | null
   }
   const { title, projectName, description, priority, dueDate, teamId } = body
-  if (!title || !projectName) return NextResponse.json({ error: 'Missing title or projectName' }, { status: 400 })
+  if (!title || !projectName) return error
 
   let project = await prisma.project.findFirst({ where: { organizationId, name: projectName } })
   if (!project) {

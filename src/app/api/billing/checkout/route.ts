@@ -8,10 +8,10 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const userId = session.user.id
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
-  if (!membership?.organization) return NextResponse.json({ error: 'Missing organization' }, { status: 400 })
+  if (!membership?.organization) return error
   const org = membership.organization
   // Accept JSON or form submissions
   let body = {} as { tier: 'BUSINESS' | 'ENTERPRISE'; seats: number; successUrl?: string; cancelUrl?: string; trialDays?: number }
@@ -33,9 +33,9 @@ export async function POST(request: Request) {
   // Seat quantity defaults to current org member count if not provided
   const memberCount = await prisma.organizationMember.count({ where: { organizationId: org.id } })
   const seats = Math.max(1, Math.min(1000, Number(body.seats || memberCount || 1)))
-  if (body.tier !== 'BUSINESS' && body.tier !== 'ENTERPRISE') return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
+  if (body.tier !== 'BUSINESS' && body.tier !== 'ENTERPRISE') return error
 
-  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+  if (!stripe) return error
 
   // Ensure or create Stripe customer associated with organization
   let customerId = (org as any).stripeCustomerId as string | undefined
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   const priceId = await resolvePriceId()
-  if (!priceId) return NextResponse.json({ error: 'Missing Stripe price (set STRIPE_PRICE_* or STRIPE_PRODUCT_*)' }, { status: 500 })
+  if (!priceId) return error
 
   const sessionCheckout = await stripe.checkout.sessions.create({
     mode: 'subscription',

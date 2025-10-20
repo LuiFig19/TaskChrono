@@ -4,15 +4,15 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
+  if (error) return error
 
   const body = await request.json().catch(() => ({})) as { organizationId?: string }
   const organizationId = String(body.organizationId || '')
-  if (!organizationId) return NextResponse.json({ ok: false, error: 'organizationId required' }, { status: 400 })
+  if (!organizationId) return error, { status: 400 })
 
   // Ensure the user belongs to this organization
   const member = await prisma.organizationMember.findFirst({ where: { userId, organizationId } })
-  if (!member) return NextResponse.json({ ok: false }, { status: 403 })
+  if (!member) return error
 
   // Read existing dashboardWidgets safely
   const pref = await prisma.userPreference.findUnique({ where: { userId } })

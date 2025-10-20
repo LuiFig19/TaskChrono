@@ -5,12 +5,12 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
   try {
     const { error, userId } = await requireApiAuth()
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (error) return error
     const form = await request.formData()
     const id = String(form.get('id') || '')
     const name = String(form.get('name') || '').trim()
     const color = String(form.get('brandColor') || '').trim()
-    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+    if (!id) return error
 
     if (name) {
       await prisma.organization.update({ where: { id }, data: { name } })

@@ -9,11 +9,11 @@ async function requireMember(userId: string, teamId: string) {
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   // Ensure creator is auto-added as ADMIN if missing
   const team = await prisma.team.findUnique({ where: { id } })
-  if (!team) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!team) return error
   if (team.createdById === userId) {
     const m = await prisma.teamMembership.findFirst({ where: { teamId: id, userId } })
     if (!m) {
@@ -21,17 +21,17 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
     }
   }
   const ok = await requireMember(userId, id)
-  if (!ok) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!ok) return error
   return NextResponse.json({ id: team.id, name: team.name, description: team.description })
 }
 
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   // Only admins can delete
   const membership = await prisma.teamMembership.findFirst({ where: { teamId: id, userId }, select: { role: true } })
-  if (!membership || (membership.role as any) !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!membership || (membership.role as any) !== 'ADMIN') return error
   await prisma.$transaction([
     prisma.teamMembership.deleteMany({ where: { teamId: id } }),
     prisma.teamGoal.deleteMany({ where: { teamId: id } }),

@@ -8,10 +8,10 @@ export async function GET(req: Request) {
 	const url = new URL(req.url)
 	const token = url.searchParams.get('token') || ''
 	const payload = verifyOrgInviteToken(token)
-	if (!payload) return NextResponse.json({ ok: false, reason: 'invalid_or_expired' }, { status: 400 })
+	if (!payload) return error, { status: 400 })
 	const { error, userId } = await requireApiAuth()
 	// If not signed in, instruct client to show signup popup
-	if (!session?.user) {
+	if (error) {
 		return NextResponse.json({ ok: true, needsAuth: true, orgId: payload.orgId, email: payload.email })
 	}
 	// Create membership if missing, do not delete other memberships

@@ -18,7 +18,7 @@ async function getActiveOrganizationId(userId: string) {
 
 export async function GET(request: Request) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
 	const organizationId = await getActiveOrganizationId(userId)
 	const q = parseInventoryQuery(request.url)
 
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
 	const organizationId = await getActiveOrganizationId(userId)
 	const body = await request.json().catch(() => ({})) as any
 	// Role-based permissions: only ADMIN/MANAGER can write
@@ -130,11 +130,11 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 	}
 	// Validation
-	if (!body.name?.trim()) return NextResponse.json({ error: 'Missing name' }, { status: 400 })
-	if (body.quantity != null && !Number.isFinite(body.quantity)) return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 })
-	if (body.minQuantity != null && !Number.isFinite(body.minQuantity)) return NextResponse.json({ error: 'Invalid minQuantity' }, { status: 400 })
-	if (body.costCents != null && !Number.isFinite(body.costCents)) return NextResponse.json({ error: 'Invalid cost' }, { status: 400 })
-	if (body.priceCents != null && !Number.isFinite(body.priceCents)) return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
+	if (!body.name?.trim()) return error
+	if (body.quantity != null && !Number.isFinite(body.quantity)) return error
+	if (body.minQuantity != null && !Number.isFinite(body.minQuantity)) return error
+	if (body.costCents != null && !Number.isFinite(body.costCents)) return error
+	if (body.priceCents != null && !Number.isFinite(body.priceCents)) return error
 
 	// Optional category/supplier upsert by name
 	let categoryId: string | undefined = undefined
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
 	// SKU uniqueness per org
 	if (body.sku?.trim()) {
 		const exists = await prisma.inventoryItem.findFirst({ where: { organizationId, sku: body.sku.trim() }, select: { id: true } })
-		if (exists) return NextResponse.json({ error: 'SKU already exists' }, { status: 409 })
+		if (exists) return error
 	}
 	const created = await prisma.inventoryItem.create({
 		data: {

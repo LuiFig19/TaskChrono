@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { stripe as stripeSdk } from '@/lib/stripe'
 
 export async function POST(request: Request) {
-  if (!stripeSdk) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+  if (!stripeSdk) return error
   const sig = request.headers.get('stripe-signature')
   const secret = process.env.STRIPE_WEBHOOK_SECRET
-  if (!sig || !secret) return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+  if (!sig || !secret) return error
 
   let event
   const raw = await request.text()

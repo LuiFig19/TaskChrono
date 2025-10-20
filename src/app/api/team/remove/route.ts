@@ -5,14 +5,14 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
 
   const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
 
   const body = await request.json().catch(() => ({})) as { email?: string }
   const email = String(body.email || '').trim().toLowerCase()
-  if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
+  if (!email) return error
 
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) return NextResponse.json({ ok: true })

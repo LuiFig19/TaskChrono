@@ -8,22 +8,22 @@ import { createOrgInviteToken } from '@/lib/invites'
 // Returns a signed token that frontend can email via Gmail deep link.
 export async function POST(request: Request) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
 
 	// Find inviter's active organization
 	const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
 	const org = membership?.organization
-	if (!org) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+	if (!org) return error
 
 	// Free plan: soft cap of 4 members
 	if (org.planTier === 'FREE') {
 		const count = await prisma.organizationMember.count({ where: { organizationId: org.id } })
-		if (count >= 4) return NextResponse.json({ error: 'Free tier allows up to 4 members' }, { status: 403 })
+		if (count >= 4) return error
 	}
 
 	const body = await request.json().catch(() => ({})) as { email?: string }
 	const email = String(body.email || '').trim().toLowerCase()
-	if (!email || !/.+@.+\..+/.test(email)) return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
+	if (!email || !/.+@.+\..+/.test(email)) return error
 
 	// Ensure a user record exists (skeleton is fine)
 	let user = await prisma.user.findUnique({ where: { email } })

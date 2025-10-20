@@ -5,9 +5,9 @@ import { prisma } from '@/lib/prisma'
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const { error, userId } = await requireApiAuth()
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (error) return error
     const org = await prisma.organization.findUnique({ where: { id: params.id }, select: { id: true, name: true } })
-    if (!org) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!org) return error
 
     // Brand color is stored per-user in UserPreference.dashboardWidgets under orgs[orgId].brandColor
     const pref = await prisma.userPreference.findUnique({ where: { userId: user.id as string } })

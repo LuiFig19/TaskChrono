@@ -10,7 +10,7 @@ function addDays(date: Date, days: number): Date {
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const membership = await prisma.organizationMember.findFirst({
     where: { userId },
     include: { organization: true },

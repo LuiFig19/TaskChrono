@@ -6,12 +6,12 @@ import { broadcast } from '@/lib/chatStore'
 
 export async function POST(req: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) return NextResponse.json({ error: 'No org' }, { status: 400 })
+  if (!organizationId) return error
   const body = await req.json().catch(()=>({})) as any
   const messageId = String(body.messageId||'')
-  if (!messageId) return NextResponse.json({ error: 'No message' }, { status: 400 })
+  if (!messageId) return error
   const userName = session.user?.name || 'User'
   try {
     await prisma.chatLike.upsert({

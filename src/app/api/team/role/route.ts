@@ -5,14 +5,14 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
 
   const body = await request.json().catch(() => ({})) as { id?: string; role?: string }
   const id = String(body.id || '')
   const role = String(body.role || '').toUpperCase()
-  if (!id || !role) return NextResponse.json({ error: 'id and role required' }, { status: 400 })
+  if (!id || !role) return error
 
   // Only allow valid enum values
   if (!['OWNER','ADMIN','MANAGER','MEMBER'].includes(role)) {

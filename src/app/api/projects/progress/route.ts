@@ -8,12 +8,12 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(req: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId } = await ensureUserOrg()
   if (!organizationId) return NextResponse.json({ projects: [] })
   const url = new URL(req.url)
   const id = url.searchParams.get('id')
-  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  if (!id) return error
 
   // Compute progress using tasks completion ratio; fallback to milestones if no tasks
   const [totalTasks, doneTasks] = await Promise.all([

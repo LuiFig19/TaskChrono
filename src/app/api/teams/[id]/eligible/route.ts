@@ -5,10 +5,10 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ users: [] }, { status: 401 })
+  if (error) return error
   const { organizationId } = await getCurrentUserAndOrg()
   const { id: teamId } = await context.params
-  if (!organizationId) return NextResponse.json({ users: [] }, { status: 200 })
+  if (!organizationId) return error
   // All org members not yet in this team
   const members = await prisma.organizationMember.findMany({
     where: { organizationId },

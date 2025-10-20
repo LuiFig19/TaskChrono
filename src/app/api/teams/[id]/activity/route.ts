@@ -34,10 +34,10 @@ function fmt(type: string, payload: any): string {
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ events: [] }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ events: [] }, { status: 403 })
+  if (!member) return error
   const list = await prisma.teamActivity.findMany({
     where: {
       teamId: id,

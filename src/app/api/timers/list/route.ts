@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ entries: [], timers: [] }, { status: 401 })
+  if (error) return error
   const entries = await prisma.timeEntry.findMany({ where: { userId }, orderBy: { startedAt: 'desc' } })
   const timers = await prisma.timer.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } })
   return NextResponse.json({

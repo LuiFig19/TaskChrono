@@ -75,16 +75,16 @@ export async function POST(request: Request) {
   } catch (e) {
     return NextResponse.json({ error: 'Organization lookup failed' }, { status: 500 })
   }
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
   const body = await request.json().catch(() => ({})) as { name?: string; description?: string; status?: string; budgetCents?: number; members?: string[] }
-  if (!body.name?.trim()) return NextResponse.json({ error: 'Missing name' }, { status: 400 })
+  if (!body.name?.trim()) return error
   // Enforce FREE tier project cap
   try {
     const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
     const plan = membership?.organization?.planTier || 'FREE'
     if (plan === 'FREE') {
       const count = await prisma.project.count({ where: { organizationId } })
-      if (count >= 5) return NextResponse.json({ error: 'Free tier allows up to 5 projects' }, { status: 403 })
+      if (count >= 5) return error
     }
   } catch {}
   let proj

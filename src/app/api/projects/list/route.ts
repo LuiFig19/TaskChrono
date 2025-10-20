@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ projects: [] })
+  if (error) return NextResponse.json({ projects: [] })
   const { organizationId } = await ensureUserOrg()
   if (!organizationId) return NextResponse.json({ projects: [] })
   const projects = await prisma.project.findMany({

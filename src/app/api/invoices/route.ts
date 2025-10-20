@@ -5,9 +5,9 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function POST(req: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
+  if (!organizationId) return error
   const body = await req.json() as any
   const amount = Math.round(parseFloat(String(body.amount||'0')) * 100)
   const created = await prisma.invoice.create({

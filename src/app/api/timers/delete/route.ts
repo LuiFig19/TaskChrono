@@ -6,7 +6,7 @@ import { emitToUser } from '@/lib/realtime'
 
 export async function POST(request: Request) {
   const { error } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId, userId } = await getCurrentUserAndOrg()
   if (!organizationId || !userId) return NextResponse.json({ ok: false })
   const form = await request.formData().catch(()=>null)

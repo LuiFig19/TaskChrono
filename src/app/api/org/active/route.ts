@@ -8,11 +8,11 @@ export async function GET() {
     const session = await auth.api.getSession({
       headers: await headers(),
     })
-    if (!session?.user) return NextResponse.json({ id: null, name: null, brandColor: null }, { status: 401 })
+    if (error) return error
     const userId = session.user.id
     const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
     const org = membership?.organization
-    if (!org) return NextResponse.json({ id: null, name: null, brandColor: null })
+    if (!org) return error
 
     const pref = await prisma.userPreference.findUnique({ where: { userId } })
     let brandColor: string | null = null

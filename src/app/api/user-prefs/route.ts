@@ -8,7 +8,7 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ widgets: null }, { status: 401 })
+  if (error) return error
   
   const pref = await prisma.userPreference.findUnique({ where: { userId } })
   const { organizationId } = await getCurrentUserAndOrg()
@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
+  if (error) return error
   
   const body = await request.json().catch(() => ({})) as { order?: string[]; progressIds?: string[]; rglLayout?: any[] }
   const { organizationId } = await getCurrentUserAndOrg()

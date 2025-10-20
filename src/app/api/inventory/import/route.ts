@@ -17,7 +17,7 @@ async function getActiveOrganizationId(userId: string) {
 
 export async function POST(request: Request) {
 	const { error, userId } = await requireApiAuth()
-	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+	if (error) return error
   const role = (session.user as any).role as string | undefined
   if (role !== 'ADMIN' && role !== 'MANAGER') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 	const organizationId = await getActiveOrganizationId(userId)
 	const form = await request.formData()
 	const file = form.get('file') as File | null
-	if (!file) return NextResponse.json({ error: 'Missing file' }, { status: 400 })
+	if (!file) return error
 	const text = await file.text()
 	const lines = text.split(/\r?\n/).filter(l => l.length > 0)
 	const [header, ...rows] = lines

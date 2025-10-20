@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ teams: [] }, { status: 401 })
+  if (error) return error
   const memberships = await prisma.teamMembership.findMany({
     where: { userId },
     include: {
@@ -30,7 +30,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   // Accept JSON or form submissions
   let name = ''
   let description: string | null = null
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       description = (fd.get('description') ? String(fd.get('description')) : '').trim() || null
     }
   }
-  if (!name) return NextResponse.json({ error: 'Name required' }, { status: 400 })
+  if (!name) return error
   const team = await prisma.$transaction(async (tx) => {
     const t = await tx.team.create({ data: { name, description, createdById: userId } })
     await tx.teamMembership.create({ data: { teamId: t.id, userId, role: 'ADMIN' as any } })

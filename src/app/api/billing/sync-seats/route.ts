@@ -6,19 +6,19 @@ import { stripe } from '@/lib/stripe'
 // Sync Stripe subscription quantity to match current org member count
 export async function POST() {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+  if (error) return error
+  if (!stripe) return error
 
   const membership = await prisma.organizationMember.findFirst({
     where: { userId },
     include: { organization: true },
   })
-  if (!membership?.organization) return NextResponse.json({ error: 'Missing organization' }, { status: 400 })
+  if (!membership?.organization) return error
   const org = membership.organization as any
 
   // Count seats as active org members
   const seats = await prisma.organizationMember.count({ where: { organizationId: org.id } })
-  if (seats < 1) return NextResponse.json({ error: 'No members found' }, { status: 400 })
+  if (seats < 1) return error
 
   // Resolve Stripe customer
   let customerId: string | undefined = org.stripeCustomerId
@@ -29,14 +29,14 @@ export async function POST() {
       customerId = result.data[0]?.id
     } catch {}
   }
-  if (!customerId) return NextResponse.json({ error: 'No Stripe customer' }, { status: 400 })
+  if (!customerId) return error
 
   // Find active subscription
   const subs = await stripe.subscriptions.list({ customer: customerId, status: 'active', limit: 1 })
   const sub = subs.data[0]
-  if (!sub) return NextResponse.json({ error: 'No active subscription' }, { status: 404 })
+  if (!sub) return error
   const item = sub.items.data[0]
-  if (!item) return NextResponse.json({ error: 'No subscription item' }, { status: 404 })
+  if (!item) return error
 
   // Update quantity to match seats; create prorations so Stripe bills deltas
   const updated = await stripe.subscriptions.update(sub.id, {

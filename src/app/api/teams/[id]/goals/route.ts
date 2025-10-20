@@ -6,10 +6,10 @@ import { canManageMembers, getUserTeamRole } from '@/lib/team'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ goals: [] }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
-  if (!member) return NextResponse.json({ goals: [] }, { status: 403 })
+  if (!member) return error
   const goals = await prisma.teamGoal.findMany({
     where: { teamId: id },
     orderBy: { updatedAt: 'desc' },
@@ -39,13 +39,13 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
-  if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!canManageMembers(role)) return error
   const body = await request.json().catch(()=>({})) as { title?: string; description?: string; dueDate?: string }
   const title = String(body.title||'').trim()
-  if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 })
+  if (!title) return error
   const goal = await prisma.teamGoal.create({ data: { teamId: id, ownerId: userId, title, description: body.description || null, dueDate: body.dueDate ? new Date(body.dueDate) : null } })
   // Log activity
   try {
@@ -65,13 +65,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
-  if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!canManageMembers(role)) return error
   const body = await request.json().catch(()=>({})) as { goalId?: string; status?: 'PLANNED'|'IN_PROGRESS'|'AT_RISK'|'COMPLETE'|'PAUSED'; ownerId?: string }
   const goalId = String(body.goalId||'')
-  if (!goalId) return NextResponse.json({ error: 'goalId required' }, { status: 400 })
+  if (!goalId) return error
   const updates: any = {}
   if (body.status) updates.status = body.status
   if (body.ownerId) updates.ownerId = body.ownerId
@@ -94,13 +94,13 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   const { error, userId } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
-  if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!canManageMembers(role)) return error
   const { searchParams } = new URL(request.url)
   const goalId = String(searchParams.get('goalId') || '')
-  if (!goalId) return NextResponse.json({ error: 'Missing goalId' }, { status: 400 })
+  if (!goalId) return error
   await prisma.teamGoal.deleteMany({ where: { id: goalId, teamId: id } })
   return NextResponse.json({ ok: true })
 }

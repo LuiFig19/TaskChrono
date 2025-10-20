@@ -6,7 +6,7 @@ import { emitToUser } from '@/lib/realtime'
 
 export async function POST(request: Request) {
   const { error } = await requireApiAuth()
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (error) return error
   const { organizationId, userId } = await getCurrentUserAndOrg()
   if (!organizationId || !userId) return NextResponse.json({ ok: false })
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       const form = await request.formData(); timerId = (form.get('timerId') as string) || null
     }
   } catch {}
-  if (!timerId) return NextResponse.json({ ok: false, error: 'Missing timerId' }, { status: 400 })
+  if (!timerId) return error, { status: 400 })
 
   const timer = await prisma.timer.findFirst({ where: { id: timerId } })
   if (!timer || timer.userId !== userId) return NextResponse.json({ ok: false })
