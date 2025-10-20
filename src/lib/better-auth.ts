@@ -27,6 +27,10 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "taskchrono",
   },
+  secret: process.env.NEXTAUTH_SECRET || process.env.BETTER_AUTH_SECRET || "fallback-secret-for-dev",
+  baseURL: process.env.REPLIT_DEV_DOMAIN 
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+    : "http://localhost:5000",
   trustedOrigins: process.env.REPLIT_DEV_DOMAIN
     ? [
         `https://${process.env.REPLIT_DEV_DOMAIN}`,

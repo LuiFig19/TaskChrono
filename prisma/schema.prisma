@@ -80,6 +80,17 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+}
+
 model Organization {
   id                  String               @id @default(cuid())
   name                String
