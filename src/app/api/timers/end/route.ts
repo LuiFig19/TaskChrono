@@ -6,7 +6,7 @@ import { emitToUser } from '@/lib/realtime'
 import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { organizationId, userId } = await getCurrentUserAndOrg()
   if (!organizationId || !userId) return NextResponse.json({ ok: false })

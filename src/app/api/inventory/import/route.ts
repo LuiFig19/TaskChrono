@@ -16,9 +16,8 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function POST(request: Request) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
   const role = (session.user as any).role as string | undefined
   if (role !== 'ADMIN' && role !== 'MANAGER') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

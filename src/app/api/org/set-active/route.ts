@@ -3,9 +3,8 @@ import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
-  const userId = user.id as string
 
   const body = await request.json().catch(() => ({})) as { organizationId?: string }
   const organizationId = String(body.organizationId || '')

@@ -6,14 +6,13 @@ import { prisma } from '@/lib/prisma'
 import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(req: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { organizationId } = await ensureUserOrg()
   const body = await req.json().catch(()=>({})) as any
   const channelId = String(body.channelId || 'all')
   const text = String(body.text || '').trim()
   if (!text) return NextResponse.json({ error: 'No text' }, { status: 400 })
-  const userId = user.id as string
   const userName = session.user?.name || 'User'
   const created = await prisma.chatMessage.create({
     data: { organizationId, channelId, userId, userName, text },

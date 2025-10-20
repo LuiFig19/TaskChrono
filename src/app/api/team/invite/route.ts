@@ -7,9 +7,8 @@ import { createOrgInviteToken } from '@/lib/invites'
 // Creates or finds a placeholder user but does NOT auto-add membership.
 // Returns a signed token that frontend can email via Gmail deep link.
 export async function POST(request: Request) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
 
 	// Find inviter's active organization
 	const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })

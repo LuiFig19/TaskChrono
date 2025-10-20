@@ -13,10 +13,10 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (error) return error
 
-  const userId = user.id
+  
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ projects: [] })
   const url = new URL(request.url)
@@ -51,9 +51,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (error) return error
-  const userId = user.id
+  
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
 

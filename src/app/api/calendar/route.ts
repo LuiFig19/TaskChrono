@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg, ensureUserOrg } from '@/lib/org'
 
 export async function GET(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ events: [] }, { status: 200 })
   const { organizationId } = await getCurrentUserAndOrg()
   if (!organizationId) return NextResponse.json({ events: [] }, { status: 200 })
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   // Ensure the user has an organization in production too (prevents the
   // "optimistic then disappears" behavior when membership is missing)

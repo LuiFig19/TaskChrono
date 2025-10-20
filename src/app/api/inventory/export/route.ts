@@ -17,9 +17,8 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET(request: Request) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
 	const organizationId = await getActiveOrganizationId(userId)
 	const q = parseInventoryQuery(request.url)
 

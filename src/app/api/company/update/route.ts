@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
   try {
-    const { error, user } = await requireApiAuth()
+    const { error, userId } = await requireApiAuth()
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const form = await request.formData()
     const id = String(form.get('id') || '')
@@ -17,7 +17,6 @@ export async function POST(request: Request) {
     }
 
     if (color) {
-      const userId = user.id as string
       const pref = await prisma.userPreference.findUnique({ where: { userId } })
       let state: any = pref?.dashboardWidgets
       if (!state || Array.isArray(state)) state = { orgs: {} }

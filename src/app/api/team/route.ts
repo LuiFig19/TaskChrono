@@ -5,7 +5,7 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 
 // Returns members of the active organization for the current user.
 export async function GET() {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ members: [] }, { status: 401 })
 
   const { organizationId } = await getCurrentUserAndOrg()

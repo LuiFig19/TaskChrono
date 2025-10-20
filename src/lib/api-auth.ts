@@ -10,7 +10,7 @@ export async function getApiSession() {
 export async function requireApiAuth() {
   const session = await getApiSession();
   if (!session?.user) {
-    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), user: null };
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), userId: null };
   }
-  return { error: null, user: session.user };
+  return { error: null, userId: session.user.id };
 }

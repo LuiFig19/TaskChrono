@@ -7,7 +7,7 @@ import { ensureUserOrg } from '@/lib/org'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { organizationId } = await ensureUserOrg()
   if (!organizationId) return NextResponse.json({ projects: [] })

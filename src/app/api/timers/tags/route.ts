@@ -5,7 +5,7 @@ import { getCurrentUserAndOrg } from '@/lib/org'
 import { emitToUser } from '@/lib/realtime'
 
 export async function POST(req: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { organizationId, userId } = await getCurrentUserAndOrg()
   if (!organizationId || !userId) return NextResponse.json({ ok: false })

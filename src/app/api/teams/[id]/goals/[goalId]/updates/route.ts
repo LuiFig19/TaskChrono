@@ -4,9 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { broadcastActivity } from '@/lib/activity'
 
 export async function POST(request: Request, context: { params: Promise<{ id: string; goalId: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id, goalId } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
   if (!member) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

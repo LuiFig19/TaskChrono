@@ -5,11 +5,10 @@ import { stripe } from '@/lib/stripe'
 
 // Sync Stripe subscription quantity to match current org member count
 export async function POST() {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-  const userId = user.id as string
   const membership = await prisma.organizationMember.findFirst({
     where: { userId },
     include: { organization: true },

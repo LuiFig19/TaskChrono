@@ -18,9 +18,8 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET() {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (error) return error
-  const userId = user.id as string
   let organizationId: string | null = null
   try {
     organizationId = await getActiveOrganizationId(userId)
@@ -68,9 +67,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (error) return error
-  const userId = user.id as string
   let organizationId: string | null = null
   try {
     organizationId = await getActiveOrganizationId(userId)

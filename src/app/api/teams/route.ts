@@ -3,9 +3,8 @@ import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ teams: [] }, { status: 401 })
-  const userId = user.id as string
   const memberships = await prisma.teamMembership.findMany({
     where: { userId },
     include: {
@@ -30,9 +29,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   // Accept JSON or form submissions
   let name = ''
   let description: string | null = null

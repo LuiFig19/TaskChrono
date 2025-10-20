@@ -33,9 +33,8 @@ function fmt(type: string, payload: any): string {
 }
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ events: [] }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   const member = await prisma.teamMembership.findFirst({ where: { userId, teamId: id } })
   if (!member) return NextResponse.json({ events: [] }, { status: 403 })

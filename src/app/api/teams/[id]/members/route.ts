@@ -4,9 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { canManageMembers, getUserTeamRole } from '@/lib/team'
 
 export async function GET(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   let m = await prisma.teamMembership.findFirst({ where: { teamId: id, userId } })
   if (!m) {
@@ -22,9 +21,8 @@ export async function GET(_req: Request, context: { params: Promise<{ id: string
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -42,9 +40,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -57,9 +54,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!canManageMembers(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

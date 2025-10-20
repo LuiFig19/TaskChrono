@@ -3,9 +3,8 @@ import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
 	const body = await request.json().catch(() => ({})) as any
   const role = (session.user as any).role as string | undefined
   if (role !== 'ADMIN' && role !== 'MANAGER') {
@@ -75,7 +74,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	const role = (session.user as any).role as string | undefined
 	if (role !== 'ADMIN' && role !== 'MANAGER') {

@@ -4,9 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { getUserTeamRole, isAdmin } from '@/lib/team'
 
 export async function POST(_req: Request, context: { params: Promise<{ id: string }> }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const { id } = await context.params
   const role = await getUserTeamRole(userId, id)
   if (!isAdmin(role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

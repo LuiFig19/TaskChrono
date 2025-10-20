@@ -3,9 +3,8 @@ import { requireApiAuth } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
   if (!membership?.organization) return NextResponse.json({ error: 'No organization' }, { status: 400 })
   const org = membership.organization

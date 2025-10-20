@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const { error, user } = await requireApiAuth()
+    const { error, userId } = await requireApiAuth()
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const org = await prisma.organization.findUnique({ where: { id: params.id }, select: { id: true, name: true } })
     if (!org) return NextResponse.json({ error: 'Not found' }, { status: 404 })

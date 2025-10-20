@@ -9,9 +9,8 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function PATCH(_req: Request, { params }: { params: { id: string } }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
   const body = await _req.json().catch(() => ({})) as { title?: string; description?: string | null; status?: string; priority?: number; dueDate?: string | null; teamId?: string | null }
@@ -31,9 +30,8 @@ export async function PATCH(_req: Request, { params }: { params: { id: string } 
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = user.id as string
   const organizationId = await getActiveOrganizationId(userId)
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
   const existing = await prisma.task.findUnique({ where: { id: params.id }, select: { projectId: true } })

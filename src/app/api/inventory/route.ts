@@ -17,9 +17,8 @@ async function getActiveOrganizationId(userId: string) {
 }
 
 export async function GET(request: Request) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
 	const organizationId = await getActiveOrganizationId(userId)
 	const q = parseInventoryQuery(request.url)
 
@@ -121,9 +120,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-	const { error, user } = await requireApiAuth()
+	const { error, userId } = await requireApiAuth()
 	if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-	const userId = user.id as string
 	const organizationId = await getActiveOrganizationId(userId)
 	const body = await request.json().catch(() => ({})) as any
 	// Role-based permissions: only ADMIN/MANAGER can write

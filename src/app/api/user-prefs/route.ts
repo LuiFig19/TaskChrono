@@ -7,9 +7,9 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function GET() {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ widgets: null }, { status: 401 })
-  const userId = user.id
+  
   const pref = await prisma.userPreference.findUnique({ where: { userId } })
   const { organizationId } = await getCurrentUserAndOrg()
   const raw = pref?.dashboardWidgets as any
@@ -28,9 +28,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ ok: false }, { status: 401 })
-  const userId = user.id
+  
   const body = await request.json().catch(() => ({})) as { order?: string[]; progressIds?: string[]; rglLayout?: any[] }
   const { organizationId } = await getCurrentUserAndOrg()
   const orgKey = organizationId || 'default'

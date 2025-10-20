@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserAndOrg } from '@/lib/org'
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const { error, user } = await requireApiAuth()
+  const { error, userId } = await requireApiAuth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { organizationId } = await getCurrentUserAndOrg()
   if (!organizationId) return NextResponse.json({ error: 'No organization' }, { status: 400 })
