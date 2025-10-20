@@ -1,6 +1,5 @@
-import { registerLocalAction } from './actions'
+import { registerLocalAction, signOutAction } from './actions'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { auth } from '@/lib/better-auth'
 import { headers } from 'next/headers'
 
@@ -25,8 +24,6 @@ export default async function RegisterPage(
     headers: await headers(),
   })
 
-  if (session?.user) redirect(dst)
-
   return (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
       {/* Animated background */}
@@ -45,6 +42,22 @@ export default async function RegisterPage(
             {plan === 'ENTERPRISE' && '14-day free trial • $12/user/month after trial'}
             {plan === 'CUSTOM' && 'Contact us for custom pricing'}
           </p>
+          
+          {session?.user && (
+            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <p className="text-sm text-amber-200">
+                You&apos;re currently signed in as <strong>{session.user.email}</strong>.
+              </p>
+              <form action={signOutAction} className="mt-2">
+                <button 
+                  type="submit"
+                  className="text-sm text-amber-300 hover:text-amber-100 underline font-medium"
+                >
+                  Sign out to create a new account
+                </button>
+              </form>
+            </div>
+          )}
           
           <form action={registerLocalAction} className="mt-6 grid gap-4">
             <label className="grid gap-2">

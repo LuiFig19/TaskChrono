@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/better-auth";
 import { headers } from "next/headers";
+import { cookies } from "next/headers";
 
 export async function registerLocalAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
@@ -38,4 +39,21 @@ export async function registerLocalAction(formData: FormData) {
   }
 
   redirect(callbackUrl);
+}
+
+export async function signOutAction() {
+  await auth.api.signOut({
+    headers: await headers(),
+  });
+  
+  const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  
+  allCookies.forEach(cookie => {
+    if (cookie.name.startsWith('taskchrono')) {
+      cookieStore.delete(cookie.name);
+    }
+  });
+  
+  redirect('/register');
 }
