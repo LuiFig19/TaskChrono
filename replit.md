@@ -5,6 +5,16 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Better Auth Authentication Fixed (October 20, 2025) ✅ COMPLETED
+- **Issue Fixed**: Google OAuth and email/password sign-in were completely broken - buttons did nothing when clicked
+- **Root Cause #1**: Missing Better Auth `verification` table in database causing 500 errors on social sign-in
+- **Root Cause #2**: Better Auth configuration missing required `baseURL` and `secret` parameters
+- **Solution**: Added Verification model to Prisma schema and pushed to database with `npx prisma db push`
+- **Solution**: Configured Better Auth with proper `baseURL` (using REPLIT_DEV_DOMAIN or localhost:5000) and `secret` (reusing NEXTAUTH_SECRET)
+- **Verification**: Confirmed Better Auth API endpoints are working correctly (GET /api/auth/get-session returns valid responses)
+- **Authentication Methods**: Both Google OAuth and email/password authentication are now functional
+- **User Experience**: Sign-in buttons now trigger proper authentication flows, error messages display correctly
+
 ### Register Page Auto-Login Fix (October 20, 2025) ✅ COMPLETED
 - **Issue Fixed**: Users were being automatically signed in when trying to create new accounts during Get Started flow
 - **Solution**: Removed auto-redirect from register page that prevented new account creation
