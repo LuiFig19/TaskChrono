@@ -49,6 +49,8 @@ export default async function RegisterPage(
                 You&apos;re currently signed in as <strong>{session.user.email}</strong>.
               </p>
               <form action={signOutAction} className="mt-2">
+                <input type="hidden" name="plan" value={plan} />
+                <input type="hidden" name="callbackUrl" value={dst} />
                 <button 
                   type="submit"
                   className="text-sm text-amber-300 hover:text-amber-100 underline font-medium"

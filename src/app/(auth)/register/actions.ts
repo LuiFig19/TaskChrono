@@ -41,7 +41,7 @@ export async function registerLocalAction(formData: FormData) {
   redirect(callbackUrl);
 }
 
-export async function signOutAction() {
+export async function signOutAction(formData: FormData) {
   await auth.api.signOut({
     headers: await headers(),
   });
@@ -55,5 +55,8 @@ export async function signOutAction() {
     }
   });
   
-  redirect('/register');
+  const plan = String(formData.get("plan") || "FREE");
+  const callbackUrl = String(formData.get("callbackUrl") || "/dashboard");
+  
+  redirect(`/register?plan=${plan}&callbackUrl=${encodeURIComponent(callbackUrl)}`);
 }
