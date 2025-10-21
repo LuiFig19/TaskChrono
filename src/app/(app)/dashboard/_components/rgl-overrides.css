@@ -4,26 +4,20 @@
   box-shadow: none !important;
 }
 
-/* Light mode ONLY drag performance fix - dark mode left untouched */
-html.light .react-grid-item {
-  /* GPU acceleration for light mode */
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+/* Smooth transitions for auto-rearranging widgets - same for both light and dark modes */
+.react-grid-item {
+  transition: transform 200ms ease-out;
 }
 
-html.light .react-grid-item.react-dragging {
-  /* Disable transform transitions ONLY during active drag in light mode */
-  transition-property: box-shadow, opacity, background-color, border-color !important;
-  transition-duration: 0ms !important;
-  
-  /* GPU acceleration */
-  will-change: transform;
+/* Disable transitions ONLY on the widget being actively dragged */
+.react-grid-item.react-dragging {
+  transition: none !important;
+  z-index: 100;
 }
 
-html.light .react-grid-item.resizing {
-  /* Disable transitions during resize in light mode */
-  transition-property: box-shadow, opacity, background-color, border-color !important;
-  transition-duration: 0ms !important;
+/* Disable transitions during resize */
+.react-grid-item.resizing {
+  transition: none !important;
 }
 
 /* Keep file minimal; legend dot color handled inline in TSX */

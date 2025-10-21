@@ -313,7 +313,7 @@ type Widget = { id: string; title: string; render: () => React.ReactNode }
 export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string }) {
   // Curated default coordinates to eliminate the top-right gap
   const curated: Record<string, RglItem> = {
-    calendar:   { i: 'calendar',    x: 0,  y: 0,  w: 8, h: 8, static: true },
+    calendar:   { i: 'calendar',    x: 0,  y: 0,  w: 8, h: 8 },
     overview:   { i: 'overview',    x: 8,  y: 0,  w: 4, h: 4 },
     completion: { i: 'completion',  x: 8,  y: 4,  w: 4, h: 4 },
     activity:   { i: 'activity',    x: 0,  y: 8,  w: 4, h: 8 },
