@@ -4,34 +4,26 @@
   box-shadow: none !important;
 }
 
-/* Drag performance optimizations - ensure smooth dragging in both light and dark modes */
-.react-grid-item {
-  /* Use GPU acceleration for transforms */
+/* Light mode ONLY drag performance fix - dark mode left untouched */
+html.light .react-grid-item {
+  /* GPU acceleration for light mode */
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  
-  /* Never transition transform properties - prevents lag during drag */
+}
+
+html.light .react-grid-item.react-dragging {
+  /* Disable transform transitions ONLY during active drag in light mode */
   transition-property: box-shadow, opacity, background-color, border-color !important;
-}
-
-.react-grid-item.react-dragging {
-  /* Enhanced GPU acceleration during drag */
+  transition-duration: 0ms !important;
+  
+  /* GPU acceleration */
   will-change: transform;
-  transform: translate3d(var(--x, 0), var(--y, 0), 0);
-  
-  /* Disable ALL transitions during drag for maximum performance */
-  transition: none !important;
-  
-  /* Increase z-index to ensure dragged item appears above others */
-  z-index: 100;
-  
-  /* Subtle elevation effect during drag */
-  opacity: 0.9;
 }
 
-.react-grid-item.resizing {
-  /* Disable transitions during resize */
-  transition: none !important;
+html.light .react-grid-item.resizing {
+  /* Disable transitions during resize in light mode */
+  transition-property: box-shadow, opacity, background-color, border-color !important;
+  transition-duration: 0ms !important;
 }
 
 /* Keep file minimal; legend dot color handled inline in TSX */
