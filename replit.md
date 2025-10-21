@@ -1,125 +1,40 @@
 # TaskChrono - Replit Migration
 
 ## Overview
-TaskChrono is a comprehensive time tracking and project management application built with Next.js 15, featuring authentication, team collaboration, time tracking, invoicing, and analytics capabilities.
+TaskChrono is a comprehensive time tracking and project management application designed to enhance productivity for individuals and teams. Built with Next.js, it offers robust features including secure authentication, team collaboration, detailed time tracking, invoicing, and advanced analytics. The project aims to provide a seamless user experience across various platforms, supporting both local development and production deployments on Vercel and Replit, with a strong focus on investor-ready code quality and a polished user interface.
 
-## Recent Changes
+## User Preferences
+- No user preferences have been documented yet.
 
-### Dashboard Drag-and-Drop Performance Fixed (October 21, 2025) ✅ COMPLETED
-- **Issue Fixed**: Widget dragging in light mode was slow and jittery compared to dark mode
-- **Root Cause**: `transition-all` on widget cards was animating transform properties used by react-grid-layout for dragging
-- **Solution #1**: Changed `transition-all` to `transition-shadow` on widget containers - only shadows animate on hover, not transforms
-- **Solution #2**: Added CSS rules in `rgl-overrides.css` for GPU acceleration:
-  - `will-change: transform` and `translate3d(0, 0, 0)` for hardware acceleration
-  - Explicit `transition-property` that excludes transforms
-  - Disabled all transitions during `.react-dragging` and `.resizing` states
-- **Result**: Both light and dark modes now have identical smooth drag-and-drop performance
-- **Preserved**: All visual styling (shadows, colors, layouts) remains unchanged
-
-### Dashboard Widget Drag-and-Drop Refined (October 21, 2025) ✅ COMPLETED
-- **Improvements Made**: Ensured light and dark mode use identical drag-and-drop code with smooth animations for auto-rearranging widgets
-- **Solution**: Simplified CSS in `rgl-overrides.css`:
-  - Added `transition: transform 200ms ease-out` to ALL `.react-grid-item` elements for smooth auto-rearranging
-  - Disabled transitions ONLY on `.react-dragging` and `.resizing` elements (the actively dragged/resized widget)
-  - Removed all mode-specific CSS rules - both themes now share the same drag behavior
-- **Calendar Widget Fix**: Removed `static: true` from calendar widget configuration, allowing it to be dragged like other widgets
-- **Result**: 
-  - Light and dark modes have identical drag-and-drop behavior
-  - Actively dragged widgets move instantly with the cursor (no lag)
-  - Surrounding widgets smoothly animate into new positions with elegant 200ms ease-out transitions
-  - Calendar widget is now fully draggable and repositionable
-
-### Better Auth Authentication Fixed (October 20, 2025) ✅ COMPLETED
-- **Issue Fixed**: Google OAuth and email/password sign-in were completely broken - buttons did nothing when clicked
-- **Root Cause #1**: Missing Better Auth `verification` table in database causing 500 errors on social sign-in
-- **Root Cause #2**: Better Auth configuration missing required `baseURL` and `secret` parameters
-- **Solution**: Added Verification model to Prisma schema and pushed to database with `npx prisma db push`
-- **Solution**: Configured Better Auth with proper `baseURL` (using REPLIT_DEV_DOMAIN or localhost:5000) and `secret` (reusing NEXTAUTH_SECRET)
-- **Verification**: Confirmed Better Auth API endpoints are working correctly (GET /api/auth/get-session returns valid responses)
-- **Authentication Methods**: Both Google OAuth and email/password authentication are now functional
-- **User Experience**: Sign-in buttons now trigger proper authentication flows, error messages display correctly
-
-### Register Page Auto-Login Fix (October 20, 2025) ✅ COMPLETED
-- **Issue Fixed**: Users were being automatically signed in when trying to create new accounts during Get Started flow
-- **Solution**: Removed auto-redirect from register page that prevented new account creation
-- **New Behavior**: Users with existing sessions now see a warning with "Sign out to create a new account" button
-- **UX Improvement**: Clear, explicit control over session management during account creation
-- **Flow**: Landing → Get Started → Select Tier → Register → (Sign Out if needed) → Create New Account → Onboarding
-
-### Complete NextAuth Removal (October 20, 2025) ✅ COMPLETED
-- **NextAuth Removed**: Completely removed NextAuth.js from the codebase - Better Auth is now the sole authentication system
-- **Package Cleanup**: Uninstalled `next-auth` and `@auth/prisma-adapter` packages
-- **API Routes Migration**: Migrated all 54 API routes from NextAuth to Better Auth using new `requireApiAuth()` helper
-- **Popup Components**: Updated auth popup pages to use Better Auth client hooks
-- **Configuration Files**: Removed `src/lib/auth.ts` and `src/types/next-auth.d.ts`
-- **No Breaking Changes**: All existing authentication flows (email/password, Google OAuth) continue to work seamlessly
-- **Environment Variables**: Better Auth uses existing `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` variables
-
-### Complete Onboarding Flow with Stripe Integration (October 19, 2025) ✅ COMPLETED
-- **Non-Persistent Sessions**: Configured Better-auth sessions to expire when browser closes (removed expiresIn/updateAge, using only cookieCache with maxAge:0)
-- **Fresh Signup Flow**: Tier selection now redirects to register page, not onboarding - ensures new users always create accounts first
-- **14-Day Free Trial Messaging**: Added clear trial messaging on register page for Business ($5/user/mo) and Enterprise ($12/user/mo) tiers
-- **Stripe Checkout Integration**: After workspace creation, paid tiers redirect to Stripe checkout with 14-day trial automatically configured
-- **Direct Dashboard Access**: After signup/onboarding, users go directly to dashboard - no intermediate subscription or activation pages
-- **Dashboard Migration**: Fully migrated dashboard from NextAuth to Better-auth - users without organizations redirect to onboarding
-- **Complete Flow**: Landing → Get Started → Select Tier → Register → Create Workspace → Dashboard (Stripe checkout skipped if prices not configured)
-- **No Auto-Login**: Sessions don't persist across browser sessions - users must explicitly sign in each time
-- **Tier Colors**: Plan badges in header display correctly - FREE (green), BUSINESS (blue), ENTERPRISE (orange)
-
-### Database Schema Fix (October 19, 2025) ✅ COMPLETED
-- **Critical Bug**: Fixed Prisma client forcing `schema=taskchrono` instead of using default `public` schema
-- **Root Cause**: `src/lib/prisma.ts` had `ensureSchemaParam()` function that appended `schema=taskchrono` to DATABASE_URL
-- **Fix**: Removed schema-forcing logic to allow Prisma to use default `public` schema
-- **Better-auth Schema Alignment**: Updated Prisma models to match Better-auth requirements:
-  - User model: Changed `emailVerified` from `DateTime?` to `Boolean @default(false)`
-  - Account model: Added `accountId`, `password` fields and set `providerUserId` default
-  - Session model: Added `ipAddress` and `userAgent` fields
-- **Result**: Better-auth signup now works correctly - users can create accounts with email/password
-
-### Beautiful Authentication UI (October 19, 2025) ✅ COMPLETED
-- **Signup Page**: Redesigned with gradient background (slate-900 to blue-950), animated glow effects
-- **Login Page**: Matching beautiful design with "Welcome back" messaging
-- **Features**: TaskChrono branding, labeled form inputs, indigo buttons with shadow glow, Google OAuth integration
-- **UX**: Proper form labels, focus states with indigo ring, placeholder text, error styling
-
-### Better-auth Integration (October 19, 2025) ✅ COMPLETED
-- **Primary Authentication**: Migrated from NextAuth.js to Better-auth as the primary authentication system
-- **Email/Password Auth**: Implemented Better-auth email/password authentication with secure signup and login
-- **Google OAuth**: Configured Google OAuth integration through Better-auth
-- **Database Schema**: Updated Prisma schema with Better-auth compatible field mappings
-  - Account model: Uses `providerUserId` and `expiresAt DateTime` for social auth accounts
-  - Session model: Uses `token` and `expiresAt` fields
-  - Both models include `createdAt` and `updatedAt` timestamps
-- **API Routes**: Created Better-auth API handler at `/api/auth/[...all]/`
-- **Client Integration**: Set up Better-auth React hooks for client-side authentication
-- **Middleware**: Fixed Edge Runtime compatibility by using cookie-based session checking instead of Prisma queries
-- **Components**: Migrated login, register, dashboard, and onboarding components to use Better-auth
-- **Onboarding Flow**: Complete user journey from landing → tier selection → Better-auth signup/login → organization creation → dashboard
-
-### Migration from Vercel to Replit (October 19, 2025) ✅ COMPLETED
-- **Port Configuration**: Updated all dev and start scripts to use port 5000 with 0.0.0.0 binding for Replit compatibility
-- **Database**: Connected to Replit PostgreSQL (Neon-backed) and ran Prisma migrations successfully with `npx prisma db push`
-- **Environment Variables**: All required secrets configured in Replit Secrets (DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY)
-- **Build Process**: Simplified build script, removed turbopack for stability, ensured Prisma generation in build and postinstall
-- **Next.js Config**: Added `allowedDevOrigins` with proper domain variations (bare domain, https://, http://, localhost, 127.0.0.1) for Replit's iframe-based preview environment - eliminates cross-origin warnings
-- **Deployment**: Configured for autoscale deployment with proper build (`npm run build`) and start (`npm run start`) commands
-- **Verification**: Application runs successfully on port 5000, serving pages without errors, all UI elements render correctly
-
-## Project Architecture
+## System Architecture
 
 ### Technology Stack
 - **Framework**: Next.js 15.5.0 with App Router
 - **Database**: PostgreSQL (via Prisma ORM)
-- **Authentication**: Better-auth with Google OAuth and email/password auth
-- **Payments**: Stripe integration for subscription billing with 14-day free trials
-- **Real-time**: Socket.io for live updates
+- **Authentication**: Better-auth (Google OAuth, email/password)
+- **Payments**: Stripe for subscription billing (14-day free trials)
+- **Real-time**: Socket.io
 - **UI**: Tailwind CSS 4, Framer Motion, Lucide icons
 - **Forms**: React Hook Form with Zod validation
 
+### UI/UX Decisions
+- **Design Language**: Modern and clean, with support for both light and dark modes.
+- **Authentication UI**: Features a redesigned signup/login page with gradient backgrounds, animated glow effects, proper form labels, focus states, and integrated Google OAuth.
+- **Dashboard**: Customizable widget-based dashboard with smooth drag-and-drop functionality, optimized for performance across themes using specific CSS transitions and GPU acceleration techniques.
+- **Branding**: Consistent TaskChrono branding across all user-facing components.
+
+### Technical Implementations
+- **Authentication**: Migrated from NextAuth.js to Better-auth for all authentication flows, including email/password and Google OAuth. This involves a dedicated API handler, client-side React hooks, and an updated Prisma schema.
+- **Environment Management**: Smart environment detection for `baseURL` and `trustedOrigins` ensures consistent behavior across Replit, Vercel, and custom domains.
+- **API Standardization**: All API routes use consistent error responses and unified request body parsing for improved code quality and maintainability.
+- **Stripe Integration**: Comprehensive onboarding flow integrates Stripe checkout for subscription management, including automated 14-day free trials.
+- **Database Schema**: Enhanced Prisma schema to align with Better-auth requirements and enforce `public` schema usage, ensuring proper user, account, and session management.
+- **Deployment**: Optimized for Replit's autoscale deployment, using port 5000 and specific Next.js configurations for iframe-based preview environments.
+
 ### Key Features
 - Multi-tenant organization and team management
-- Project and task tracking with assignments
-- Time tracking with timers and manual entries
+- Project and task tracking
+- Time tracking (timers and manual entries)
 - Invoicing and billing
 - Calendar integration
 - File uploads and inventory management
@@ -127,64 +42,12 @@ TaskChrono is a comprehensive time tracking and project management application b
 - Analytics and reporting (Recharts)
 - Dark mode support
 
-### Database Schema
-Comprehensive Prisma schema including:
-- User management and authentication (Better-auth models)
-- Organizations and teams with member roles
-- Projects, tasks, and time entries
-- Invoicing and billing
-- Inventory tracking
-- File management
-- Widget layouts for customizable dashboards
-
-## Environment Configuration
-
-### Required Environment Variables
-All configured in Replit Secrets:
-- `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
-- `GOOGLE_CLIENT_ID`: Google OAuth client ID (used by Better Auth)
-- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret (used by Better Auth)
-- `STRIPE_SECRET_KEY`: Stripe API key
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
-- `RESEND_API_KEY`: Email service API key
-
-### Legacy Environment Variables (Can be removed)
-- `NEXTAUTH_SECRET`: No longer used - Better Auth handles session encryption internally
-- `NEXTAUTH_URL`: No longer used - Better Auth auto-detects URLs
-
-### Optional Variables
-- `RESEND_FROM`: Email sender address
-- `NEXT_PUBLIC_QUICKSHIFT_URL`: QuickShift feature URL
-
-## Development
-
-### Commands
-- `npm run dev`: Start development server on port 5000
-- `npm run build`: Build for production
-- `npm run start`: Start production server
-- `npm run lint`: Run ESLint
-- `npx prisma studio`: Open Prisma Studio for database management
-- `npx prisma db push`: Push schema changes to database
-
-### Development Notes
-- Server runs on port 5000 (required by Replit)
-- Hot module reload warnings are normal in Replit's iframe environment
-- Prisma client auto-generates on `npm install` via postinstall script
-- React strict mode is disabled for compatibility with certain third-party components
-
-## Deployment
-
-### Configuration
-- **Target**: Autoscale (stateless web application)
-- **Build**: `npm run build` (includes Prisma generation)
-- **Start**: `npm run start` (production Next.js server on port 5000)
-
-### Pre-deployment Checklist
-- Ensure all environment variables are set in production secrets
-- Run database migrations if schema changed
-- Test authentication flows (Google OAuth, credentials)
-- Verify Stripe webhook endpoints are configured
-- Check email sending functionality
-
-## User Preferences
-(To be documented as preferences are expressed)
+## External Dependencies
+- **PostgreSQL**: Primary database accessed via Prisma ORM.
+- **Google OAuth**: Used by Better-auth for social login.
+- **Stripe**: Payment gateway for subscriptions, trials, and billing.
+- **Resend**: Email service for transactional emails.
+- **Socket.io**: For real-time communication features.
+- **Framer Motion**: For UI animations.
+- **Lucide icons**: Icon library.
+- **Recharts**: For data visualization and analytics.

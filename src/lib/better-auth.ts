@@ -3,6 +3,59 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
 import { nextCookies } from "better-auth/next-js";
 
+/**
+ * Determines the base URL for Better Auth
+ * Priority: Custom domain > Vercel URL > Replit domain > localhost
+ */
+function getBaseURL(): string {
+  // Production: Use NEXTAUTH_URL if set (custom domain)
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  
+  // Vercel: Use VERCEL_URL (automatically set by Vercel)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Replit: Use REPLIT_DEV_DOMAIN
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  }
+  
+  // Development fallback
+  return "http://localhost:5000";
+}
+
+/**
+ * Gets trusted origins for Better Auth
+ */
+function getTrustedOrigins(): string[] {
+  const origins: string[] = [];
+  
+  // Add custom domain if set
+  if (process.env.NEXTAUTH_URL) {
+    origins.push(process.env.NEXTAUTH_URL);
+  }
+  
+  // Add Vercel URL if available
+  if (process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
+  
+  // Add Replit domains if available
+  if (process.env.REPLIT_DEV_DOMAIN) {
+    origins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+    origins.push(`http://${process.env.REPLIT_DEV_DOMAIN}`);
+  }
+  
+  // Always allow localhost for development
+  origins.push('http://localhost:5000');
+  origins.push('http://127.0.0.1:5000');
+  
+  return origins;
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -28,17 +81,8 @@ export const auth = betterAuth({
     cookiePrefix: "taskchrono",
   },
   secret: process.env.NEXTAUTH_SECRET || process.env.BETTER_AUTH_SECRET || "fallback-secret-for-dev",
-  baseURL: process.env.REPLIT_DEV_DOMAIN 
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : "http://localhost:5000",
-  trustedOrigins: process.env.REPLIT_DEV_DOMAIN
-    ? [
-        `https://${process.env.REPLIT_DEV_DOMAIN}`,
-        `http://${process.env.REPLIT_DEV_DOMAIN}`,
-        'http://localhost:5000',
-        'http://127.0.0.1:5000',
-      ]
-    : [],
+  baseURL: getBaseURL(),
+  trustedOrigins: getTrustedOrigins(),
   plugins: [nextCookies()],
 });
 
