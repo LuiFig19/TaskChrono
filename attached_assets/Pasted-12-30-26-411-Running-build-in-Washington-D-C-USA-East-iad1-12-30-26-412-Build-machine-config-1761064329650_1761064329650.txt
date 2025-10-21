@@ -1,0 +1,81 @@
+12:30:26.411 Running build in Washington, D.C., USA (East) – iad1
+12:30:26.412 Build machine configuration: 2 cores, 8 GB
+12:30:26.429 Cloning github.com/LuiFig19/TaskChrono (Branch: main, Commit: 6b2589e)
+12:30:26.816 Cloning completed: 386.000ms
+12:30:28.864 Restored build cache from previous deployment (C8GQyRv4j5EXzrNNJTzN1gfWPvT8)
+12:30:30.284 Running "vercel build"
+12:30:30.829 Vercel CLI 48.2.9
+12:30:31.178 Installing dependencies...
+12:30:34.832 
+12:30:34.832 > taskchrono-app@0.1.0 postinstall
+12:30:34.833 > prisma generate
+12:30:34.833 
+12:30:36.262 Prisma schema loaded from prisma/schema.prisma
+12:30:37.462 
+12:30:37.463 ✔ Generated Prisma Client (v6.14.0) to ./node_modules/@prisma/client in 555ms
+12:30:37.463 
+12:30:37.463 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+12:30:37.463 
+12:30:37.464 Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+12:30:37.464 
+12:30:37.487 
+12:30:37.487 added 75 packages, and removed 25 packages in 6s
+12:30:37.488 
+12:30:37.488 190 packages are looking for funding
+12:30:37.488   run `npm fund` for details
+12:30:37.500 Detected Next.js version: 15.5.0
+12:30:37.505 Running "npm run build"
+12:30:37.637 
+12:30:37.637 > taskchrono-app@0.1.0 build
+12:30:37.637 > prisma generate && next build
+12:30:37.637 
+12:30:38.768 Prisma schema loaded from prisma/schema.prisma
+12:30:39.807 ┌─────────────────────────────────────────────────────────┐
+12:30:39.808 │  Update available 6.14.0 -> 6.17.1                      │
+12:30:39.809 │  Run the following to update                            │
+12:30:39.809 │    npm i --save-dev prisma@latest                       │
+12:30:39.809 │    npm i @prisma/client@latest                          │
+12:30:39.809 └─────────────────────────────────────────────────────────┘
+12:30:39.810 
+12:30:39.810 ✔ Generated Prisma Client (v6.14.0) to ./node_modules/@prisma/client in 461ms
+12:30:39.810 
+12:30:39.810 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+12:30:39.810 
+12:30:39.810 Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+12:30:39.810 
+12:30:40.965    ▲ Next.js 15.5.0
+12:30:40.966    - Experiments (use with caution):
+12:30:40.967      · serverActions
+12:30:40.967      · optimizePackageImports
+12:30:40.967 
+12:30:41.082    Creating an optimized production build ...
+12:30:47.556 
+12:30:47.557 
+12:30:47.557 Retrying 1/3...
+12:30:47.558 
+12:30:47.558 
+12:30:47.558 Retrying 1/3...
+12:31:09.518 Failed to compile.
+12:31:09.519 
+12:31:09.519 ./src/app/api/org/set-active/route.ts
+12:31:09.519 Error:   [31mx[0m Expected ';', got ')'
+12:31:09.519     ,-[[36;1;4m/vercel/path0/src/app/api/org/set-active/route.ts[0m:11:1]
+12:31:09.519  [2m 8[0m | 
+12:31:09.519  [2m 9[0m |   const body = await request.json().catch(() => ({})) as { organizationId?: string }
+12:31:09.519  [2m10[0m |   const organizationId = String(body.organizationId || '')
+12:31:09.519  [2m11[0m |   if (!organizationId) return error, { status: 400 })
+12:31:09.519     : [35;1m                                                    ^[0m
+12:31:09.519  [2m12[0m | 
+12:31:09.519  [2m13[0m |   // Ensure the user belongs to this organization
+12:31:09.524  [2m14[0m |   const member = await prisma.organizationMember.findFirst({ where: { userId, organizationId } })
+12:31:09.525     `----
+12:31:09.525 
+12:31:09.525 Caused by:
+12:31:09.525     Syntax Error
+12:31:09.526 
+12:31:09.526 Import trace for requested module:
+12:31:09.526 ./src/app/api/org/set-active/route.ts
+12:31:09.526 
+12:31:09.532 
+12:31:09.532 > Build failed because of webpack errors
+12:31:09.567 Error: Command "npm run build" exited with 1
