@@ -9,8 +9,7 @@ export default function LogoutPage() {
       try {
         await authClient.signOut();
         window.location.href = '/';
-      } catch (error) {
-        console.error('Logout error:', error);
+      } catch {
         window.location.href = '/';
       }
     };

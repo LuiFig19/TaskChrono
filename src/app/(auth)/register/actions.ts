@@ -29,8 +29,6 @@ export async function registerLocalAction(formData: FormData) {
       throw new Error("Failed to create user account");
     }
   } catch (error: any) {
-    console.error("Registration error:", error);
-    
     if (error?.message?.includes('email') && (error?.message?.includes('already exists') || error?.message?.includes('duplicate'))) {
       throw new Error("This email is already registered. Please sign in instead or use a different email.");
     }

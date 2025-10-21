@@ -1,0 +1,74 @@
+Role: Senior Full-Stack Refactoring Engineer (Next.js + TypeScript + Tailwind + Prisma + Stripe + Better Auth + Postgres/Neon)
+
+Goal:
+Clean up and refactor the TaskChrono codebase for clarity, consistency, and maintainability — without breaking any existing features, APIs, authentication, or design. The app is functional and stable; we just want the code to look polished, professional, and investor-ready.
+
+🧩 Instructions
+
+Do not remove or rename working logic.
+Only refactor, re-organize, and clean up.
+
+Refactor scope:
+
+Organize files and folders logically (e.g., /components, /hooks, /lib, /pages, /styles, /utils).
+
+Ensure imports use consistent alias paths (@/components/... etc.).
+
+Remove unused imports, variables, and console logs.
+
+Merge duplicate code blocks or styles where possible.
+
+Standardize formatting and indentation (Prettier + ESLint).
+
+Ensure consistent naming conventions (camelCase for JS, PascalCase for components).
+
+Keep Tailwind classes tidy and readable — avoid redundant ones.
+
+Improve comment clarity; remove dead code blocks.
+
+Make sure environment variables are used cleanly (no hard-coded secrets).
+
+Check that async/await logic and error handling are consistent across API routes.
+
+Ensure TypeScript types are clear, non-redundant, and strongly typed.
+
+Do not touch:
+
+Better Auth or Stripe integration logic.
+
+Theme switching (dark/light).
+
+Working drag-and-drop code.
+
+Database models or Prisma schema unless an import path needs cleanup.
+
+Output:
+
+Clean, professional-grade code that’s easy to read.
+
+No new dependencies.
+
+No broken functionality.
+
+Consistent formatting and organization across all files.
+
+Do not push to GitHub or deploy yet — local cleanup only for review.
+
+✅ Expected Results
+
+The codebase is neatly organized, with consistent structure and style.
+
+No errors introduced, and all features work exactly as before.
+
+Ready for investor or technical audit review.
+
+💬 Do Investors Care About Code Quality?
+
+Usually, non-technical investors care about product stability and scalability, not how pretty the code looks.
+However:
+
+Clean, documented code builds confidence when investors bring in technical advisors for due-diligence.
+
+It helps future engineers onboard faster.
+
+It reduces bugs and friction before demo day.

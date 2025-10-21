@@ -15,8 +15,8 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
         provider: "google",
         callbackURL: callbackUrl,
       });
-    } catch (error) {
-      console.error("Google sign-in error:", error);
+    } catch {
+      // Error handled silently - auth client will handle redirects
     } finally {
       setLoading(false);
     }
@@ -64,9 +64,8 @@ export function CredentialsForm({ callbackUrl }: { callbackUrl: string }) {
         router.push(callbackUrl);
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
-      console.error("Sign-in error:", err);
     } finally {
       setLoading(false);
     }

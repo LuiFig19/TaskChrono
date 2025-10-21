@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { authClient } from '@/lib/better-auth-client'
-
-type Plan = 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
+import { Plan } from '@/lib/widget-config'
 
 export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?: string }) {
   const [open, setOpen] = useState(false)
@@ -111,8 +110,7 @@ export default function MobileMenu({ plan, userEmail }: { plan: Plan; userEmail?
                           }
                         });
                         window.location.href = '/'
-                      } catch (error) {
-                        console.error('Signout error:', error)
+                      } catch {
                         document.cookie.split(";").forEach(c => {
                           const [name] = c.split("=");
                           if (name.trim().startsWith('taskchrono')) {

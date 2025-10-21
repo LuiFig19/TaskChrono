@@ -9,8 +9,7 @@ export async function GET() {
     });
     
     return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:5000'));
-  } catch (error) {
-    console.error('Logout error:', error);
+  } catch {
     return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:5000'));
   }
 }
