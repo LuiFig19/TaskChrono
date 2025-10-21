@@ -5,6 +5,17 @@ TaskChrono is a comprehensive time tracking and project management application b
 
 ## Recent Changes
 
+### Dashboard Drag-and-Drop Performance Fixed (October 21, 2025) ✅ COMPLETED
+- **Issue Fixed**: Widget dragging in light mode was slow and jittery compared to dark mode
+- **Root Cause**: `transition-all` on widget cards was animating transform properties used by react-grid-layout for dragging
+- **Solution #1**: Changed `transition-all` to `transition-shadow` on widget containers - only shadows animate on hover, not transforms
+- **Solution #2**: Added CSS rules in `rgl-overrides.css` for GPU acceleration:
+  - `will-change: transform` and `translate3d(0, 0, 0)` for hardware acceleration
+  - Explicit `transition-property` that excludes transforms
+  - Disabled all transitions during `.react-dragging` and `.resizing` states
+- **Result**: Both light and dark modes now have identical smooth drag-and-drop performance
+- **Preserved**: All visual styling (shadows, colors, layouts) remains unchanged
+
 ### Better Auth Authentication Fixed (October 20, 2025) ✅ COMPLETED
 - **Issue Fixed**: Google OAuth and email/password sign-in were completely broken - buttons did nothing when clicked
 - **Root Cause #1**: Missing Better Auth `verification` table in database causing 500 errors on social sign-in
