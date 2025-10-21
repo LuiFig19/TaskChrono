@@ -491,11 +491,11 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         {order.map((id) => (
           <div key={id} className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden dark:border-slate-800 dark:bg-slate-900 light:border-[#E0E6ED] light:bg-white light:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] hover:light:shadow-[0_4px_6px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.06)] transition-shadow duration-200`}>
             <div className="tc-widget-handle cursor-move select-none font-bold text-white dark:text-white light:text-[#202124] flex items-center justify-between">
-              <span>{widgets[id]?.title}</span>
+              <span className="flex-1">{widgets[id]?.title}</span>
               {id === 'calendar' && (
-                <div className="flex gap-1">
-                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="tc-no-drag inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors" aria-label="Previous month">⟵</button>
-                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="tc-no-drag inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors" aria-label="Next month">⟶</button>
+                <div className="flex gap-1 tc-no-drag">
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors" aria-label="Previous month">⟵</button>
+                  <button type="button" onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))} className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors" aria-label="Next month">⟶</button>
                         </div>
                       )}
               {id !== 'calendar' && (

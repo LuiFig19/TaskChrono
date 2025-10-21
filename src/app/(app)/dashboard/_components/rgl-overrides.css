@@ -10,13 +10,15 @@
 }
 
 /* Disable transitions ONLY on the widget being actively dragged */
-.react-grid-item.react-dragging {
+.react-grid-item.react-dragging,
+.react-grid-item.react-dragging > * {
   transition: none !important;
   z-index: 100;
 }
 
 /* Disable transitions during resize */
-.react-grid-item.resizing {
+.react-grid-item.resizing,
+.react-grid-item.resizing > * {
   transition: none !important;
 }
 
