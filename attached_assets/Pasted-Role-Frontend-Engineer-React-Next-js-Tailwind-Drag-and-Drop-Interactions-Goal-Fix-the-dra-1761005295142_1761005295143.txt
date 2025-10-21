@@ -1,0 +1,62 @@
+Role: Frontend Engineer (React + Next.js + Tailwind + Drag-and-Drop Interactions)
+
+Goal:
+Fix the drag-and-drop lag issue for widgets in light mode on the dashboard.
+The dark mode drag-and-drop system works perfectly — smooth and responsive — but in light mode the dragging is noticeably slow or jittery.
+You must make the light mode use the same drag-and-drop performance and logic that dark mode uses, without affecting visuals, layout, or any other functionality.
+
+🧩 Instructions
+
+Locate the component handling dashboard widget drag-and-drop logic (likely using libraries such as react-beautiful-dnd, dnd-kit, or a custom handler).
+
+Identify where theme-specific conditions are applied (for example, if (theme === "light") or CSS conditions based on light mode).
+
+Compare how drag events are initialized and updated in dark mode versus light mode — the event handlers, state updates, and transform styles should be identical.
+
+Ensure the same animation timing, transform, and hardware acceleration (translate3d, will-change: transform, etc.) are used for both modes.
+
+If separate logic blocks exist for each theme, refactor so both use the same handler functions for:
+
+onDragStart
+
+onDragUpdate
+
+onDragEnd
+
+Check CSS or Tailwind conditional classes — make sure light mode doesn’t override positioning or transitions that cause lag (e.g. background or opacity transitions during drag).
+
+Verify that this fix only applies to light mode performance, without changing:
+
+UI colors
+
+shadows
+
+layout spacing
+
+border radius or animations
+
+After changes, test thoroughly:
+
+In dark mode → drag-and-drop remains smooth
+
+In light mode → drag speed and response match dark mode exactly
+
+💡 Constraints
+
+Do not edit unrelated UI or theme logic.
+
+Do not push to GitHub or deploy — this fix is local only for testing.
+
+Keep the same theme toggle and persistence behavior.
+
+Focus purely on performance parity between light and dark mode drag behavior.
+
+✅ Expected Outcome
+
+After completion:
+
+Both dark and light modes share identical drag-and-drop logic and smooth animation timing.
+
+Light mode widget dragging no longer lags or slows down.
+
+The site’s layout, design, and theme visuals remain unchanged.

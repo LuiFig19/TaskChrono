@@ -489,7 +489,7 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
         onResizeStop={(l: any) => saveLayout(l as any)}
       >
         {order.map((id) => (
-          <div key={id} className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden dark:border-slate-800 dark:bg-slate-900 light:border-[#E0E6ED] light:bg-white light:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] hover:light:shadow-[0_4px_6px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.06)] transition-all duration-200`}>
+          <div key={id} className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden dark:border-slate-800 dark:bg-slate-900 light:border-[#E0E6ED] light:bg-white light:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] hover:light:shadow-[0_4px_6px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.06)] transition-shadow duration-200`}>
             <div className="tc-widget-handle cursor-move select-none font-bold text-white dark:text-white light:text-[#202124] flex items-center justify-between">
               <span>{widgets[id]?.title}</span>
               {id === 'calendar' && (
