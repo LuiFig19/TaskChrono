@@ -90,12 +90,12 @@ const item = {
 
 export default function GetStartedPage() {
   return (
-    <div className="min-h-[90vh] bg-gradient-to-b from-slate-950 to-slate-900">
+    <div className="min-h-[90vh] bg-gradient-to-b dark:from-slate-950 dark:to-slate-900 light:from-gray-50 light:to-white">
       <div className="max-w-screen-2xl mx-auto px-4 py-14">
         <LazyMotion features={() => import('framer-motion').then((m)=>m.domAnimation)}>
           <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-            <h1 className="text-3xl md:text-4xl font-bold text-white">Choose your plan</h1>
-            <p className="text-slate-300 mt-2">14-Day Free Trial for all paid tiers</p>
+            <h1 className="text-3xl md:text-4xl font-bold dark:text-white light:text-gray-900">Choose your plan</h1>
+            <p className="dark:text-slate-300 light:text-gray-600 mt-2">14-Day Free Trial for all paid tiers</p>
           </m.div>
 
           <m.div
@@ -108,7 +108,7 @@ export default function GetStartedPage() {
               <m.div variants={item} key={t.key}>
                 <Link
                   href={`/register?plan=${t.key}`}
-                  className="group relative block h-full rounded-2xl border border-slate-800 bg-slate-900/60 p-6 hover:border-slate-700 hover:shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_10px_40px_-10px_rgba(0,0,0,0.7)] transition-all duration-300"
+                  className="group relative block h-full rounded-2xl border dark:border-slate-800 light:border-gray-200 dark:bg-slate-900/60 light:bg-white p-6 dark:hover:border-slate-700 light:hover:border-indigo-400 hover:shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_10px_40px_-10px_rgba(0,0,0,0.7)] transition-all duration-300"
                   aria-label={`Select ${t.name} plan`}
                 >
                   {t.recommended && (
@@ -117,28 +117,28 @@ export default function GetStartedPage() {
                     </span>
                   )}
 
-                  <div className="flex items-center gap-2 text-slate-300">
+                  <div className="flex items-center gap-2 dark:text-slate-300 light:text-gray-700">
                     {t.key === 'FREE' && <Sparkles className="h-4 w-4 text-indigo-400" />}
                     {t.key === 'BUSINESS' && <BarChart3 className="h-4 w-4 text-indigo-400" />}
                     {t.key === 'ENTERPRISE' && <Boxes className="h-4 w-4 text-indigo-400" />}
                     <span className="text-sm">{t.name}</span>
                   </div>
 
-                  <div className="mt-1 text-2xl font-semibold text-white">{t.price}</div>
+                  <div className="mt-1 text-2xl font-semibold dark:text-white light:text-gray-900">{t.price}</div>
                   {(t.key !== 'FREE' && t.key !== 'CUSTOM') && (
                     <div className="mt-1 flex flex-col gap-2 items-start">
-                      <div className="inline-flex rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
+                      <div className="inline-flex rounded-md dark:bg-indigo-500/10 light:bg-indigo-50 px-2 py-0.5 text-[11px] font-medium dark:text-indigo-300 light:text-indigo-600">
                         14‑day free trial
                       </div>
                       {t.highlight && (
-                        <div className="inline-flex items-center gap-1 rounded-md border border-indigo-700/40 bg-indigo-950/30 px-2 py-1 text-[11px] text-indigo-200">
+                        <div className="inline-flex items-center gap-1 rounded-md border dark:border-indigo-700/40 light:border-indigo-200 dark:bg-indigo-950/30 light:bg-indigo-50 px-2 py-1 text-[11px] dark:text-indigo-200 light:text-indigo-700">
                           <Sparkles className="h-3 w-3" /> {t.highlight}
                         </div>
                       )}
                     </div>
                   )}
 
-                  <ul className="mt-5 space-y-2 text-sm text-slate-300">
+                  <ul className="mt-5 space-y-2 text-sm dark:text-slate-300 light:text-gray-700">
                     {t.features.map((f) => (
                       <li key={f} className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-indigo-400" /> {f}
@@ -146,7 +146,7 @@ export default function GetStartedPage() {
                     ))}
                   </ul>
 
-                  <div className="mt-6 text-xs text-slate-400 group-hover:text-slate-300">Click to select</div>
+                  <div className="mt-6 text-xs dark:text-slate-400 light:text-gray-500 dark:group-hover:text-slate-300 light:group-hover:text-gray-700">Click to select</div>
 
                   <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 transition-[box-shadow] group-hover:shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]" />
                 </Link>
