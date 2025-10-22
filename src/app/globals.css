@@ -3,49 +3,57 @@ html:not(.dark) [data-tier-selection-page] {
   background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
 }
 
-/* Tier cards - Colored backgrounds (default for light mode) */
-.tier-card[data-tier-card="FREE"] {
+/* Tier cards - Colored backgrounds (light mode) - HIGH SPECIFICITY */
+html:not(.dark) a.tier-card[data-tier-card="FREE"],
+a.tier-card[data-tier-card="FREE"] {
   background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%) !important;
   border-color: #6EE7B7 !important;
 }
 
-.tier-card[data-tier-card="FREE"]:hover {
+html:not(.dark) a.tier-card[data-tier-card="FREE"]:hover,
+a.tier-card[data-tier-card="FREE"]:hover {
   background: linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%) !important;
   border-color: #10B981 !important;
   box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-.tier-card[data-tier-card="BUSINESS"] {
+html:not(.dark) a.tier-card[data-tier-card="BUSINESS"],
+a.tier-card[data-tier-card="BUSINESS"] {
   background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%) !important;
   border-color: #60A5FA !important;
 }
 
-.tier-card[data-tier-card="BUSINESS"]:hover {
+html:not(.dark) a.tier-card[data-tier-card="BUSINESS"]:hover,
+a.tier-card[data-tier-card="BUSINESS"]:hover {
   background: linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%) !important;
   border-color: #3B82F6 !important;
   box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-.tier-card[data-tier-card="ENTERPRISE"] {
+html:not(.dark) a.tier-card[data-tier-card="ENTERPRISE"],
+a.tier-card[data-tier-card="ENTERPRISE"] {
   background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%) !important;
   border-color: #FB923C !important;
 }
 
-.tier-card[data-tier-card="ENTERPRISE"]:hover {
+html:not(.dark) a.tier-card[data-tier-card="ENTERPRISE"]:hover,
+a.tier-card[data-tier-card="ENTERPRISE"]:hover {
   background: linear-gradient(135deg, #FDBA74 0%, #FB923C 100%) !important;
   border-color: #F97316 !important;
   box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-.tier-card[data-tier-card="CUSTOM"] {
+html:not(.dark) a.tier-card[data-tier-card="CUSTOM"],
+a.tier-card[data-tier-card="CUSTOM"] {
   background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%) !important;
   border-color: #C084FC !important;
 }
 
-.tier-card[data-tier-card="CUSTOM"]:hover {
+html:not(.dark) a.tier-card[data-tier-card="CUSTOM"]:hover,
+a.tier-card[data-tier-card="CUSTOM"]:hover {
   background: linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%) !important;
   border-color: #A855F7 !important;
   box-shadow: 0 12px 32px rgba(168, 85, 247, 0.3) !important;
