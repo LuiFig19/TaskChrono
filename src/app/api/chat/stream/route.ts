@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-  if (error) return new NextResponse('Unauthorized', { status: 401 })
+  if (!session) return new NextResponse('Unauthorized', { status: 401 })
   const { organizationId } = await ensureUserOrg()
   const { searchParams } = new URL(req.url)
   const channelId = searchParams.get('c') || 'all'
