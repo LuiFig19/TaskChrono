@@ -88,6 +88,37 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 }
 
+// Color mapping for each tier in light mode
+const getTierColors = (tierKey: string) => {
+  const colors = {
+    FREE: {
+      background: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+      border: '#6EE7B7',
+      hoverBg: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%)',
+      hoverBorder: '#10B981',
+    },
+    BUSINESS: {
+      background: 'linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)',
+      border: '#60A5FA',
+      hoverBg: 'linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%)',
+      hoverBorder: '#3B82F6',
+    },
+    ENTERPRISE: {
+      background: 'linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%)',
+      border: '#FB923C',
+      hoverBg: 'linear-gradient(135deg, #FDBA74 0%, #FB923C 100%)',
+      hoverBorder: '#F97316',
+    },
+    CUSTOM: {
+      background: 'linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%)',
+      border: '#C084FC',
+      hoverBg: 'linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%)',
+      hoverBorder: '#A855F7',
+    },
+  }
+  return colors[tierKey as keyof typeof colors]
+}
+
 export default function GetStartedPage() {
   return (
     <div data-tier-selection-page className="min-h-[90vh] bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
@@ -104,13 +135,21 @@ export default function GetStartedPage() {
             animate="show"
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
           >
-            {tiers.map((t) => (
+            {tiers.map((t) => {
+              const colors = getTierColors(t.key)
+              return (
               <m.div variants={item} key={t.key}>
                 <Link
                   href={`/register?plan=${t.key}`}
                   data-tier-card
                   data-tier={t.key}
-                  className="group relative block h-full rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 hover:border-indigo-400 dark:hover:border-slate-700 hover:shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_10px_40px_-10px_rgba(0,0,0,0.7)] transition-all duration-300"
+                  className="group relative block h-full rounded-2xl p-6 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
+                  style={{
+                    background: colors.background,
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: colors.border,
+                  }}
                   aria-label={`Select ${t.name} plan`}
                 >
                   {t.recommended && (
@@ -153,7 +192,8 @@ export default function GetStartedPage() {
                   <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 transition-[box-shadow] group-hover:shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]" />
                 </Link>
               </m.div>
-            ))}
+            )}
+            )}
           </m.div>
         </LazyMotion>
       </div>

@@ -3,56 +3,33 @@ html.light [data-tier-selection-page] {
   background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
 }
 
-/* Free tier - Green tint */
-html.light [data-tier-card][data-tier="FREE"] {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%) !important;
-  border: 1px solid #6EE7B7 !important;
-  color: #111827 !important;
-}
-
-html.light [data-tier-card][data-tier="FREE"]:hover {
+/* Tier card hover effects - beautiful animations */
+[data-tier-card][data-tier="FREE"]:hover {
   background: linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%) !important;
   border-color: #10B981 !important;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3) !important;
+  transform: translateY(-4px) scale(1.01);
 }
 
-/* Business tier - Blue tint */
-html.light [data-tier-card][data-tier="BUSINESS"] {
-  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%) !important;
-  border: 1px solid #60A5FA !important;
-  color: #111827 !important;
-}
-
-html.light [data-tier-card][data-tier="BUSINESS"]:hover {
+[data-tier-card][data-tier="BUSINESS"]:hover {
   background: linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%) !important;
   border-color: #3B82F6 !important;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35) !important;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-4px) scale(1.01);
 }
 
-/* Enterprise tier - Orange tint */
-html.light [data-tier-card][data-tier="ENTERPRISE"] {
-  background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%) !important;
-  border: 1px solid #FB923C !important;
-  color: #111827 !important;
-}
-
-html.light [data-tier-card][data-tier="ENTERPRISE"]:hover {
+[data-tier-card][data-tier="ENTERPRISE"]:hover {
   background: linear-gradient(135deg, #FDBA74 0%, #FB923C 100%) !important;
   border-color: #F97316 !important;
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35) !important;
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3) !important;
+  transform: translateY(-4px) scale(1.01);
 }
 
-/* Custom tier - Purple tint */
-html.light [data-tier-card][data-tier="CUSTOM"] {
-  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%) !important;
-  border: 1px solid #C084FC !important;
-  color: #111827 !important;
-}
-
-html.light [data-tier-card][data-tier="CUSTOM"]:hover {
+[data-tier-card][data-tier="CUSTOM"]:hover {
   background: linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%) !important;
   border-color: #A855F7 !important;
-  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35) !important;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.3) !important;
+  transform: translateY(-4px) scale(1.01);
 }
 
 /* Pricing cards - light mode visual upgrade */
