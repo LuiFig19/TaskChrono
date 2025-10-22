@@ -90,7 +90,7 @@ const item = {
 
 export default function GetStartedPage() {
   return (
-    <div className="min-h-[90vh] bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div data-tier-selection-page className="min-h-[90vh] bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
       <div className="max-w-screen-2xl mx-auto px-4 py-14">
         <LazyMotion features={() => import('framer-motion').then((m)=>m.domAnimation)}>
           <m.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
@@ -108,6 +108,7 @@ export default function GetStartedPage() {
               <m.div variants={item} key={t.key}>
                 <Link
                   href={`/register?plan=${t.key}`}
+                  data-tier-card
                   className="group relative block h-full rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 hover:border-indigo-400 dark:hover:border-slate-700 hover:shadow-[0_0_0_1px_rgba(99,102,241,0.4),0_10px_40px_-10px_rgba(0,0,0,0.7)] transition-all duration-300"
                   aria-label={`Select ${t.name} plan`}
                 >

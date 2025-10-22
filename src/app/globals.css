@@ -1,3 +1,18 @@
+/* Tier selection page (/get-started) - light mode */
+html.light [data-tier-selection-page] {
+  background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
+}
+
+html.light [data-tier-card] {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  color: #111827 !important;
+}
+
+html.light [data-tier-card]:hover {
+  border-color: #818CF8 !important;
+}
+
 /* Pricing cards - light mode visual upgrade */
 html.light #pricing .pricing-card {
   background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFF 100%) !important;
