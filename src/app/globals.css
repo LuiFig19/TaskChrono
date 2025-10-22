@@ -3,33 +3,66 @@ html.light [data-tier-selection-page] {
   background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
 }
 
-/* Tier card hover effects - beautiful animations */
-[data-tier-card][data-tier="FREE"]:hover {
+/* Tier cards - Colored backgrounds (default for light mode) */
+.tier-card[data-tier-card="FREE"] {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%) !important;
+  border-color: #6EE7B7 !important;
+}
+
+.tier-card[data-tier-card="FREE"]:hover {
   background: linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%) !important;
   border-color: #10B981 !important;
   box-shadow: 0 12px 32px rgba(16, 185, 129, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-[data-tier-card][data-tier="BUSINESS"]:hover {
+.tier-card[data-tier-card="BUSINESS"] {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%) !important;
+  border-color: #60A5FA !important;
+}
+
+.tier-card[data-tier-card="BUSINESS"]:hover {
   background: linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%) !important;
   border-color: #3B82F6 !important;
   box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-[data-tier-card][data-tier="ENTERPRISE"]:hover {
+.tier-card[data-tier-card="ENTERPRISE"] {
+  background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%) !important;
+  border-color: #FB923C !important;
+}
+
+.tier-card[data-tier-card="ENTERPRISE"]:hover {
   background: linear-gradient(135deg, #FDBA74 0%, #FB923C 100%) !important;
   border-color: #F97316 !important;
   box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
 }
 
-[data-tier-card][data-tier="CUSTOM"]:hover {
+.tier-card[data-tier-card="CUSTOM"] {
+  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%) !important;
+  border-color: #C084FC !important;
+}
+
+.tier-card[data-tier-card="CUSTOM"]:hover {
   background: linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%) !important;
   border-color: #A855F7 !important;
   box-shadow: 0 12px 32px rgba(168, 85, 247, 0.3) !important;
   transform: translateY(-4px) scale(1.01);
+}
+
+/* Dark mode override - make cards dark again */
+html.dark .tier-card {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgb(30, 41, 59) !important;
+}
+
+html.dark .tier-card:hover {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: rgb(51, 65, 85) !important;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.4), 0 10px 40px -10px rgba(0,0,0,0.7) !important;
+  transform: translateY(-2px);
 }
 
 /* Pricing cards - light mode visual upgrade */

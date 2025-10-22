@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { LazyMotion, m } from 'framer-motion'
 import { CheckCircle2, Sparkles, BarChart3, Boxes } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { useEffect, useState } from 'react'
 
 type Tier = {
   key: string
@@ -120,6 +122,17 @@ const getTierColors = (tierKey: string) => {
 }
 
 export default function GetStartedPage() {
+  const { theme, systemTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Determine if we're in dark mode
+  const currentTheme = theme === 'system' ? systemTheme : theme
+  const isDark = currentTheme === 'dark'
+
   return (
     <div data-tier-selection-page className="min-h-[90vh] bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
       <div className="max-w-screen-2xl mx-auto px-4 py-14">
@@ -141,15 +154,8 @@ export default function GetStartedPage() {
               <m.div variants={item} key={t.key}>
                 <Link
                   href={`/register?plan=${t.key}`}
-                  data-tier-card
-                  data-tier={t.key}
-                  className="group relative block h-full rounded-2xl p-6 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
-                  style={{
-                    background: colors.background,
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: colors.border,
-                  }}
+                  data-tier-card={t.key}
+                  className="tier-card group relative block h-full rounded-2xl p-6 transition-all duration-300 border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
                   aria-label={`Select ${t.name} plan`}
                 >
                   {t.recommended && (
