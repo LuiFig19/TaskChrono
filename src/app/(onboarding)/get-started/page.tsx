@@ -155,7 +155,7 @@ export default function GetStartedPage() {
                 <Link
                   href={`/register?plan=${t.key}`}
                   data-tier-card={t.key}
-                  className="tier-card group relative block h-full rounded-2xl p-6 transition-all duration-300 border border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
+                  className="tier-card group relative block h-full rounded-2xl p-6 transition-all duration-300 border border-gray-200 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
                   aria-label={`Select ${t.name} plan`}
                 >
                   {t.recommended && (
