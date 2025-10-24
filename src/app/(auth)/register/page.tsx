@@ -25,6 +25,12 @@ export default async function RegisterPage(
     headers: await headers(),
   })
 
+  // If a user is already signed in, don't allow them to sit on the signup screen.
+  // Send them to the intended destination (dashboard/onboarding) instead of showing a banner.
+  if (session?.user) {
+    return redirect(dst)
+  }
+
   return (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
       {/* Animated background */}
@@ -44,23 +50,7 @@ export default async function RegisterPage(
             {plan === 'CUSTOM' && 'Contact us for custom pricing'}
           </p>
           
-          {session?.user && (
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-sm text-amber-200">
-                You&apos;re currently signed in as <strong>{session.user.email}</strong>.
-              </p>
-              <form action={signOutAction} className="mt-2">
-                <input type="hidden" name="plan" value={plan} />
-                <input type="hidden" name="callbackUrl" value={dst} />
-                <button 
-                  type="submit"
-                  className="text-sm text-amber-300 hover:text-amber-100 underline font-medium"
-                >
-                  Sign out to create a new account
-                </button>
-              </form>
-            </div>
-          )}
+          {/* When logged out, show the form immediately (if logged in we redirected above). */}
           
           <RegisterForm callbackUrl={dst} />
           
