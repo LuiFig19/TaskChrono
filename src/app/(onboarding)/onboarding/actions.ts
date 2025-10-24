@@ -93,7 +93,7 @@ export async function createOrganizationAction(formData: FormData) {
 
   // Seats default: owner + invited emails (adjustable in Checkout)
   const seats = Math.max(1, invites.length + 1)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
   const sessionCheckout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
