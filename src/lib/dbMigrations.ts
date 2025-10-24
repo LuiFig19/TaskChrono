@@ -146,6 +146,24 @@ export async function ensureBetterAuthSchema(): Promise<void> {
       CREATE UNIQUE INDEX IF NOT EXISTS "Account_providerId_accountId_key_public"
       ON "public"."Account" ("providerId", "accountId");
     `)
+
+    // Ensure Session optional columns exist (taskchrono)
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "taskchrono"."Session"
+        ADD COLUMN IF NOT EXISTS "ipAddress" TEXT,
+        ADD COLUMN IF NOT EXISTS "userAgent" TEXT,
+        ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    `).catch(() => {})
+
+    // Ensure Session optional columns exist (public)
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "public"."Session"
+        ADD COLUMN IF NOT EXISTS "ipAddress" TEXT,
+        ADD COLUMN IF NOT EXISTS "userAgent" TEXT,
+        ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    `).catch(() => {})
   } catch {
     // Best-effort; keep app functioning even if permissions restrict DDL
   }
