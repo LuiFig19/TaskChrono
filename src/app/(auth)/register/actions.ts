@@ -25,7 +25,13 @@ export async function registerLocalAction(formData: FormData) {
       headers: await headers(),
     });
 
-    if (!signUpResult || !signUpResult.user) {
+    // If API returned a structured error
+    if ((signUpResult as any)?.error) {
+      const msg = (signUpResult as any).error?.message || (signUpResult as any).error;
+      throw new Error(String(msg || 'Failed to create user account'));
+    }
+
+    if (!signUpResult || !(signUpResult as any).user) {
       throw new Error("Failed to create user account");
     }
   } catch (error: any) {
