@@ -49,7 +49,11 @@ export async function registerLocalAction(
     return { error: error?.message || "Failed to register. Please try again." };
   }
 
-  redirect(callbackUrl);
+  // Do NOT auto-sign in after signup. Explicitly sign out and send user to login.
+  try {
+    await auth.api.signOut({ headers: await headers() });
+  } catch {}
+  redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
 }
 
 export async function signOutAction(formData: FormData) {
