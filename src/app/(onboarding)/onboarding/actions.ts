@@ -7,7 +7,7 @@ import { stripe } from '@/lib/stripe'
 
 export type OnboardingState = { error?: string };
 
-export async function createOrganizationAction(formData: FormData) {
+export async function createOrganizationAction(_prev: OnboardingState | undefined, formData: FormData): Promise<OnboardingState | void> {
   const name = String(formData.get('name') || '').trim()
   const plan = String(formData.get('plan') || 'FREE') as 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
   const emailCsv = String(formData.get('emails') || '').trim()
@@ -19,7 +19,7 @@ export async function createOrganizationAction(formData: FormData) {
     redirect(`/register?callbackUrl=${encodeURIComponent(callbackPath)}`)
   }
   if (!name) {
-    throw new Error('Organization name is required')
+    return { error: 'Organization name is required' }
   }
 
   // Ensure user exists
@@ -69,7 +69,7 @@ export async function createOrganizationAction(formData: FormData) {
 
   // For paid tiers, create or reuse Stripe customer and redirect to Checkout with 14‑day trial
   if (!stripe || !org) {
-    throw new Error('Stripe is not configured for paid tiers. Please contact support.')
+    return { error: 'Stripe is not configured for paid tiers. Please contact support.' }
   }
 
   // Ensure Stripe customer exists for this organization
@@ -86,14 +86,28 @@ export async function createOrganizationAction(formData: FormData) {
   }
 
   // Resolve the price id based on selected tier
-  const priceId = plan === 'BUSINESS' ? (process.env.STRIPE_PRICE_BUSINESS || '') : (process.env.STRIPE_PRICE_ENTERPRISE || '')
+  let priceId = plan === 'BUSINESS' ? (process.env.STRIPE_PRICE_BUSINESS || '') : (process.env.STRIPE_PRICE_ENTERPRISE || '')
   if (!priceId) {
-    throw new Error('Stripe price ID is missing for the selected tier. Please contact support.')
+    // Support legacy env naming using product IDs; pick the first active monthly recurring price for that product
+    const productId = plan === 'BUSINESS' ? (process.env.STRIPE_PRODUCT_BUSINESS || process.env.STRIPE_PRODUCT_ID_BUSINESS || '') : (process.env.STRIPE_PRODUCT_ENTERPRISE || process.env.STRIPE_PRODUCT_ID_ENTERPRISE || '')
+    if (productId) {
+      try {
+        const prices = await stripe.prices.list({ active: true, product: productId, limit: 100 })
+        const monthly = prices.data.find((p: any) => p.recurring?.interval === 'month') || prices.data[0]
+        if (monthly?.id) {
+          priceId = monthly.id as string
+        }
+      } catch {}
+    }
+  }
+  if (!priceId) {
+    return { error: 'Stripe price ID is missing. Set STRIPE_PRICE_BUSINESS/STRIPE_PRICE_ENTERPRISE to a price_ ID (or STRIPE_PRODUCT_* to auto-resolve).' }
   }
 
   // Seats default: owner + invited emails (adjustable in Checkout)
   const seats = Math.max(1, invites.length + 1)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  try {
   const sessionCheckout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -109,6 +123,9 @@ export async function createOrganizationAction(formData: FormData) {
   })
 
   redirect(sessionCheckout.url || '/dashboard')
+  } catch {
+    return { error: 'Failed to start Stripe checkout. Please try again.' }
+  }
 }
 
 export async function finalizeOrganizationAction(formData: FormData) {
