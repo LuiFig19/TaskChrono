@@ -5,6 +5,8 @@ import { auth } from '@/lib/better-auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 
+export type OnboardingState = { error?: string };
+
 export async function createOrganizationAction(formData: FormData) {
   const name = String(formData.get('name') || '').trim()
   const plan = String(formData.get('plan') || 'FREE') as 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
@@ -67,8 +69,7 @@ export async function createOrganizationAction(formData: FormData) {
 
   // For paid tiers, create or reuse Stripe customer and redirect to Checkout with 14‑day trial
   if (!stripe || !org) {
-    // Fallback: go to dashboard if Stripe isn't configured
-    redirect('/dashboard')
+    throw new Error('Stripe is not configured for paid tiers. Please contact support.')
   }
 
   // Ensure Stripe customer exists for this organization
@@ -87,8 +88,7 @@ export async function createOrganizationAction(formData: FormData) {
   // Resolve the price id based on selected tier
   const priceId = plan === 'BUSINESS' ? (process.env.STRIPE_PRICE_BUSINESS || '') : (process.env.STRIPE_PRICE_ENTERPRISE || '')
   if (!priceId) {
-    // If prices not configured, go to dashboard
-    redirect('/dashboard')
+    throw new Error('Stripe price ID is missing for the selected tier. Please contact support.')
   }
 
   // Seats default: owner + invited emails (adjustable in Checkout)
