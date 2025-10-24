@@ -7,7 +7,16 @@ import { stripe } from '@/lib/stripe'
 
 export type OnboardingState = { error?: string };
 
-export async function createOrganizationAction(_prev: OnboardingState | undefined, formData: FormData): Promise<OnboardingState | void> {
+// Be tolerant to both signatures:
+//  - (prevState, formData) when called via useFormState
+//  - (formData) when called directly via <form action={...}>
+export async function createOrganizationAction(
+  a?: OnboardingState | FormData,
+  b?: FormData
+): Promise<OnboardingState | void> {
+  const formData = (a && (a as FormData).get)
+    ? (a as FormData)
+    : (b as FormData);
   const name = String(formData.get('name') || '').trim()
   const plan = String(formData.get('plan') || 'FREE') as 'FREE' | 'BUSINESS' | 'ENTERPRISE' | 'CUSTOM'
   const emailCsv = String(formData.get('emails') || '').trim()
