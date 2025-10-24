@@ -6,14 +6,19 @@ import { headers } from "next/headers";
 import { cookies } from "next/headers";
 import { ensureBetterAuthSchema } from "@/lib/dbMigrations";
 
-export async function registerLocalAction(formData: FormData) {
+export type RegisterState = { error?: string };
+
+export async function registerLocalAction(
+  _prevState: RegisterState | undefined,
+  formData: FormData
+): Promise<RegisterState> {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
   const name = String(formData.get("name") || "").trim();
   const callbackUrl = String(formData.get("callbackUrl") || "/dashboard");
 
   if (!email || !password) {
-    throw new Error("Email and password are required");
+    return { error: "Email and password are required" };
   }
 
   try {
@@ -29,21 +34,19 @@ export async function registerLocalAction(formData: FormData) {
       headers: await headers(),
     });
 
-    // If API returned a structured error
     if ((signUpResult as any)?.error) {
       const msg = (signUpResult as any).error?.message || (signUpResult as any).error;
-      throw new Error(String(msg || 'Failed to create user account'));
+      return { error: String(msg || 'Failed to create user account') };
     }
 
     if (!signUpResult || !(signUpResult as any).user) {
-      throw new Error("Failed to create user account");
+      return { error: "Failed to create user account" };
     }
   } catch (error: any) {
-    if (error?.message?.includes('email') && (error?.message?.includes('already exists') || error?.message?.includes('duplicate'))) {
-      throw new Error("This email is already registered. Please sign in instead or use a different email.");
+    if (error?.message?.toLowerCase?.().includes('already') && error?.message?.toLowerCase?.().includes('email')) {
+      return { error: "This email is already registered. Please sign in instead or use a different email." };
     }
-    
-    throw new Error(error?.message || "Failed to register. Please try again.");
+    return { error: error?.message || "Failed to register. Please try again." };
   }
 
   redirect(callbackUrl);
