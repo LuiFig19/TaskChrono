@@ -39,8 +39,8 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
   );
 }
 
-export function CredentialsForm({ callbackUrl }: { callbackUrl: string }) {
-  const [email, setEmail] = React.useState("");
+export function CredentialsForm({ callbackUrl, defaultEmail }: { callbackUrl: string; defaultEmail?: string }) {
+  const [email, setEmail] = React.useState(defaultEmail || "");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

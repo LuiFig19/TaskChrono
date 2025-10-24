@@ -7,10 +7,10 @@ import { SignIn, CredentialsForm } from "./signin";
 
 export default async function LoginPage(
   props:
-    | { searchParams?: { callbackUrl?: string } }
-    | { searchParams: Promise<{ callbackUrl?: string }> }
+    | { searchParams?: { callbackUrl?: string; signup?: string; email?: string } }
+    | { searchParams: Promise<{ callbackUrl?: string; signup?: string; email?: string }> }
 ) {
-  let params: { callbackUrl?: string } = {};
+  let params: { callbackUrl?: string; signup?: string; email?: string } = {};
   try {
     const maybe = (props as any).searchParams;
     params =
@@ -29,6 +29,8 @@ export default async function LoginPage(
 
   const hasGoogle =
     !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
+  const justSignedUp = String(params.signup || "") === "1";
+  const defaultEmail = typeof params.email === 'string' ? params.email : undefined;
 
   return (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
@@ -61,8 +63,14 @@ export default async function LoginPage(
             </div>
           ) : null}
 
+          {justSignedUp ? (
+            <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-sm">
+              Your account was created. Please sign in to continue onboarding.
+            </div>
+          ) : null}
+
           <div className={hasGoogle ? "" : "mt-6"}>
-            <CredentialsForm callbackUrl={dst} />
+            <CredentialsForm callbackUrl={dst} defaultEmail={defaultEmail} />
           </div>
 
           <div className="mt-6 text-center text-sm text-slate-400">

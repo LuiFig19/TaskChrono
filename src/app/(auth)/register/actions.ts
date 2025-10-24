@@ -75,7 +75,8 @@ export async function registerLocalAction(
   try {
     await auth.api.signOut({ headers: await headers() });
   } catch {}
-  redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  const qp = new URLSearchParams({ callbackUrl, signup: '1', email });
+  redirect(`/login?${qp.toString()}`);
 }
 
 export async function signOutAction(formData: FormData) {
