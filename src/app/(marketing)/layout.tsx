@@ -1,8 +1,17 @@
 import '@/app/globals.css'
 // Minimal layout to avoid client refs during build
 import Link from 'next/link'
+import { auth } from '@/lib/better-auth'
+import { headers } from 'next/headers'
 
-export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
+  // Ensure users never remain signed-in on marketing pages as per product requirement
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (session?.user) {
+      await auth.api.signOut({ headers: await headers() })
+    }
+  } catch {}
   const quickshiftUrl = '/quickshift'
   const signInHref = '/login'
   return (
