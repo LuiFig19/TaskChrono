@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/better-auth'
 import { headers } from 'next/headers'
 import RegisterForm from './RegisterForm'
+import { redirect } from 'next/navigation'
 
 export default async function RegisterPage(
   props:
