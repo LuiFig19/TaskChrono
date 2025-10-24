@@ -41,9 +41,12 @@ export async function registerLocalAction(
           where: { id: existing.id },
           data: { passwordHash: hash, name: name || existing.name || null },
         });
-        // Do not auto sign-in; send user to login
-        try { await auth.api.signOut({ headers: await headers() }); } catch {}
-        redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        // Auto sign-in and go to onboarding/destination
+        await auth.api.signInEmail({
+          body: { email, password },
+          headers: await headers(),
+        });
+        redirect(callbackUrl);
       }
     } catch {}
 
@@ -71,12 +74,12 @@ export async function registerLocalAction(
     return { error: error?.message || "Failed to register. Please try again." };
   }
 
-  // Do NOT auto-sign in after signup. Explicitly sign out and send user to login.
-  try {
-    await auth.api.signOut({ headers: await headers() });
-  } catch {}
-  const qp = new URLSearchParams({ callbackUrl, signup: '1', email });
-  redirect(`/login?${qp.toString()}`);
+  // Auto sign-in after successful signup and continue onboarding
+  await auth.api.signInEmail({
+    body: { email, password },
+    headers: await headers(),
+  });
+  redirect(callbackUrl);
 }
 
 export async function signOutAction(formData: FormData) {
