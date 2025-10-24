@@ -24,8 +24,10 @@ export default async function RegisterPage(
   const session = await auth.api.getSession({
     headers: await headers(),
   })
-
-  // If a user is already signed in, show a clear sign-out affordance to create a new account.
+  // Never allow a signed-in state on the signup page: auto sign-out silently
+  if (session?.user) {
+    try { await auth.api.signOut({ headers: await headers() }) } catch {}
+  }
 
   return (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
@@ -46,23 +48,7 @@ export default async function RegisterPage(
             {plan === 'CUSTOM' && 'Contact us for custom pricing'}
           </p>
           
-          {session?.user && (
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-sm text-amber-200">
-                You&apos;re currently signed in as <strong>{session.user.email}</strong>.
-              </p>
-              <form action={signOutAction} className="mt-2">
-                <input type="hidden" name="plan" value={plan} />
-                <input type="hidden" name="callbackUrl" value={dst} />
-                <button 
-                  type="submit"
-                  className="text-sm text-amber-300 hover:text-amber-100 underline font-medium"
-                >
-                  Sign out to create a new account
-                </button>
-              </form>
-            </div>
-          )}
+          {/* Auto signed-out above; no banner shown on signup */}
           
           <RegisterForm callbackUrl={dst} />
           
