@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/better-auth";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
+import { ensureBetterAuthSchema } from "@/lib/dbMigrations";
 
 export async function registerLocalAction(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
@@ -16,6 +17,9 @@ export async function registerLocalAction(formData: FormData) {
   }
 
   try {
+    // Ensure production DB is aligned before attempting to create the account
+    await ensureBetterAuthSchema();
+
     const signUpResult = await auth.api.signUpEmail({
       body: {
         email,
