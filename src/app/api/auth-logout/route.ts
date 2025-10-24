@@ -8,8 +8,8 @@ export async function GET() {
       headers: await headers(),
     });
     
-    return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:5000'));
+    return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
   } catch {
-    return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:5000'));
+    return NextResponse.redirect(new URL('/', process.env.NEXTAUTH_URL || 'http://localhost:3000'));
   }
 }

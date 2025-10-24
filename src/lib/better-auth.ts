@@ -24,7 +24,7 @@ function getBaseURL(): string {
   }
   
   // Development fallback
-  return "http://localhost:5000";
+  return "http://localhost:3000";
 }
 
 /**
@@ -50,6 +50,8 @@ function getTrustedOrigins(): string[] {
   }
   
   // Always allow localhost for development
+  origins.push('http://localhost:3000');
+  origins.push('http://127.0.0.1:3000');
   origins.push('http://localhost:5000');
   origins.push('http://127.0.0.1:5000');
   
