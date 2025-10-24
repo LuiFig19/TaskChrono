@@ -69,6 +69,7 @@ export async function ensureBetterAuthSchema(): Promise<void> {
     // Add commonly missing columns (idempotent)
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "taskchrono"."Account"
+        ADD COLUMN IF NOT EXISTS "type" TEXT,
         ADD COLUMN IF NOT EXISTS "accessToken" TEXT,
         ADD COLUMN IF NOT EXISTS "refreshToken" TEXT,
         ADD COLUMN IF NOT EXISTS "idToken" TEXT,
@@ -81,6 +82,7 @@ export async function ensureBetterAuthSchema(): Promise<void> {
 
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "public"."Account"
+        ADD COLUMN IF NOT EXISTS "type" TEXT,
         ADD COLUMN IF NOT EXISTS "accessToken" TEXT,
         ADD COLUMN IF NOT EXISTS "refreshToken" TEXT,
         ADD COLUMN IF NOT EXISTS "idToken" TEXT,
@@ -89,6 +91,29 @@ export async function ensureBetterAuthSchema(): Promise<void> {
         ADD COLUMN IF NOT EXISTS "password" TEXT,
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    `).catch(() => {})
+
+    // Ensure type is nullable
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema='taskchrono' AND table_name='Account' AND column_name='type'
+        ) THEN
+          ALTER TABLE "taskchrono"."Account" ALTER COLUMN "type" DROP NOT NULL;
+        END IF;
+      END $$;
+    `).catch(() => {})
+
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema='public' AND table_name='Account' AND column_name='type'
+        ) THEN
+          ALTER TABLE "public"."Account" ALTER COLUMN "type" DROP NOT NULL;
+        END IF;
+      END $$;
     `).catch(() => {})
 
     // Recreate unique index if legacy index name exists
