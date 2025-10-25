@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { auth } from '@/lib/better-auth'
 import Link from 'next/link'
 import { createOrganizationAction } from './actions'
+export const dynamic = 'force-dynamic'
 
 export default async function OnboardingPage(
   props: { searchParams?: { plan?: string } } | { searchParams: Promise<{ plan?: string }> }
