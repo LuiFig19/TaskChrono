@@ -1,7 +1,7 @@
 import { signOutAction } from './actions'
 import Link from 'next/link'
 import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import RegisterForm from './RegisterForm'
 
 export default async function RegisterPage(
@@ -26,7 +26,7 @@ export default async function RegisterPage(
   })
   // Never allow a signed-in state on the signup page: auto sign-out silently
   if (session?.user) {
-    try { await auth.api.signOut({ headers: await headers() }) } catch {}
+    try { await auth.api.signOut({ headers: await headers(), cookies: await cookies() }) } catch {}
   }
 
   return (

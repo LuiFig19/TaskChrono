@@ -45,6 +45,7 @@ export async function registerLocalAction(
         await auth.api.signInEmail({
           body: { email, password },
           headers: await headers(),
+          cookies: await cookies(),
         });
         redirect(callbackUrl);
       }
@@ -78,6 +79,7 @@ export async function registerLocalAction(
   await auth.api.signInEmail({
     body: { email, password },
     headers: await headers(),
+    cookies: await cookies(),
   });
   redirect(callbackUrl);
 }
