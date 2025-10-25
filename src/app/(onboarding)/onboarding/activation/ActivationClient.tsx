@@ -1,25 +1,63 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export default function ActivationClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<string>('Activating your workspace...');
+  const [status, setStatus] = useState<string>('Verifying your session...');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    const plan = searchParams.get('plan');
-    
-    // Wait a moment for any DB propagation, then redirect
-    const timer = setTimeout(() => {
-      setStatus('Redirecting to dashboard...');
-      // Force a full page navigation to ensure session is picked up
-      window.location.href = '/dashboard';
-    }, 2000);
+    async function verify() {
+      try {
+        // First verify we have a session
+        const res = await fetch('/api/onboarding/verify-session', {
+          credentials: 'include',
+        });
+        
+        if (!res.ok) {
+          // No session, redirect to login with callback
+          setStatus('Session expired. Redirecting to login...');
+          setTimeout(() => {
+            window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
+          }, 1500);
+          return;
+        }
 
-    return () => clearTimeout(timer);
+        // Session exists, wait for DB propagation then go to dashboard
+        setStatus('Activating your workspace...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setStatus('Redirecting to dashboard...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        window.location.href = '/dashboard';
+      } catch (err: any) {
+        setError('Failed to verify session. Please try logging in again.');
+        setTimeout(() => {
+          window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
+        }, 3000);
+      }
+    }
+    
+    verify();
   }, [searchParams]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-rose-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-white mb-2">Session Error</h1>
+          <p className="text-slate-300">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 flex items-center justify-center">

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Allow activation page without auth check (it will verify session client-side)
+  if (request.nextUrl.pathname.startsWith("/onboarding/activation")) {
+    return NextResponse.next();
+  }
+
   if (!request.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.next();
   }
@@ -19,5 +24,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/onboarding/:path*"],
 };
