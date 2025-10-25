@@ -75,14 +75,19 @@ export async function POST(req: Request) {
 
     const seats = 1
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    
+    // Get user email for Stripe checkout
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } }).catch(() => null)
+    
     const checkout = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      customer_email: user?.email || undefined,
       line_items: [{ price: priceId, quantity: seats }],
       allow_promotion_codes: true,
-      success_url: `${appUrl}/onboarding/activation?plan=${plan}`,
+      success_url: `${appUrl}/onboarding/activation?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/onboarding?plan=${plan}`,
-      subscription_data: { trial_period_days: 14, metadata: { organizationId: org.id, tier: plan, seats: String(seats) } },
-      metadata: { organizationId: org.id, tier: plan, seats: String(seats) },
+      subscription_data: { trial_period_days: 14, metadata: { organizationId: org.id, tier: plan, seats: String(seats), userId } },
+      metadata: { organizationId: org.id, tier: plan, seats: String(seats), userId },
     })
     return NextResponse.json({ redirect: checkout.url || '/dashboard' })
   } catch (e: any) {
