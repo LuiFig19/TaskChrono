@@ -65,19 +65,16 @@ export default async function OnboardingPage(
           <p className="text-slate-300 mt-1">Selected plan: {planLabel}</p>
 
           <form className="mt-6 grid gap-5" action={createOrganizationAction}>
-          <label className="grid gap-1">
-            <span className="text-sm text-slate-300">Organization name</span>
-            <input className="border border-slate-700 bg-slate-900 text-slate-100 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" name="name" placeholder="Acme Inc" required />
-          </label>
-
-          <div className="grid gap-1">
-            <span className="text-sm text-slate-300">Invite teammates (optional)</span>
-            <input className="border border-slate-700 bg-slate-900 text-slate-100 rounded-md px-3 py-2" name="emails" placeholder="name1@company.com, name2@company.com" />
-            <span className="text-xs text-slate-400">We’ll send email invites after setup. You can manage roles in Settings.</span>
-          </div>
-
-          <input type="hidden" name="plan" value={plan} />
-
+            <label className="grid gap-1">
+              <span className="text-sm text-slate-300">Organization name</span>
+              <input className="border border-slate-700 bg-slate-900 text-slate-100 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" name="name" placeholder="Acme Inc" required />
+            </label>
+            <div className="grid gap-1">
+              <span className="text-sm text-slate-300">Invite teammates (optional)</span>
+              <input className="border border-slate-700 bg-slate-900 text-slate-100 rounded-md px-3 py-2" name="emails" placeholder="name1@company.com, name2@company.com" />
+              <span className="text-xs text-slate-400">We’ll send email invites after setup. You can manage roles in Settings.</span>
+            </div>
+            <input type="hidden" name="plan" value={plan} />
             <div className="flex items-center gap-3">
               <button type="submit" className="px-5 py-2.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">Continue</button>
               <Link href="/get-started" className="text-slate-300 hover:text-white transition-colors">Choose a different plan</Link>
