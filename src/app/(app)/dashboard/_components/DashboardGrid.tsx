@@ -451,9 +451,9 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
           <a
             href="/dashboard/calendar"
             data-calendar-cta
-            className="inline-block mt-3 px-3 py-1.5 rounded border transition-all
+            className="inline-block mt-3 px-4 py-2 rounded-full border font-medium transition-all
               dark:border-slate-700 dark:hover:bg-slate-800 dark:text-white
-              light:bg-blue-600 light:hover:bg-blue-700 light:text-white light:border-blue-500 light:shadow-sm"
+              text-white bg-blue-600 border-blue-500 shadow-sm"
           >
             Open Calendar
           </a>

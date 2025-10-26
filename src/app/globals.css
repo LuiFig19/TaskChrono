@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Tier selection page (/get-started) - light mode */
 html:not(.dark) [data-tier-selection-page] {
   background: linear-gradient(to bottom, #F9FAFB, #FFFFFF) !important;
@@ -71,6 +73,51 @@ html.dark .tier-card:hover {
   border-color: rgb(51, 65, 85) !important;
   box-shadow: 0 0 0 1px rgba(99,102,241,0.4), 0 10px 40px -10px rgba(0,0,0,0.7) !important;
   transform: translateY(-2px);
+}
+
+/* Tier selection page (/get-started) - dark mode colored cards */
+html.dark a.tier-card[data-tier-card="FREE"],
+html.dark .tier-card[data-tier-card="FREE"] {
+  background: linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(6,95,70,0.18) 100%) !important; /* emerald */
+  border-color: rgba(16,185,129,0.35) !important;
+}
+html.dark a.tier-card[data-tier-card="FREE"]:hover,
+html.dark .tier-card[data-tier-card="FREE"]:hover {
+  background: linear-gradient(135deg, rgba(16,185,129,0.28) 0%, rgba(6,95,70,0.28) 100%) !important;
+  border-color: rgba(52,211,153,0.55) !important;
+}
+
+html.dark a.tier-card[data-tier-card="BUSINESS"],
+html.dark .tier-card[data-tier-card="BUSINESS"] {
+  background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(30,64,175,0.18) 100%) !important; /* blue */
+  border-color: rgba(59,130,246,0.35) !important;
+}
+html.dark a.tier-card[data-tier-card="BUSINESS"]:hover,
+html.dark .tier-card[data-tier-card="BUSINESS"]:hover {
+  background: linear-gradient(135deg, rgba(59,130,246,0.28) 0%, rgba(30,64,175,0.28) 100%) !important;
+  border-color: rgba(147,197,253,0.55) !important;
+}
+
+html.dark a.tier-card[data-tier-card="ENTERPRISE"],
+html.dark .tier-card[data-tier-card="ENTERPRISE"] {
+  background: linear-gradient(135deg, rgba(249,115,22,0.18) 0%, rgba(180,83,9,0.18) 100%) !important; /* orange */
+  border-color: rgba(249,115,22,0.35) !important;
+}
+html.dark a.tier-card[data-tier-card="ENTERPRISE"]:hover,
+html.dark .tier-card[data-tier-card="ENTERPRISE"]:hover {
+  background: linear-gradient(135deg, rgba(249,115,22,0.28) 0%, rgba(180,83,9,0.28) 100%) !important;
+  border-color: rgba(251,146,60,0.55) !important;
+}
+
+html.dark a.tier-card[data-tier-card="CUSTOM"],
+html.dark .tier-card[data-tier-card="CUSTOM"] {
+  background: linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(91,33,182,0.18) 100%) !important; /* purple */
+  border-color: rgba(139,92,246,0.35) !important;
+}
+html.dark a.tier-card[data-tier-card="CUSTOM"]:hover,
+html.dark .tier-card[data-tier-card="CUSTOM"]:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,0.28) 0%, rgba(91,33,182,0.28) 100%) !important;
+  border-color: rgba(167,139,250,0.55) !important;
 }
 
 /* Pricing cards - light mode visual upgrade */
@@ -197,10 +244,11 @@ html:not(.dark) a[data-calendar-cta] {
   background-image: none !important;
 }
 html:not(.dark) a[data-calendar-cta]:hover { 
-  background-color: #1d4ed8 !important; 
-  background: #1d4ed8 !important;
+  background-color: #eef2ff !important; /* very light indigo/near white */
+  background: #eef2ff !important;
+  color: #1e3a8a !important; /* indigo-800 text on hover for contrast */
+  border-color: #93c5fd !important; /* blue-300 border */
 }
-@import "tailwindcss";
 
 :root {
   --background: #0a0a0a;
@@ -1096,10 +1144,17 @@ html:not(.dark) button[data-progress-add] {
   border-style: solid !important;
 }
 
-html:not(.dark) a[data-calendar-cta]:hover,
 html:not(.dark) a[data-inventory-cta]:hover,
 html:not(.dark) button[data-progress-add]:hover {
   background-color: #1d4ed8 !important; /* blue-700 */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 10px 18px rgba(37,99,235,0.20) !important;
+  transform: translateY(-1px);
+}
+/* Open Calendar hover: lighten to near-white for tactile feedback */
+html:not(.dark) a[data-calendar-cta]:hover {
+  background-color: #eef2ff !important; /* light indigo/near white */
+  color: #1e3a8a !important; /* indigo-800 text */
+  border-color: #93c5fd !important; /* blue-300 border */
   box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 10px 18px rgba(37,99,235,0.20) !important;
   transform: translateY(-1px);
 }
@@ -1108,7 +1163,7 @@ html:not(.dark) a[data-calendar-cta]:active,
 html:not(.dark) a[data-inventory-cta]:active,
 html:not(.dark) button[data-progress-add]:active { transform: translateY(0); }
 
-/* Maximum specificity override for calendar CTA */
+/* Ensure calendar CTA base color is blue (hover rule above lightens) */
 html:not(.dark) a[data-calendar-cta] {
   background: #2563eb !important;
   background-color: #2563eb !important;
@@ -1123,7 +1178,8 @@ html:not(.dark) a[data-calendar-cta] {
    ======================================== */
 html.dark a[data-inventory-cta],
 html.dark button[data-progress-add],
-html.dark a[data-timers-cta] {
+html.dark a[data-timers-cta],
+html.dark a[data-calendar-cta] {
   background-image: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) !important; /* violet-500 -> indigo-500 */
   background-color: #8b5cf6 !important; /* fallback */
   color: #ffffff !important;
@@ -1132,7 +1188,8 @@ html.dark a[data-timers-cta] {
 }
 html.dark a[data-inventory-cta]:hover,
 html.dark button[data-progress-add]:hover,
-html.dark a[data-timers-cta]:hover {
+html.dark a[data-timers-cta]:hover,
+html.dark a[data-calendar-cta]:hover {
   filter: brightness(1.06) !important;
 }
 

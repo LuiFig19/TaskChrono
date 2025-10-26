@@ -34,7 +34,7 @@ export default function LandingClient() {
                 View Demo
               </Link>
             </MotionDiv>
-            <MotionDiv className="text-sm text-gray-500">Join <strong>20,000+ businesses</strong> boosting productivity with TaskChrono.</MotionDiv>
+            <MotionDiv className="text-sm text-gray-500">Built for teams who value productivity, precision, and accountability.</MotionDiv>
           </div>
         </div>
       </section>
