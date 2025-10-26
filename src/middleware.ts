@@ -7,17 +7,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Don't check auth in middleware for dashboard - let the page handle it
+  // This prevents redirect loops when session cookies are being set
+  if (request.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.next();
-  }
-
-  // Check for Better-auth session cookie
-  const sessionToken = request.cookies.get("taskchrono.session_token");
-
-  if (!sessionToken) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("callbackUrl", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
