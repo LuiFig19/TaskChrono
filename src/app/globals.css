@@ -1185,6 +1185,8 @@ html.dark a[data-calendar-cta] {
   color: #ffffff !important;
   border-color: #7c3aed !important; /* violet-600 border */
   box-shadow: none !important; /* remove glow */
+  border-radius: 9999px !important; /* pill shape to match progress button */
+  padding: 0.25rem 0.75rem !important; /* py-1 px-3 */
 }
 html.dark a[data-inventory-cta]:hover,
 html.dark button[data-progress-add]:hover,
