@@ -12,57 +12,61 @@ export default function ActivationClient() {
       try {
         const token = searchParams.get('token');
         
-        if (token) {
-          // Try to restore session using the activation token
-          setStatus('Restoring your session...');
-          const restoreRes = await fetch('/api/onboarding/restore-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
-            credentials: 'include',
-          });
-          
-          const restoreData = await restoreRes.json().catch(() => ({} as any));
-          
-          if (restoreData.requiresLogin) {
-            // Session was lost, need to log in again
-            setStatus('Please log in to continue...');
-            setTimeout(() => {
-              const loginUrl = `/login?callbackUrl=${encodeURIComponent('/dashboard')}&email=${encodeURIComponent(restoreData.email || '')}`;
-              window.location.href = loginUrl;
-            }, 1500);
-            return;
-          }
-        }
-        
-        // Check if we have a valid session now
+        // First, check if we have a valid session
         setStatus('Verifying your session...');
         const sessionRes = await fetch('/api/onboarding/verify-session', {
           credentials: 'include',
         });
         
-        if (!sessionRes.ok) {
-          // No session at all, redirect to login
-          setStatus('Session expired. Redirecting to login...');
+        const sessionData = await sessionRes.json().catch(() => ({} as any));
+        
+        if (!sessionRes.ok || !sessionData.authenticated) {
+          // No session - need to log in
+          if (token) {
+            // Decode token to get email
+            try {
+              const decoded = JSON.parse(atob(token.replace(/-/g, '+').replace(/_/g, '/')));
+              // Try to get user email from complete-activation endpoint
+              const activationRes = await fetch('/api/onboarding/complete-activation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token }),
+                credentials: 'include',
+              });
+              const activationData = await activationRes.json().catch(() => ({} as any));
+              
+              if (activationData.email) {
+                setStatus('Please log in to access your dashboard...');
+                setTimeout(() => {
+                  window.location.href = `/login?callbackUrl=${encodeURIComponent('/dashboard')}&email=${encodeURIComponent(activationData.email)}`;
+                }, 1000);
+                return;
+              }
+            } catch {}
+          }
+          
+          setStatus('Please log in to continue...');
           setTimeout(() => {
-            window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
-          }, 1500);
+            window.location.href = `/login?callbackUrl=${encodeURIComponent('/dashboard')}`;
+          }, 1000);
           return;
         }
 
-        // Session exists, wait for DB propagation then go to dashboard
+        // Session exists! Wait for DB propagation then go to dashboard
         setStatus('Activating your workspace...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2500));
         
         setStatus('Redirecting to your dashboard...');
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        window.location.href = '/dashboard';
+        // Use window.location.replace to avoid adding to history
+        window.location.replace('/dashboard');
       } catch (err: any) {
-        setError('Failed to complete activation. Please try logging in.');
+        console.error('Activation error:', err);
+        setError('Failed to complete activation. Redirecting to login...');
         setTimeout(() => {
           window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
-        }, 3000);
+        }, 2000);
       }
     }
     
