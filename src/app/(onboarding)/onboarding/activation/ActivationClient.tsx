@@ -4,19 +4,45 @@ import { useSearchParams } from 'next/navigation';
 
 export default function ActivationClient() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<string>('Verifying your session...');
+  const [status, setStatus] = useState<string>('Completing your subscription...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function verify() {
+    async function activate() {
       try {
-        // First verify we have a session
-        const res = await fetch('/api/onboarding/verify-session', {
+        const token = searchParams.get('token');
+        
+        if (token) {
+          // Try to restore session using the activation token
+          setStatus('Restoring your session...');
+          const restoreRes = await fetch('/api/onboarding/restore-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+            credentials: 'include',
+          });
+          
+          const restoreData = await restoreRes.json().catch(() => ({} as any));
+          
+          if (restoreData.requiresLogin) {
+            // Session was lost, need to log in again
+            setStatus('Please log in to continue...');
+            setTimeout(() => {
+              const loginUrl = `/login?callbackUrl=${encodeURIComponent('/dashboard')}&email=${encodeURIComponent(restoreData.email || '')}`;
+              window.location.href = loginUrl;
+            }, 1500);
+            return;
+          }
+        }
+        
+        // Check if we have a valid session now
+        setStatus('Verifying your session...');
+        const sessionRes = await fetch('/api/onboarding/verify-session', {
           credentials: 'include',
         });
         
-        if (!res.ok) {
-          // No session, redirect to login with callback
+        if (!sessionRes.ok) {
+          // No session at all, redirect to login
           setStatus('Session expired. Redirecting to login...');
           setTimeout(() => {
             window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
@@ -28,19 +54,19 @@ export default function ActivationClient() {
         setStatus('Activating your workspace...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        setStatus('Redirecting to dashboard...');
+        setStatus('Redirecting to your dashboard...');
         await new Promise(resolve => setTimeout(resolve, 500));
         
         window.location.href = '/dashboard';
       } catch (err: any) {
-        setError('Failed to verify session. Please try logging in again.');
+        setError('Failed to complete activation. Please try logging in.');
         setTimeout(() => {
           window.location.href = '/login?callbackUrl=' + encodeURIComponent('/dashboard');
         }, 3000);
       }
     }
     
-    verify();
+    activate();
   }, [searchParams]);
 
   if (error) {

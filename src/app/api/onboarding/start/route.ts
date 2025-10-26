@@ -79,12 +79,20 @@ export async function POST(req: Request) {
     // Get user email for Stripe checkout
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } }).catch(() => null)
     
+    // Create a temporary activation token that survives the Stripe redirect
+    const activationToken = Buffer.from(JSON.stringify({ 
+      userId, 
+      orgId: org.id, 
+      exp: Date.now() + 3600000 // 1 hour
+    })).toString('base64url')
+    
     const checkout = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer_email: user?.email || undefined,
+      client_reference_id: userId,
       line_items: [{ price: priceId, quantity: seats }],
       allow_promotion_codes: true,
-      success_url: `${appUrl}/onboarding/activation?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl}/onboarding/activation?token=${activationToken}&plan=${plan}`,
       cancel_url: `${appUrl}/onboarding?plan=${plan}`,
       subscription_data: { trial_period_days: 14, metadata: { organizationId: org.id, tier: plan, seats: String(seats), userId } },
       metadata: { organizationId: org.id, tier: plan, seats: String(seats), userId },
