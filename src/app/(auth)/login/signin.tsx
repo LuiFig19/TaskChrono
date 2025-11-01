@@ -15,7 +15,7 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
       : callbackUrl;
     // Prefer the SDK; if it doesn't return a URL, fallback to manual call
     try {
-      const result = await authClient.signIn.social({
+      const result = await (kind === 'sign-up' ? authClient.signUp.social : authClient.signIn.social)({
         provider: 'google',
         callbackURL: cb,
         requestSignUp: kind === 'sign-up',
@@ -30,23 +30,26 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
       }
     } catch {}
 
-    // Fallback: POST directly to the appropriate API, then navigate to the provider URL
+    // Fallback (robust): submit a temporary form POST so the browser follows redirects
     try {
       const endpoint = kind === 'sign-up' ? '/api/auth/sign-up/social' : '/api/auth/sign-in/social';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ provider: 'google', callbackURL: cb, requestSignUp: kind === 'sign-up' }),
-      });
-      const data = (await res.json().catch(() => null)) as any;
-      if (data?.url) {
-        const u = new URL(data.url as string);
-        u.searchParams.set('prompt', 'select_account');
-        u.searchParams.set('include_granted_scopes', 'true');
-        window.location.href = u.toString();
-        return;
-      }
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = endpoint;
+      form.style.display = 'none';
+      const add = (name: string, value: string) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      };
+      add('provider', 'google');
+      add('callbackURL', cb || '');
+      add('requestSignUp', String(kind === 'sign-up'));
+      document.body.appendChild(form);
+      form.submit();
+      return;
     } catch {}
 
     // Last resort
