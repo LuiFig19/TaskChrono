@@ -115,7 +115,22 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
   };
 
   return (
-    <GoogleButton onClick={handleGoogleSignUp} loading={loading} labelLoading="Creating account..." labelDefault="Sign up with Google" />
+    <GoogleButton
+      onClick={handleGoogleSignUp}
+      loading={loading}
+      labelLoading="Creating account..."
+      labelDefault="Sign up with Google"
+      href={typeof window !== 'undefined'
+        ? (() => {
+            const abs = callbackUrl && !/^https?:/i.test(callbackUrl) ? `${window.location.origin}${callbackUrl}` : callbackUrl;
+            const u = new URL('/api/auth/sign-up/google', window.location.origin);
+            if (abs) u.searchParams.set('callbackURL', abs);
+            u.searchParams.set('prompt', 'select_account');
+            u.searchParams.set('include_granted_scopes', 'true');
+            return u.toString();
+          })()
+        : undefined}
+    />
   );
 }
 
@@ -124,10 +139,7 @@ function GoogleButton({ onClick, loading, labelLoading, labelDefault, href }: { 
     <a
       role="button"
       href={href}
-      onClick={(e) => {
-        if (!href) return;
-        // Let normal navigation happen; prevent double if JS handler also runs
-      }}
+      onClick={() => { try { onClick?.(); } catch {} }}
       className="w-full px-5 py-3 rounded-md border text-sm font-semibold border-slate-300/60 bg-white text-slate-900 hover:bg-white/90 disabled:opacity-60 shadow-sm flex items-center justify-center gap-3 transition-colors dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
