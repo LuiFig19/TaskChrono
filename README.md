@@ -85,10 +85,27 @@ Environment
 Required for production features:
 
 ```
+SENTRY_DSN=
+SENTRY_ENV=production
+SENTRY_TRACES_SAMPLE_RATE=0.1
+SENTRY_PROFILES_SAMPLE_RATE=0
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+POSTHOG_API_KEY=
 UPSTASH_REDIS_REST_URL=...
 UPSTASH_REDIS_REST_TOKEN=...
 DATABASE_URL=postgresql://... (pooled Neon URL)
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
 ```
+
+Observability & Monitoring
+
+- Sentry: configured via `sentry.client.config.ts` and `sentry.server.config.ts`. Set `SENTRY_DSN` to enable. Captures API exceptions and slow routes (via route wrapper logging).
+- Analytics: PostHog (client) initialized in `ClientProviders`; respects opt-out (`localStorage: tc-analytics-optout=1`). Optional Vercel Analytics is mounted for aggregate anonymous trends.
+- Logging: Pino JSON logs to stdout; API wrapper logs method/route/status and duration (warns when slow). Suitable for Vercel log drains.
+- Health: `/api/health` checks DB and Redis (Upstash) connectivity.
+- Metrics: `/api/metrics` exposes Prometheus-style counters and basic durations.
 
 
 Contributing

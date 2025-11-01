@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
 import SortableItem, { useDndHandle } from '../dnd/SortableItem';
+import { track } from '@/lib/analytics';
 import { useWidgetDnd } from '../dnd/useWidgetDnd';
 import Chart from './Chart';
 import ProjectProgressWidget from './ProjectProgressWidget';
@@ -353,6 +354,10 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   const DEFAULT_LAYOUT = useMemo(() => order.map((id) => curated[id]).filter(Boolean), [order]);
 
   const { layout, setLayout, saveLayout, reset, loading } = useWidgetLayout(DEFAULT_LAYOUT, 'main');
+  useEffect(() => {
+    try { track('dashboard_viewed', { widgets: order.length }); } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // DnD Kit integration: define a stable swap callback and init DnD hooks
   const swapSlots = React.useCallback(

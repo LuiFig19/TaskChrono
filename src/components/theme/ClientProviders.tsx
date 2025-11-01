@@ -2,6 +2,9 @@
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 import { SWRConfig } from 'swr';
+import { useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { initAnalytics } from '@/lib/analytics';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -15,8 +18,17 @@ export default function ClientProviders({ children }: { children: React.ReactNod
           keepPreviousData: true as any,
         }}
       >
+        <InitAnalytics />
         {children}
+        <Analytics />
       </SWRConfig>
     </ThemeProvider>
   );
+}
+
+function InitAnalytics() {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+  return null;
 }
