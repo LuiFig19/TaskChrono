@@ -10,11 +10,14 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
 
   async function redirectToGoogle(kind: 'sign-in' | 'sign-up') {
+    const cb = typeof window !== 'undefined' && callbackUrl && !/^https?:/i.test(callbackUrl)
+      ? `${window.location.origin}${callbackUrl}`
+      : callbackUrl;
     // Prefer the SDK; if it doesn't return a URL, fallback to manual call
     try {
       const result = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: callbackUrl,
+        callbackURL: cb,
         requestSignUp: kind === 'sign-up',
       } as any);
       const url = (result as any)?.url as string | undefined;
@@ -27,12 +30,14 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
       }
     } catch {}
 
-    // Fallback: POST directly to the API, then navigate to the provider URL
+    // Fallback: POST directly to the appropriate API, then navigate to the provider URL
     try {
-      const res = await fetch('/api/auth/sign-in/social', {
+      const endpoint = kind === 'sign-up' ? '/api/auth/sign-up/social' : '/api/auth/sign-in/social';
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: 'google', callbackURL: callbackUrl, requestSignUp: kind === 'sign-up' }),
+        credentials: 'include',
+        body: JSON.stringify({ provider: 'google', callbackURL: cb, requestSignUp: kind === 'sign-up' }),
       });
       const data = (await res.json().catch(() => null)) as any;
       if (data?.url) {
@@ -45,7 +50,8 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
     } catch {}
 
     // Last resort
-    window.location.href = '/api/auth/callback/google';
+    const last = kind === 'sign-up' ? '/api/auth/sign-up/google' : '/api/auth/sign-in/google';
+    window.location.href = `${last}?prompt=select_account&include_granted_scopes=true`;
   }
 
   const handleGoogleSignIn = async () => {
@@ -53,7 +59,10 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
     setLoading(true);
     try {
       await redirectToGoogle('sign-in');
-    } catch {}
+      setTimeout(() => setLoading(false), 600);
+    } catch {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,8 +79,10 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
     setLoading(true);
     try {
       await redirectToGoogle('sign-up');
-    } finally {
-      // No-op
+      // If we are still here, the redirect did not occur; reset loading
+      setTimeout(() => setLoading(false), 600);
+    } catch {
+      setLoading(false);
     }
   };
 

@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { ApiErrors } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
-import * as Sentry from '@sentry/nextjs';
 import { recordDuration, recordError, recordRequest } from '@/lib/metrics';
+import * as Sentry from '@sentry/nextjs';
 
 export type RouteHandler = (...args: any[]) => Promise<NextResponse | Response | void | null>;
 

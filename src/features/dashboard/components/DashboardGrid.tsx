@@ -6,8 +6,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
-import SortableItem, { useDndHandle } from '../dnd/SortableItem';
 import { track } from '@/lib/analytics';
+import SortableItem, { useDndHandle } from '../dnd/SortableItem';
 import { useWidgetDnd } from '../dnd/useWidgetDnd';
 import Chart from './Chart';
 import ProjectProgressWidget from './ProjectProgressWidget';

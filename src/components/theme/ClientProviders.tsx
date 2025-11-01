@@ -1,10 +1,9 @@
 'use client';
-import { ThemeProvider } from 'next-themes';
-import React from 'react';
-import { SWRConfig } from 'swr';
-import { useEffect } from 'react';
-import { Analytics } from '@vercel/analytics/react';
 import { initAnalytics } from '@/lib/analytics';
+import { Analytics } from '@vercel/analytics/react';
+import { ThemeProvider } from 'next-themes';
+import React, { useEffect } from 'react';
+import { SWRConfig } from 'swr';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
