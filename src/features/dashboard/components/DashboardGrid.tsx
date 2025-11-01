@@ -6,6 +6,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
+import SortableItem, { useDndHandle } from '../dnd/SortableItem';
+import { useWidgetDnd } from '../dnd/useWidgetDnd';
 import Chart from './Chart';
 import ProjectProgressWidget from './ProjectProgressWidget';
 import ResponsiveGridLayout from './RGLResponsiveClient';
@@ -350,7 +352,28 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
   const [order, setOrder] = useState<string[]>(initialOrder);
   const DEFAULT_LAYOUT = useMemo(() => order.map((id) => curated[id]).filter(Boolean), [order]);
 
-  const { layout, saveLayout, reset, loading } = useWidgetLayout(DEFAULT_LAYOUT, 'main');
+  const { layout, setLayout, saveLayout, reset, loading } = useWidgetLayout(DEFAULT_LAYOUT, 'main');
+
+  // DnD Kit integration: define a stable swap callback and init DnD hooks
+  const swapSlots = React.useCallback(
+    (a: string, b: string) => {
+      if (!Array.isArray(layout)) return;
+      const l = (layout as RglItem[]).slice();
+      const ia = l.findIndex((it) => it.i === a);
+      const ib = l.findIndex((it) => it.i === b);
+      if (ia === -1 || ib === -1) return;
+      const aPos = { x: l[ia].x, y: l[ia].y, w: l[ia].w, h: l[ia].h };
+      l[ia] = { ...l[ia], x: l[ib].x, y: l[ib].y, w: l[ib].w, h: l[ib].h };
+      l[ib] = { ...l[ib], x: aPos.x, y: aPos.y, w: aPos.w, h: aPos.h };
+      setLayout(l);
+      try {
+        saveLayout(l as any);
+      } catch {}
+    },
+    [layout, saveLayout, setLayout],
+  );
+
+  const { Dnd, SortableContainer } = useWidgetDnd(order, swapSlots, (next) => setOrder(next));
 
   useEffect(() => {
     if (pin && !order.includes(pin)) setOrder((o) => (o.includes(pin) ? o : [...o, pin]));
@@ -543,72 +566,103 @@ export default function DashboardGrid({ plan, pin }: { plan: Plan; pin?: string 
 
   return (
     <div>
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={{ lg: layout as any }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as any}
-        rowHeight={40}
-        margin={[16, 16] as any}
-        isResizable
-        isDraggable
-        draggableHandle=".tc-widget-handle"
-        draggableCancel=".tc-no-drag"
-        onDragStop={(l: any) => saveLayout(l as any)}
-        onResizeStop={(l: any) => saveLayout(l as any)}
-      >
-        {order.map((id) => (
-          <div
-            key={id}
-            className={`h-full rounded-xl border border-slate-800 ${widgetBackgroundClass[id] ?? 'bg-slate-900'} p-5 flex flex-col overflow-hidden dark:border-slate-800 light:border-[#E0E6ED] light:bg-white light:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] hover:light:shadow-[0_4px_6px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.06)] transition-shadow duration-200`}
+      <Dnd>
+        <SortableContainer>
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: layout as any }}
+            cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as any}
+            rowHeight={40}
+            margin={[16, 16] as any}
+            isResizable
+            isDraggable
+            draggableHandle=".tc-widget-handle"
+            draggableCancel=".tc-no-drag"
+            onResizeStop={(l: any) => saveLayout(l as any)}
           >
-            <div className="tc-widget-handle cursor-move select-none font-bold text-white dark:text-white light:text-[#202124] flex items-center justify-between">
-              <span className="flex-1">{widgets[id]?.title}</span>
-              {id === 'calendar' && (
-                <div className="flex gap-1 tc-no-drag">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))
-                    }
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors"
-                    aria-label="Previous month"
-                  >
-                    ⟵
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))
-                    }
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors"
-                    aria-label="Next month"
-                  >
-                    ⟶
-                  </button>
-                </div>
-              )}
-              {id !== 'calendar' && (
-                <button
-                  title="Remove widget"
-                  aria-label="Remove widget"
-                  className="tc-widget-delete ml-2"
-                  onClick={() => setOrder((o) => o.filter((x) => x !== id))}
-                >
-                  🗑
-                </button>
-              )}
-            </div>
-            <div
-              data-widget-id={id}
-              className={`flex-1 min-h-0 ${id === 'calendar' ? 'overflow-visible' : id === 'progress' ? 'overflow-hidden' : id === 'analytics' ? 'overflow-hidden' : id === 'activity' ? 'overflow-hidden' : 'overflow-auto tc-scroll'}`}
-            >
-              {widgets[id]?.render()}
-            </div>
-          </div>
-        ))}
-      </ResponsiveGridLayout>
+            {order.map((id) => (
+              <SortableItem key={id} id={id}>
+                <WidgetTile
+                  id={id}
+                  title={widgets[id]?.title}
+                  render={widgets[id]?.render}
+                  calBase={calBase}
+                  setCalBase={setCalBase}
+                  remove={() => setOrder((o) => o.filter((x) => x !== id))}
+                />
+              </SortableItem>
+            ))}
+          </ResponsiveGridLayout>
+        </SortableContainer>
+      </Dnd>
       {/* Expose reset via window event dispatched by the Reset button */}
       <ResetBridge onReset={reset} />
+    </div>
+  );
+}
+
+function WidgetTile({
+  id,
+  title,
+  render,
+  calBase,
+  setCalBase,
+  remove,
+}: {
+  id: string;
+  title: string | undefined;
+  render: (() => React.ReactNode) | undefined;
+  calBase: Date;
+  setCalBase: (d: Date) => void;
+  remove: () => void;
+}) {
+  const { handleProps } = useDndHandle();
+  return (
+    <div
+      className={`h-full rounded-xl border border-slate-800 p-5 flex flex-col overflow-hidden dark:border-slate-800 light:border-[#E0E6ED] light:bg-white light:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] hover:light:shadow-[0_4px_6px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.06)] transition-shadow duration-200`}
+    >
+      <div
+        className="tc-widget-handle cursor-move select-none font-bold text-white dark:text-white light:text-[#202124] flex items-center justify-between"
+        {...handleProps}
+      >
+        <span className="flex-1">{title}</span>
+        {id === 'calendar' && (
+          <div className="flex gap-1 tc-no-drag">
+            <button
+              type="button"
+              onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() - 1, 1))}
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors"
+              aria-label="Previous month"
+            >
+              ⟵
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalBase(new Date(calBase.getFullYear(), calBase.getMonth() + 1, 1))}
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-slate-700 hover:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800 light:border-[#E0E6ED] light:hover:bg-[#F1F3F6] transition-colors"
+              aria-label="Next month"
+            >
+              ⟶
+            </button>
+          </div>
+        )}
+        {id !== 'calendar' && (
+          <button
+            title="Remove widget"
+            aria-label="Remove widget"
+            className="tc-widget-delete ml-2"
+            onClick={remove}
+          >
+            🗑
+          </button>
+        )}
+      </div>
+      <div
+        data-widget-id={id}
+        className={`flex-1 min-h-0 ${id === 'calendar' ? 'overflow-visible' : id === 'progress' ? 'overflow-hidden' : id === 'analytics' ? 'overflow-hidden' : id === 'activity' ? 'overflow-hidden' : 'overflow-auto tc-scroll'}`}
+      >
+        {render?.()}
+      </div>
     </div>
   );
 }
