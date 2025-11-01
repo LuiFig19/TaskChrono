@@ -69,7 +69,21 @@ export function SignIn({ callbackUrl }: { callbackUrl: string }) {
   };
 
   return (
-    <GoogleButton onClick={handleGoogleSignIn} loading={loading} labelLoading="Signing in..." />
+    <GoogleButton
+      onClick={handleGoogleSignIn}
+      loading={loading}
+      labelLoading="Signing in..."
+      href={typeof window !== 'undefined'
+        ? (() => {
+            const abs = callbackUrl && !/^https?:/i.test(callbackUrl) ? `${window.location.origin}${callbackUrl}` : callbackUrl;
+            const u = new URL('/api/auth/sign-in/google', window.location.origin);
+            if (abs) u.searchParams.set('callbackURL', abs);
+            u.searchParams.set('prompt', 'select_account');
+            u.searchParams.set('include_granted_scopes', 'true');
+            return u.toString();
+          })()
+        : undefined}
+    />
   );
 }
 
@@ -84,9 +98,10 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
       const abs = typeof window !== 'undefined' && callbackUrl && !/^https?:/i.test(callbackUrl)
         ? `${window.location.origin}${callbackUrl}`
         : callbackUrl;
-      // Direct, robust redirect to Better Auth provider route
-      const url = new URL('/api/auth/sign-up/google', window.location.origin);
+      // Direct, robust redirect to Better Auth provider route (sign-in with requestSignUp)
+      const url = new URL('/api/auth/sign-in/google', window.location.origin);
       if (abs) url.searchParams.set('callbackURL', abs);
+      url.searchParams.set('requestSignUp', 'true');
       url.searchParams.set('prompt', 'select_account');
       url.searchParams.set('include_granted_scopes', 'true');
       window.location.href = url.toString();
@@ -104,12 +119,15 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
   );
 }
 
-function GoogleButton({ onClick, loading, labelLoading, labelDefault }: { onClick: () => void; loading: boolean; labelLoading: string; labelDefault?: string }) {
+function GoogleButton({ onClick, loading, labelLoading, labelDefault, href }: { onClick: () => void; loading: boolean; labelLoading: string; labelDefault?: string; href?: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={loading}
+    <a
+      role="button"
+      href={href}
+      onClick={(e) => {
+        if (!href) return;
+        // Let normal navigation happen; prevent double if JS handler also runs
+      }}
       className="w-full px-5 py-3 rounded-md border text-sm font-semibold border-slate-300/60 bg-white text-slate-900 hover:bg-white/90 disabled:opacity-60 shadow-sm flex items-center justify-center gap-3 transition-colors dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
@@ -119,7 +137,7 @@ function GoogleButton({ onClick, loading, labelLoading, labelDefault }: { onClic
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
       </svg>
       {loading ? labelLoading : (labelDefault || 'Continue with Google')}
-    </button>
+    </a>
   );
 }
 
