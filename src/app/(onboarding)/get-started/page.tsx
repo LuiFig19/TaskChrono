@@ -1,19 +1,19 @@
-"use client"
+'use client';
 
-import Link from 'next/link'
-import { LazyMotion, m } from 'framer-motion'
-import { CheckCircle2, Sparkles, BarChart3, Boxes } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { LazyMotion, m } from 'framer-motion';
+import { BarChart3, Boxes, CheckCircle2, Sparkles } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 type Tier = {
-  key: string
-  name: string
-  price: string
-  features: string[]
-  highlight?: string
-  recommended?: boolean
-}
+  key: string;
+  name: string;
+  price: string;
+  features: string[];
+  highlight?: string;
+  recommended?: boolean;
+};
 
 const tiers: Tier[] = [
   {
@@ -74,21 +74,21 @@ const tiers: Tier[] = [
       'AI-powered reporting & forecasting',
     ],
   },
-]
+];
 
-const container = {
+const container: any = {
   hidden: { opacity: 0, y: 8 },
   show: {
     opacity: 1,
     y: 0,
     transition: { staggerChildren: 0.06, duration: 0.35, ease: 'easeOut' },
   },
-}
+};
 
-const item = {
+const item: any = {
   hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
-}
+};
 
 // Color mapping for each tier in light mode
 const getTierColors = (tierKey: string) => {
@@ -117,29 +117,36 @@ const getTierColors = (tierKey: string) => {
       hoverBg: 'linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%)',
       hoverBorder: '#A855F7',
     },
-  }
-  return colors[tierKey as keyof typeof colors]
-}
+  };
+  return colors[tierKey as keyof typeof colors];
+};
 
 export default function GetStartedPage() {
-  const { theme, systemTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { theme, systemTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   // Determine if we're in dark mode
-  const currentTheme = theme === 'system' ? systemTheme : theme
-  const isDark = currentTheme === 'dark'
+  const currentTheme = theme === 'system' ? systemTheme : theme;
+  const isDark = currentTheme === 'dark';
 
   return (
-    <div data-tier-selection-page className="min-h-[90vh] bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div
+      data-tier-selection-page
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900"
+    >
       <div className="max-w-screen-2xl mx-auto px-4 py-14">
-        <LazyMotion features={() => import('framer-motion').then((m)=>m.domAnimation)}>
+        <LazyMotion features={() => import('framer-motion').then((m) => m.domAnimation)}>
           <m.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Choose your plan</h1>
-            <p className="text-gray-600 dark:text-slate-300 mt-2">14-Day Free Trial for all paid tiers</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+              Choose your plan
+            </h1>
+            <p className="text-gray-600 dark:text-slate-300 mt-2">
+              14-Day Free Trial for all paid tiers
+            </p>
           </m.div>
 
           <m.div
@@ -149,62 +156,64 @@ export default function GetStartedPage() {
             className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
           >
             {tiers.map((t) => {
-              const colors = getTierColors(t.key)
+              const colors = getTierColors(t.key);
               return (
-              <m.div variants={item} key={t.key}>
-                <Link
-                  href={`/register?plan=${t.key}`}
-                  data-tier-card={t.key}
-                  className="tier-card group relative block h-full rounded-2xl p-6 transition-all duration-300 border border-gray-200 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
-                  aria-label={`Select ${t.name} plan`}
-                >
-                  {t.recommended && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white shadow">
-                      Recommended
-                    </span>
-                  )}
+                <m.div variants={item} key={t.key}>
+                  <Link
+                    href={`/register?plan=${t.key}`}
+                    data-tier-card={t.key}
+                    className="tier-card group relative block h-full rounded-2xl p-6 transition-all duration-300 border border-gray-200 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700"
+                    aria-label={`Select ${t.name} plan`}
+                  >
+                    {t.recommended && (
+                      <span className="absolute -top-3 left-6 rounded-full bg-indigo-600 px-3 py-1 text-xs font-medium text-white shadow">
+                        Recommended
+                      </span>
+                    )}
 
-                  <div className="flex items-center gap-2 text-gray-700 dark:text-slate-300">
-                    {t.key === 'FREE' && <Sparkles className="h-4 w-4 text-indigo-400" />}
-                    {t.key === 'BUSINESS' && <BarChart3 className="h-4 w-4 text-indigo-400" />}
-                    {t.key === 'ENTERPRISE' && <Boxes className="h-4 w-4 text-indigo-400" />}
-                    <span className="text-sm">{t.name}</span>
-                  </div>
-
-                  <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{t.price}</div>
-                  {(t.key !== 'FREE' && t.key !== 'CUSTOM') && (
-                    <div className="mt-1 flex flex-col gap-2 items-start">
-                      <div className="inline-flex rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-300">
-                        14‑day free trial
-                      </div>
-                      {t.highlight && (
-                        <div className="inline-flex items-center gap-1 rounded-md border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-1 text-[11px] text-indigo-700 dark:text-indigo-200">
-                          <Sparkles className="h-3 w-3" /> {t.highlight}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-slate-300">
+                      {t.key === 'FREE' && <Sparkles className="h-4 w-4 text-indigo-400" />}
+                      {t.key === 'BUSINESS' && <BarChart3 className="h-4 w-4 text-indigo-400" />}
+                      {t.key === 'ENTERPRISE' && <Boxes className="h-4 w-4 text-indigo-400" />}
+                      <span className="text-sm">{t.name}</span>
                     </div>
-                  )}
 
-                  <ul className="mt-5 space-y-2 text-sm text-gray-700 dark:text-slate-300">
-                    {t.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-indigo-400" /> {f}
-                      </li>
-                    ))}
-                  </ul>
+                    <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+                      {t.price}
+                    </div>
+                    {t.key !== 'FREE' && t.key !== 'CUSTOM' && (
+                      <div className="mt-1 flex flex-col gap-2 items-start">
+                        <div className="inline-flex rounded-md bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-300">
+                          14‑day free trial
+                        </div>
+                        {t.highlight && (
+                          <div className="inline-flex items-center gap-1 rounded-md border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-1 text-[11px] text-indigo-700 dark:text-indigo-200">
+                            <Sparkles className="h-3 w-3" /> {t.highlight}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  <div className="mt-6 text-xs text-gray-500 dark:text-slate-400 group-hover:text-gray-700 dark:group-hover:text-slate-300">Click to select</div>
+                    <ul className="mt-5 space-y-2 text-sm text-gray-700 dark:text-slate-300">
+                      {t.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-indigo-400" /> {f}
+                        </li>
+                      ))}
+                    </ul>
 
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 transition-[box-shadow] group-hover:shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]" />
-                </Link>
-              </m.div>
-            )}
-            )}
+                    <div className="mt-6 text-xs text-gray-500 dark:text-slate-400 group-hover:text-gray-700 dark:group-hover:text-slate-300">
+                      Click to select
+                    </div>
+
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 transition-[box-shadow] group-hover:shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]" />
+                  </Link>
+                </m.div>
+              );
+            })}
           </m.div>
         </LazyMotion>
       </div>
     </div>
-  )
+  );
 }
-
-

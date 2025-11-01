@@ -1,36 +1,42 @@
-import { NextResponse } from 'next/server'
-import { requireApiAuth } from '@/lib/api-auth'
-import { prisma } from '@/lib/prisma'
-import { ApiErrors } from '@/lib/api-response'
+import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
-  const { error, userId } = await requireApiAuth()
-  if (error) return error
+import { requireApiAuth } from '@/lib/api-auth';
+import { ApiErrors } from '@/lib/api-response';
+import { prisma } from '@/lib/prisma';
+import { withErrorHandling } from '@/lib/route-helpers';
 
-  const body = await request.json().catch(() => ({})) as { organizationId?: string }
-  const organizationId = String(body.organizationId || '')
-  if (!organizationId) return ApiErrors.missing('organizationId')
+export const POST = withErrorHandling(async (request: Request) => {
+  const { error, userId } = await requireApiAuth();
+  if (error) return error;
+
+  const body = (await request.json().catch(() => ({}))) as { organizationId?: string };
+  const organizationId = String(body.organizationId || '');
+  if (!organizationId) return ApiErrors.missing('organizationId');
 
   // Ensure the user belongs to this organization
-  const member = await prisma.organizationMember.findFirst({ where: { userId, organizationId } })
-  if (!member) return ApiErrors.forbidden()
+  const member = await prisma.organizationMember.findFirst({ where: { userId, organizationId } });
+  if (!member) return ApiErrors.forbidden();
 
   // Read existing dashboardWidgets safely
-  const pref = await prisma.userPreference.findUnique({ where: { userId } })
-  let state: any = {}
+  const pref = await prisma.userPreference.findUnique({ where: { userId } });
+  let state: any = {};
   try {
-    if (pref?.dashboardWidgets && typeof pref.dashboardWidgets === 'object' && !Array.isArray(pref.dashboardWidgets)) {
-      state = pref.dashboardWidgets
+    if (
+      pref?.dashboardWidgets &&
+      typeof pref.dashboardWidgets === 'object' &&
+      !Array.isArray(pref.dashboardWidgets)
+    ) {
+      state = pref.dashboardWidgets;
     }
   } catch {}
-  state.activeOrgId = organizationId
+  state.activeOrgId = organizationId;
 
   // Upsert preferences with new active org
   await prisma.userPreference.upsert({
     where: { userId },
     update: { dashboardWidgets: state as any },
     create: { userId, dashboardWidgets: state as any },
-  })
+  });
 
-  return NextResponse.json({ ok: true })
-}
+  return NextResponse.json({ ok: true });
+});

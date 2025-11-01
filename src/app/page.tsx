@@ -1,8 +1,8 @@
-export const dynamic = 'force-static'
-export const revalidate = 0
+export const dynamic = 'force-static';
+export const revalidate = 0;
 
-import LandingClient from './(marketing)/LandingClient'
+import LandingClient from '@/features/marketing/components/LandingClient';
 
 export default function RootIndex() {
-  return <LandingClient />
+  return <LandingClient />;
 }

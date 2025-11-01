@@ -1,16 +1,16 @@
-"use client"
-import { CheckCircle2, XCircle } from 'lucide-react'
-import { LazyMotion, m } from 'framer-motion'
-import Link from 'next/link'
+'use client';
+import { LazyMotion, m } from 'framer-motion';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import Link from 'next/link';
 
 type Tier = {
-  name: string
-  price: string
-  blurb: string
-  features: { label: string; included?: boolean }[]
-  cta: { label: string; href: string }
-  highlight?: boolean
-}
+  name: string;
+  price: string;
+  blurb: string;
+  features: { label: string; included?: boolean }[];
+  cta: { label: string; href: string };
+  highlight?: boolean;
+};
 
 const tiers: Tier[] = [
   {
@@ -72,7 +72,7 @@ const tiers: Tier[] = [
     ],
     cta: { label: 'Contact Sales', href: '/get-started?plan=CUSTOM' },
   },
-]
+];
 
 export default function Pricing() {
   return (
@@ -81,7 +81,7 @@ export default function Pricing() {
         <h2 className="text-3xl font-bold">Pricing</h2>
         <p className="text-gray-600 mt-2">14-day free trial on all paid tiers</p>
       </div>
-      <LazyMotion features={() => import('framer-motion').then((m)=>m.domAnimation)}>
+      <LazyMotion features={() => import('framer-motion').then((m) => m.domAnimation)}>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {tiers.map((tier, i) => (
             <m.div
@@ -91,7 +91,9 @@ export default function Pricing() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.05, duration: 0.5 }}
               className={`pricing-card relative rounded-2xl border p-6 bg-white/60 backdrop-blur-sm ${
-                tier.highlight ? 'pricing-card--highlight ring-2 ring-indigo-500 shadow-xl' : 'shadow-sm'
+                tier.highlight
+                  ? 'pricing-card--highlight ring-2 ring-indigo-500 shadow-xl'
+                  : 'shadow-sm'
               }`}
             >
               {tier.highlight && (
@@ -118,7 +120,9 @@ export default function Pricing() {
                 <Link
                   href={tier.cta.href}
                   className={`block text-center px-4 py-2 rounded-lg transition-colors ${
-                    tier.highlight ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border hover:bg-gray-50'
+                    tier.highlight
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'border hover:bg-gray-50'
                   }`}
                 >
                   {tier.cta.label}
@@ -129,7 +133,5 @@ export default function Pricing() {
         </div>
       </LazyMotion>
     </section>
-  )
+  );
 }
-
-

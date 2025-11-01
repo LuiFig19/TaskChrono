@@ -1,21 +1,29 @@
-import { auth } from '@/lib/better-auth'
-import { prisma } from '@/lib/prisma'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export default async function SubscriptionPage({ searchParams }: { searchParams?: { upgrade?: string } }) {
+import { auth } from '@/lib/better-auth';
+import { prisma } from '@/lib/prisma';
+
+export default async function SubscriptionPage({
+  searchParams,
+}: {
+  searchParams?: { upgrade?: string };
+}) {
   const session = await auth.api.getSession({
     headers: await headers(),
-  })
-  if (!session?.user) redirect('/login?callbackUrl=/dashboard/subscription')
-  const userId = session.user.id
-  const membership = await prisma.organizationMember.findFirst({ where: { userId }, include: { organization: true } })
-  const plan = membership?.organization?.planTier || 'FREE'
+  });
+  if (!session?.user) redirect('/login?callbackUrl=/dashboard/subscription');
+  const userId = session.user.id;
+  const membership = await prisma.organizationMember.findFirst({
+    where: { userId },
+    include: { organization: true },
+  });
+  const plan = membership?.organization?.planTier || 'FREE';
 
-  async function openCheckout(tier: 'BUSINESS'|'ENTERPRISE') {
-    'use server'
+  async function openCheckout(tier: 'BUSINESS' | 'ENTERPRISE') {
+    'use server';
     // server action to create a checkout and redirect
-    return tier
+    return tier;
   }
 
   return (
@@ -67,19 +75,23 @@ export default async function SubscriptionPage({ searchParams }: { searchParams?
             <form action="/api/billing/checkout" method="post">
               <input type="hidden" name="tier" value="BUSINESS" />
               <input type="hidden" name="seats" value="1" />
-              <button className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">Upgrade to Business</button>
+              <button className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">
+                Upgrade to Business
+              </button>
             </form>
             <form action="/api/billing/checkout" method="post">
               <input type="hidden" name="tier" value="ENTERPRISE" />
               <input type="hidden" name="seats" value="1" />
-              <button className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">Upgrade to Enterprise</button>
+              <button className="px-3 py-2 rounded border border-indigo-600 text-indigo-300 hover:bg-slate-800">
+                Upgrade to Enterprise
+              </button>
             </form>
           </div>
-          <div className="text-xs text-slate-400 mt-2">You will be redirected to Stripe Checkout to complete your upgrade.</div>
+          <div className="text-xs text-slate-400 mt-2">
+            You will be redirected to Stripe Checkout to complete your upgrade.
+          </div>
         </section>
       </div>
     </div>
-  )
+  );
 }
-
-

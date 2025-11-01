@@ -106,3 +106,6 @@ ALTER TABLE "taskchrono"."Session"
 
 -- Touch updatedAt to current timestamp
 UPDATE "taskchrono"."Session" SET "updatedAt" = NOW() WHERE "updatedAt" IS NOT NULL;
+
+
+

@@ -1,10 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   poweredByHeader: false,
   compress: true,
-  allowedDevOrigins: process.env.REPLIT_DEV_DOMAIN 
+  allowedDevOrigins: process.env.REPLIT_DEV_DOMAIN
     ? [
         process.env.REPLIT_DEV_DOMAIN,
         `https://${process.env.REPLIT_DEV_DOMAIN}`,
@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
         'localhost',
       ]
     : [],
-  // Do not block production builds on eslint/type errors (we log them locally)
+  // Keep ESLint and TS out of build for speed; CI runs typecheck separately
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   experimental: {

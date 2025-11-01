@@ -1,18 +1,17 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import ProjectsClient from './projectsClient'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+import ProjectsClient from '@/features/projects/components/ProjectsClient';
+import { auth } from '@/lib/better-auth';
 
 export default async function ProjectsPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
-    redirect('/login')
+    redirect('/login');
   }
   return (
     <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <ProjectsClient />
     </div>
-  )
+  );
 }
-
-

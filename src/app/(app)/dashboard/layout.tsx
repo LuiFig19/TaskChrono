@@ -1,19 +1,19 @@
-import React from "react";
-import { getUserPlan } from "./_components/feature-gate";
-import { auth } from "@/lib/better-auth";
-import { headers } from "next/headers";
-import DashboardHeader from "./_components/DashboardHeader";
+import { headers } from 'next/headers';
+import React from 'react';
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import DashboardHeader from '@/features/dashboard/components/DashboardHeader';
+import { getUserPlan } from '@/features/dashboard/lib/featureGate';
+import { auth } from '@/lib/better-auth';
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const plan = await getUserPlan();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const userEmail = session?.user?.email as string | undefined;
+  let userEmail: string | undefined = undefined;
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    userEmail = session?.user?.email as string | undefined;
+  } catch {}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">

@@ -1,46 +1,48 @@
-import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { auth } from '@/lib/better-auth'
-import Link from 'next/link'
-import OnboardingClient from './OnboardingClient'
-export const dynamic = 'force-dynamic'
+import { headers } from 'next/headers';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+
+import { auth } from '@/lib/better-auth';
+
+import OnboardingClient from './OnboardingClient';
+export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPage(
-  props: { searchParams?: { plan?: string } } | { searchParams: Promise<{ plan?: string }> }
+  props: { searchParams?: { plan?: string } } | { searchParams: Promise<{ plan?: string }> },
 ) {
-  let planParam: string | undefined
+  let planParam: string | undefined;
   try {
-    const maybe = (props as any).searchParams
-    const sp = typeof maybe?.then === 'function' ? await maybe : (maybe || {})
-    planParam = sp?.plan
+    const maybe = (props as any).searchParams;
+    const sp = typeof maybe?.then === 'function' ? await maybe : maybe || {};
+    planParam = sp?.plan;
   } catch {}
   const session = await auth.api.getSession({
-    headers: await headers()
-  })
+    headers: await headers(),
+  });
   if (!session?.user) {
-    const plan = planParam || 'FREE'
-    const cb = `/onboarding?plan=${plan}`
-    redirect(`/register?callbackUrl=${encodeURIComponent(cb)}`)
+    const plan = planParam || 'FREE';
+    const cb = `/onboarding?plan=${plan}`;
+    redirect(`/register?callbackUrl=${encodeURIComponent(cb)}`);
   }
 
   // Check if user already has an organization - redirect to dashboard if they do
-  const { prisma } = await import('@/lib/prisma')
+  const { prisma } = await import('@/lib/prisma');
   const existingMembership = await prisma.organizationMember.findFirst({
     where: { userId: session.user.id },
-    include: { organization: true }
-  })
+    include: { organization: true },
+  });
   if (existingMembership) {
-    redirect('/dashboard')
+    redirect('/dashboard');
   }
 
-  const plan = planParam || 'FREE'
+  const plan = planParam || 'FREE';
   const planLabel = (() => {
-    const upper = String(plan).toUpperCase()
+    const upper = String(plan).toUpperCase();
     if (upper === 'FREE') {
-      return <span className="font-semibold text-green-400">FREE</span>
+      return <span className="font-semibold text-green-400">FREE</span>;
     }
     if (upper === 'BUSINESS') {
-      return <span className="font-semibold text-orange-400">💼 BUSINESS</span>
+      return <span className="font-semibold text-orange-400">💼 BUSINESS</span>;
     }
     if (upper === 'ENTERPRISE') {
       return (
@@ -48,10 +50,10 @@ export default async function OnboardingPage(
           <span className="not-italic mr-1">🏢</span>
           <span className="italic">ENTERPRISE</span>
         </span>
-      )
+      );
     }
-    return <span className="font-semibold text-indigo-300">✨ {upper}</span>
-  })()
+    return <span className="font-semibold text-indigo-300">✨ {upper}</span>;
+  })();
   return (
     <div className="relative overflow-hidden min-h-[100vh] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 text-slate-100">
       {/* Animated background */}
@@ -69,7 +71,5 @@ export default async function OnboardingPage(
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-

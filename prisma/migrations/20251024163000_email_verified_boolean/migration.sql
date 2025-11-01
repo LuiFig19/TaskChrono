@@ -26,3 +26,6 @@ DO $$ BEGIN
     ALTER TABLE "public"."User" ALTER COLUMN "emailVerified" SET NOT NULL;
   END IF;
 END $$;
+
+
+

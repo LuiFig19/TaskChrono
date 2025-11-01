@@ -1,17 +1,18 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import Chart from '../_components/Chart'
-import { getUserPlanServer } from '@/lib/org'
-import LockedFeature from '../_components/locked'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+import Chart from '@/features/dashboard/components/Chart';
+import LockedFeature from '@/features/dashboard/components/Locked';
+import { auth } from '@/lib/better-auth';
+import { getUserPlanServer } from '@/lib/org';
 
 export default async function AnalyticsPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
-    redirect('/login')
+    redirect('/login');
   }
-  const plan = await getUserPlanServer()
-  if (plan === 'FREE') return <LockedFeature title="Analytics" />
+  const plan = await getUserPlanServer();
+  if (plan === 'FREE') return <LockedFeature title="Analytics" />;
   return (
     <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <h1 className="text-2xl font-semibold">Analytics</h1>
@@ -30,7 +31,5 @@ export default async function AnalyticsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-

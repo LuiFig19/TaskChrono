@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import Link from 'next/link'
-import React, { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
+import React, { useState } from 'react';
 
 function Hamburger() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="relative">
@@ -43,17 +43,39 @@ function Hamburger() {
             className="absolute right-0 mt-2 w-56 rounded-md border border-slate-700 bg-slate-900 shadow-xl z-50"
           >
             <nav className="grid p-2 text-sm text-slate-200">
-              <Link href="/demo-dashboard/inventory" className="px-3 py-2 rounded hover:bg-slate-800">Inventory Tracker</Link>
-              <Link href="/demo-dashboard/summaries" className="px-3 py-2 rounded hover:bg-slate-800">Weekly Summaries</Link>
-              <Link href="/demo-dashboard/settings" className="px-3 py-2 rounded hover:bg-slate-800">Account Settings</Link>
-              <Link href="/demo-dashboard/notifications" className="px-3 py-2 rounded hover:bg-slate-800">Notifications</Link>
-              <Link href="/demo-dashboard/reports" className="px-3 py-2 rounded hover:bg-slate-800">Reports</Link>
+              <Link
+                href="/demo-dashboard/inventory"
+                className="px-3 py-2 rounded hover:bg-slate-800"
+              >
+                Inventory Tracker
+              </Link>
+              <Link
+                href="/demo-dashboard/summaries"
+                className="px-3 py-2 rounded hover:bg-slate-800"
+              >
+                Weekly Summaries
+              </Link>
+              <Link
+                href="/demo-dashboard/settings"
+                className="px-3 py-2 rounded hover:bg-slate-800"
+              >
+                Account Settings
+              </Link>
+              <Link
+                href="/demo-dashboard/notifications"
+                className="px-3 py-2 rounded hover:bg-slate-800"
+              >
+                Notifications
+              </Link>
+              <Link href="/demo-dashboard/reports" className="px-3 py-2 rounded hover:bg-slate-800">
+                Reports
+              </Link>
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 export default function DemoDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -61,12 +83,22 @@ export default function DemoDashboardLayout({ children }: { children: React.Reac
     <div className="min-h-[700px] bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100">
       <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur">
         <div className="max-w-screen-2xl mx-auto px-4 py-3 grid grid-cols-[1fr_auto_1fr] items-center">
-          <Link href="/" className="font-semibold text-white">TaskChrono</Link>
+          <Link href="/" className="font-semibold text-white">
+            TaskChrono
+          </Link>
           <nav className="hidden md:flex items-center justify-center gap-6 text-sm text-slate-200">
-            <Link href="/demo-dashboard" className="hover:text-white">Tasks</Link>
-            <Link href="/demo-dashboard/projects" className="hover:text-white">Project Manager</Link>
-            <Link href="/demo-dashboard/files" className="hover:text-white">Saved Files</Link>
-            <Link href="/demo-dashboard/calendar" className="hover:text-white">Calendar</Link>
+            <Link href="/demo-dashboard" className="hover:text-white">
+              Tasks
+            </Link>
+            <Link href="/demo-dashboard/projects" className="hover:text-white">
+              Project Manager
+            </Link>
+            <Link href="/demo-dashboard/files" className="hover:text-white">
+              Saved Files
+            </Link>
+            <Link href="/demo-dashboard/calendar" className="hover:text-white">
+              Calendar
+            </Link>
           </nav>
           <div className="justify-self-end">
             <Hamburger />
@@ -75,7 +107,5 @@ export default function DemoDashboardLayout({ children }: { children: React.Reac
       </header>
       <main className="max-w-screen-2xl mx-auto px-4 py-6">{children}</main>
     </div>
-  )
+  );
 }
-
-

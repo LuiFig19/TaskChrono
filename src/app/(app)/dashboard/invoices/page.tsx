@@ -1,36 +1,44 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import { prisma } from '@/lib/prisma'
-import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org'
-import InvoiceClient from './InvoicesClient'
-import LockedFeature from '../_components/locked'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-function cents(n: number) { return (n/100).toFixed(2) }
+import LockedFeature from '@/features/dashboard/components/Locked';
+import InvoiceClient from '@/features/invoices/components/InvoicesClient';
+import { auth } from '@/lib/better-auth';
+import { getCurrentUserAndOrg, getUserPlanServer } from '@/lib/org';
+import { prisma } from '@/lib/prisma';
 
-export default async function InvoicesPage({ searchParams }: { searchParams?: { q?: string, status?: string } }) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) redirect('/login')
-  const plan = await getUserPlanServer()
-  if (plan === 'FREE') return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-6">
-      <LockedFeature title="Invoices & Billing Management" />
-    </div>
-  )
+function cents(n: number) {
+  return (n / 100).toFixed(2);
+}
 
-  const { organizationId } = await getCurrentUserAndOrg()
-  if (!organizationId) redirect('/login')
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string; status?: string };
+}) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) redirect('/login');
+  const plan = await getUserPlanServer();
+  if (plan === 'FREE')
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-6">
+        <LockedFeature title="Invoices & Billing Management" />
+      </div>
+    );
 
-  const q = (searchParams?.q || '').trim()
-  const status = (searchParams?.status || '').toUpperCase()
-  const where: any = { organizationId }
+  const { organizationId } = await getCurrentUserAndOrg();
+  if (!organizationId) redirect('/login');
+
+  const q = (searchParams?.q || '').trim();
+  const status = (searchParams?.status || '').toUpperCase();
+  const where: any = { organizationId };
   if (q) {
     where.OR = [
       { clientName: { contains: q, mode: 'insensitive' } },
       { projectName: { contains: q, mode: 'insensitive' } },
-    ]
+    ];
   }
-  if (['DRAFT','SENT','PAID','OVERDUE'].includes(status)) where.status = status
+  if (['DRAFT', 'SENT', 'PAID', 'OVERDUE'].includes(status)) where.status = status;
 
   const [invoices, stats] = await Promise.all([
     prisma.invoice.findMany({
@@ -42,30 +50,44 @@ export default async function InvoicesPage({ searchParams }: { searchParams?: { 
       where: { organizationId },
       _sum: { amountCents: true },
       _count: true,
-    })
-  ])
+    }),
+  ]);
 
-  const totalIssued = invoices.length
-  const now = Date.now()
-  const outstanding = invoices.filter((i:any) => i.status !== 'PAID').reduce((s:any,i:any)=>s+i.amountCents,0)
-  const paid = invoices.filter((i:any)=>i.status==='PAID').length
-  const overdue = invoices.filter((i:any)=> i.status!=='PAID' && i.dueAt && new Date(i.dueAt as any).getTime() < now).length
+  const totalIssued = invoices.length;
+  const now = Date.now();
+  const outstanding = invoices
+    .filter((i: any) => i.status !== 'PAID')
+    .reduce((s: any, i: any) => s + i.amountCents, 0);
+  const paid = invoices.filter((i: any) => i.status === 'PAID').length;
+  const overdue = invoices.filter(
+    (i: any) => i.status !== 'PAID' && i.dueAt && new Date(i.dueAt as any).getTime() < now,
+  ).length;
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 pt-4 pb-6">
       <h1 className="text-2xl font-semibold">Invoices</h1>
       <div className="mt-4 grid md:grid-cols-4 gap-3">
-        <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Total Issued</div><div className="text-white text-xl">{totalIssued}</div></div>
-        <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Outstanding</div><div className="text-white text-xl">${cents(outstanding)}</div></div>
-        <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Paid</div><div className="text-emerald-400 text-xl">{paid}</div></div>
-        <div className="rounded border border-slate-800 bg-slate-900 p-4"><div className="text-slate-400 text-sm">Overdue</div><div className="text-rose-400 text-xl">{overdue}</div></div>
+        <div className="rounded border border-slate-800 bg-slate-900 p-4">
+          <div className="text-slate-400 text-sm">Total Issued</div>
+          <div className="text-white text-xl">{totalIssued}</div>
+        </div>
+        <div className="rounded border border-slate-800 bg-slate-900 p-4">
+          <div className="text-slate-400 text-sm">Outstanding</div>
+          <div className="text-white text-xl">${cents(outstanding)}</div>
+        </div>
+        <div className="rounded border border-slate-800 bg-slate-900 p-4">
+          <div className="text-slate-400 text-sm">Paid</div>
+          <div className="text-emerald-400 text-xl">{paid}</div>
+        </div>
+        <div className="rounded border border-slate-800 bg-slate-900 p-4">
+          <div className="text-slate-400 text-sm">Overdue</div>
+          <div className="text-rose-400 text-xl">{overdue}</div>
+        </div>
       </div>
 
       <InvoiceClient initialInvoices={invoices as any} />
     </div>
-  )
+  );
 }
 
 // (client code moved to InvoicesClient.tsx)
-
-

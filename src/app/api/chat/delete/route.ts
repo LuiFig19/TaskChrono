@@ -1,22 +1,22 @@
-import { NextResponse } from 'next/server'
-import { requireApiAuth } from '@/lib/api-auth'
-import { ensureUserOrg } from '@/lib/org'
-import { prisma } from '@/lib/prisma'
-import { broadcast } from '@/lib/chatStore'
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-  const { error, userId } = await requireApiAuth()
-  if (error) return error
-  const { organizationId } = await ensureUserOrg()
-  const body = await req.json().catch(()=>({})) as any
-  const id = String(body.id || '')
-  if (!id) return error
-  const message = await prisma.chatMessage.findUnique({ where: { id } })
-  if (!message || message.organizationId !== organizationId) return NextResponse.json({ ok: true })
-  await prisma.chatLike.deleteMany({ where: { messageId: id } }).catch(()=>{})
-  await prisma.chatMessage.delete({ where: { id } }).catch(()=>{})
-  broadcast(organizationId!, message.channelId, 'deleted', { id })
-  return NextResponse.json({ ok: true })
-}
+import { requireApiAuth } from '@/lib/api-auth';
+import { broadcast } from '@/lib/chatStore';
+import { ensureUserOrg } from '@/lib/org';
+import { prisma } from '@/lib/prisma';
+import { withErrorHandling } from '@/lib/route-helpers';
 
-
+export const POST = withErrorHandling(async (req: Request) => {
+  const { error, userId } = await requireApiAuth();
+  if (error) return error;
+  const { organizationId } = await ensureUserOrg();
+  const body = (await req.json().catch(() => ({}))) as any;
+  const id = String(body.id || '');
+  if (!id) return error;
+  const message = await prisma.chatMessage.findUnique({ where: { id } });
+  if (!message || message.organizationId !== organizationId) return NextResponse.json({ ok: true });
+  await prisma.chatLike.deleteMany({ where: { messageId: id } }).catch(() => {});
+  await prisma.chatMessage.delete({ where: { id } }).catch(() => {});
+  broadcast(organizationId!, message.channelId, 'deleted', { id });
+  return NextResponse.json({ ok: true });
+});

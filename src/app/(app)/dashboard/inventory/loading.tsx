@@ -5,8 +5,5 @@ export default function Loading() {
       <div className="mt-4 h-10 bg-slate-800 rounded" />
       <div className="mt-4 h-32 bg-slate-800 rounded" />
     </div>
-  )
+  );
 }
-
-
-

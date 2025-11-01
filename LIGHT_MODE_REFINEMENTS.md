@@ -9,10 +9,11 @@ Your light mode has been **completely refined** with a premium, visually balance
 ## 🎨 Design System Updates
 
 ### Color Palette (Google Workspace Inspired)
+
 ```css
 /* Background Hierarchy - Subtle layering */
 --bg-base: #F3F4F6           → Global background (warm neutral, not pure white)
---bg-surface: #FFFFFF        → Cards & widgets (clean white for content)  
+--bg-surface: #FFFFFF        → Cards & widgets (clean white for content)
 --bg-elevated: #F0F2F5       → Navbar, toolbars, elevated surfaces
 --bg-muted: #F7F9FB          → Section backgrounds, subtle zones
 
@@ -27,6 +28,7 @@ Your light mode has been **completely refined** with a premium, visually balance
 ```
 
 ### Shadows & Depth (Material 3 Style)
+
 - **Soft shadows**: `0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(50,65,90,0.08)`
   - Subtle depth without harsh edges
   - Warmer shadow tone (blue-tinted) like Google Workspace
@@ -40,46 +42,55 @@ Your light mode has been **completely refined** with a premium, visually balance
 ## 🧩 Component Improvements
 
 ### 1. **Navbar**
+
 - Subtle gradient: `#FAFBFC → #ECEFF3`
 - Refined border and backdrop blur
 - Text color: `#1F1F1F` with blue hover (`#3B82F6`)
 - Smooth shadow separation from page
 
 ### 2. **Cards & Widgets**
+
 - White surface (`#FFFFFF`) on soft base (`#F4F6F8`)
 - `border-radius: 16px` for modern feel
 - Micro-interaction: lifts 2px on hover with shadow increase
 - Consistent internal padding
 
 ### 3. **Typography Hierarchy**
+
 - **Headings (h1-h3)**: `#202124`, `font-weight: 600`, `letter-spacing: -0.2px`
 - **Body text**: `#4A4A4A`, `line-height: 1.55`
 - **Muted text**: `#6B7280` for labels and timestamps
 - Clear visual separation between levels
 
 ### 4. **Buttons**
+
 **Neutral buttons**:
+
 - Background: `#F5F7FA`
 - Border: `1px solid #D8DEE4`
 - Hover: `#E9ECF1` with `translateY(-1px)`
 
 **Brand accent buttons** (blue, green, purple):
+
 - Keep original colors
 - Add subtle glow: `box-shadow: 0 0 6px rgba(..., 0.15)`
 
 ### 5. **Input Fields**
+
 - Background: `#F5F7FA` (neutral fill)
 - Hover: `#ECEFF4` (slightly darker)
 - Focus: White background with blue border + focus ring
 - Smooth transitions on all states
 
 ### 6. **Scrollbars**
+
 - Track: `#F0F2F4`
 - Thumb: `#C5C9CF`
 - Hover: `#AEB3B9`
 - Width: `8px` for subtlety
 
 ### 7. **Theme Toggle Button**
+
 - Enhanced with scale animation (`hover:scale-105`, `active:scale-95`)
 - Smooth 300ms transitions
 - Light mode: `#F5F7FA` background with `#D8DEE4` border
@@ -91,6 +102,7 @@ Your light mode has been **completely refined** with a premium, visually balance
 ## 🔧 Technical Implementation
 
 ### Global CSS Structure
+
 ```
 ✅ Soft neutral base (#F4F6F8) - reduces eye strain
 ✅ White cards with proper depth via shadows
@@ -103,6 +115,7 @@ Your light mode has been **completely refined** with a premium, visually balance
 ```
 
 ### Theme System
+
 - **Library**: `next-themes` (industry standard for Next.js)
 - **Storage**: `localStorage` with key `tc-theme`
 - **Default**: Dark mode
@@ -131,16 +144,16 @@ Your light mode has been **completely refined** with a premium, visually balance
 
 ## 🎯 Key Differences from Before
 
-| **Before** | **After** |
-|------------|-----------|
-| Pure white `#FFFFFF` everywhere | Soft neutral `#F4F6F8` base |
-| Flat cards, no depth | Elevated cards with shadows + hover |
-| All text same weight/color | 3-level typography hierarchy |
-| Basic navbar | Gradient navbar with backdrop blur |
-| No hover feedback | Lift animations on hover |
-| Generic scrollbars | Custom themed scrollbars |
-| Simple button states | Micro-interactions (scale, lift) |
-| Harsh transitions | Smooth 200-300ms easing |
+| **Before**                      | **After**                           |
+| ------------------------------- | ----------------------------------- |
+| Pure white `#FFFFFF` everywhere | Soft neutral `#F4F6F8` base         |
+| Flat cards, no depth            | Elevated cards with shadows + hover |
+| All text same weight/color      | 3-level typography hierarchy        |
+| Basic navbar                    | Gradient navbar with backdrop blur  |
+| No hover feedback               | Lift animations on hover            |
+| Generic scrollbars              | Custom themed scrollbars            |
+| Simple button states            | Micro-interactions (scale, lift)    |
+| Harsh transitions               | Smooth 200-300ms easing             |
 
 ---
 
@@ -149,6 +162,7 @@ Your light mode has been **completely refined** with a premium, visually balance
 Your light mode is now **production-ready** and matches the quality of top-tier SaaS dashboards.
 
 ### To Test:
+
 1. Navigate to `http://localhost:3000/dashboard`
 2. Click the theme toggle button (sun/moon icon) in the top-right
 3. Observe:
@@ -160,6 +174,7 @@ Your light mode is now **production-ready** and matches the quality of top-tier 
    - Custom scrollbars
 
 ### Dark Mode Verification:
+
 - Toggle back to dark mode
 - Confirm everything looks exactly as before
 - No colors, gradients, or styles changed
@@ -188,4 +203,3 @@ This refinement follows the principles of modern UI design:
 7. **Performance**: CSS-only animations, no JavaScript overhead
 
 Your light mode now feels as polished and professional as Linear, Notion, or Google Workspace! 🎉
-

@@ -1,7 +1,7 @@
 export default function DemoReports() {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-4 text-slate-200">Reports preview</div>
-  )
+    <div className="rounded-lg border border-slate-800 bg-slate-900 p-4 text-slate-200">
+      Reports preview
+    </div>
+  );
 }
-
-

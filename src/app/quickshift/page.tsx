@@ -1,6 +1,6 @@
-"use client"
-import { motion } from 'framer-motion'
-import Link from 'next/link'
+'use client';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function QuickShiftComingSoon() {
   return (
@@ -25,7 +25,8 @@ export default function QuickShiftComingSoon() {
           transition={{ delay: 0.15, duration: 0.6 }}
           className="mt-4 text-lg sm:text-xl text-slate-300 max-w-2xl"
         >
-          Under development. Coming soon to supercharge your team scheduling and time tracking — designed to work beautifully with TaskChrono.
+          Under development. Coming soon to supercharge your team scheduling and time tracking —
+          designed to work beautifully with TaskChrono.
         </motion.p>
 
         <motion.div
@@ -37,19 +38,19 @@ export default function QuickShiftComingSoon() {
           {[
             {
               title: 'Smart Scheduling',
-              desc: 'Drag-and-drop shifts, conflict detection, labor cost insights.'
+              desc: 'Drag-and-drop shifts, conflict detection, labor cost insights.',
             },
             {
               title: 'Mobile Clock-in/out',
-              desc: 'Location-aware, break tracking, photo verification.'
+              desc: 'Location-aware, break tracking, photo verification.',
             },
             {
               title: 'Real-time Attendance',
-              desc: 'Live dashboards, late alerts, and automated reminders.'
+              desc: 'Live dashboards, late alerts, and automated reminders.',
             },
             {
               title: 'Payroll-ready Exports',
-              desc: 'Clean timesheets, overtime rules, and CSV exports.'
+              desc: 'Clean timesheets, overtime rules, and CSV exports.',
             },
           ].map((f, i) => (
             <motion.div
@@ -75,7 +76,10 @@ export default function QuickShiftComingSoon() {
           <span className="inline-flex items-center rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-sm text-indigo-200">
             Private beta opens soon
           </span>
-          <Link href="/get-started" className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">
+          <Link
+            href="/get-started"
+            className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+          >
             Get Started with TaskChrono
           </Link>
         </motion.div>
@@ -87,14 +91,15 @@ export default function QuickShiftComingSoon() {
           className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3"
         >
           {['Fast', 'Reliable', 'Modern UI'].map((chip) => (
-            <div key={chip} className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-2 text-sm text-slate-300">
+            <div
+              key={chip}
+              className="rounded-lg border border-slate-800 bg-slate-900/30 px-3 py-2 text-sm text-slate-300"
+            >
               {chip}
             </div>
           ))}
         </motion.div>
       </main>
     </div>
-  )
+  );
 }
-
-

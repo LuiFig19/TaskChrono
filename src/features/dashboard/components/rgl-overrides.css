@@ -1,0 +1,26 @@
+.react-grid-item.react-grid-placeholder {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Smooth transitions for auto-rearranging widgets - same for both light and dark modes */
+.react-grid-item {
+  transition: transform 200ms ease-out;
+}
+
+/* Disable transitions ONLY on the widget being actively dragged */
+.react-grid-item.react-dragging,
+.react-grid-item.react-dragging > * {
+  transition: none !important;
+  z-index: 100;
+}
+
+/* Disable transitions during resize */
+.react-grid-item.resizing,
+.react-grid-item.resizing > * {
+  transition: none !important;
+}
+
+/* Keep file minimal; legend dot color handled inline in TSX */
+

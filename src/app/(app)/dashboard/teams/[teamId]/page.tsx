@@ -1,19 +1,21 @@
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import TeamsClient from './teamsClient'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-export default async function TeamDetailPage(context: { params: Promise<{ teamId: string }>, searchParams: Promise<{ tab?: string }> }) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) redirect('/login')
-  const { teamId } = await context.params
-  const s = await context.searchParams
-  const tab = (s?.tab || 'overview') as string
+import TeamsClient from '@/features/teams/components/TeamsClient';
+import { auth } from '@/lib/better-auth';
+
+export default async function TeamDetailPage(context: {
+  params: Promise<{ teamId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) redirect('/login');
+  const { teamId } = await context.params;
+  const s = await context.searchParams;
+  const tab = (s?.tab || 'overview') as string;
   return (
     <div className="max-w-screen-2xl mx-auto px-6 md:px-8 pt-6 pb-8">
       <TeamsClient teamId={teamId} initialTab={tab} />
     </div>
-  )
+  );
 }
-
-

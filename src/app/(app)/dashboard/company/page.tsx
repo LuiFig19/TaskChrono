@@ -1,3 +1,3 @@
-export default function CompanyPage() { return null }
-
-
+export default function CompanyPage() {
+  return null;
+}

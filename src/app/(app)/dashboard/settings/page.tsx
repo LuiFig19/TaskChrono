@@ -1,23 +1,26 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import { prisma } from '@/lib/prisma'
-import SettingsClient from './settingsClient'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+import SettingsClient from '@/features/settings/components/SettingsClient';
+import { auth } from '@/lib/better-auth';
+import { prisma } from '@/lib/prisma';
 
 export default async function SettingsPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
-    redirect('/login')
+    redirect('/login');
   }
   const membership = await prisma.organizationMember.findFirst({
     where: { userId: session.user.id },
     include: { organization: true },
-  })
-  const isAdmin = membership?.role === 'OWNER' || membership?.role === 'ADMIN'
-  const organizationId = membership?.organizationId ?? null
+  });
+  const isAdmin = membership?.role === 'OWNER' || membership?.role === 'ADMIN';
+  const organizationId = membership?.organizationId ?? null;
   return (
-    <SettingsClient isAdmin={!!isAdmin} organizationId={organizationId} plan={membership?.organization?.planTier || 'FREE'} />
-  )
+    <SettingsClient
+      isAdmin={!!isAdmin}
+      organizationId={organizationId}
+      plan={membership?.organization?.planTier || 'FREE'}
+    />
+  );
 }
-
-

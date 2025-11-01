@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma';
 
 /**
  * Ensures production DB has Better Auth expected columns.
@@ -21,7 +21,7 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "taskchrono"."Account" RENAME COLUMN "providerAccountId" TO "accountId";
         END IF;
       END $$;
-    `)
+    `);
 
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
@@ -35,7 +35,7 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "taskchrono"."Account" RENAME COLUMN "provider" TO "providerId";
         END IF;
       END $$;
-    `)
+    `);
 
     // Also handle public schema (some deployments used public tables)
     await prisma.$executeRawUnsafe(`
@@ -50,7 +50,7 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "public"."Account" RENAME COLUMN "providerAccountId" TO "accountId";
         END IF;
       END $$;
-    `)
+    `);
 
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
@@ -64,10 +64,12 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "public"."Account" RENAME COLUMN "provider" TO "providerId";
         END IF;
       END $$;
-    `)
+    `);
 
     // Add commonly missing columns (idempotent)
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       ALTER TABLE "taskchrono"."Account"
         ADD COLUMN IF NOT EXISTS "type" TEXT,
         ADD COLUMN IF NOT EXISTS "accessToken" TEXT,
@@ -78,9 +80,13 @@ export async function ensureBetterAuthSchema(): Promise<void> {
         ADD COLUMN IF NOT EXISTS "password" TEXT,
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
 
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       ALTER TABLE "public"."Account"
         ADD COLUMN IF NOT EXISTS "type" TEXT,
         ADD COLUMN IF NOT EXISTS "accessToken" TEXT,
@@ -91,10 +97,14 @@ export async function ensureBetterAuthSchema(): Promise<void> {
         ADD COLUMN IF NOT EXISTS "password" TEXT,
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
 
     // Ensure type is nullable
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       DO $$ BEGIN
         IF EXISTS (
           SELECT 1 FROM information_schema.columns
@@ -103,9 +113,13 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "taskchrono"."Account" ALTER COLUMN "type" DROP NOT NULL;
         END IF;
       END $$;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
 
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       DO $$ BEGIN
         IF EXISTS (
           SELECT 1 FROM information_schema.columns
@@ -114,7 +128,9 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           ALTER TABLE "public"."Account" ALTER COLUMN "type" DROP NOT NULL;
         END IF;
       END $$;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
 
     // Recreate unique index if legacy index name exists
     await prisma.$executeRawUnsafe(`
@@ -125,12 +141,12 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           DROP INDEX "taskchrono"."Account_provider_providerAccountId_key";
         END IF;
       END $$;
-    `)
+    `);
 
     await prisma.$executeRawUnsafe(`
       CREATE UNIQUE INDEX IF NOT EXISTS "Account_providerId_accountId_key"
       ON "taskchrono"."Account" ("providerId", "accountId");
-    `)
+    `);
 
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
@@ -140,33 +156,39 @@ export async function ensureBetterAuthSchema(): Promise<void> {
           DROP INDEX "public"."Account_provider_providerAccountId_key";
         END IF;
       END $$;
-    `)
+    `);
 
     await prisma.$executeRawUnsafe(`
       CREATE UNIQUE INDEX IF NOT EXISTS "Account_providerId_accountId_key_public"
       ON "public"."Account" ("providerId", "accountId");
-    `)
+    `);
 
     // Ensure Session optional columns exist (taskchrono)
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       ALTER TABLE "taskchrono"."Session"
         ADD COLUMN IF NOT EXISTS "ipAddress" TEXT,
         ADD COLUMN IF NOT EXISTS "userAgent" TEXT,
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
 
     // Ensure Session optional columns exist (public)
-    await prisma.$executeRawUnsafe(`
+    await prisma
+      .$executeRawUnsafe(
+        `
       ALTER TABLE "public"."Session"
         ADD COLUMN IF NOT EXISTS "ipAddress" TEXT,
         ADD COLUMN IF NOT EXISTS "userAgent" TEXT,
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
-    `).catch(() => {})
+    `,
+      )
+      .catch(() => {});
   } catch {
     // Best-effort; keep app functioning even if permissions restrict DDL
   }
 }
-
-

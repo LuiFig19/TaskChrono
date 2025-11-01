@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
 
-export function GET() {
-  return NextResponse.json({ status: 'ok', app: 'taskchrono' })
-}
+import { withErrorHandling } from '@/lib/route-helpers';
 
-
+export const GET = withErrorHandling(async () => {
+  return NextResponse.json({ status: 'ok', app: 'taskchrono' });
+});

@@ -1,6 +1,6 @@
-"use client"
-import { LazyMotion, m } from 'framer-motion'
-import Link from 'next/link'
+'use client';
+import { LazyMotion, m } from 'framer-motion';
+import Link from 'next/link';
 
 export default function Hero() {
   return (
@@ -33,13 +33,21 @@ export default function Hero() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="mt-10 flex items-center justify-center gap-3"
           >
-            <Link href="/get-started" className="px-6 py-3 rounded-lg bg-black text-white shadow-lg shadow-indigo-200/40 hover:scale-[1.02] transition-transform">Get Started</Link>
-            <Link href="#screenshot" className="px-6 py-3 rounded-lg border hover:bg-gray-50 transition-colors">View Demo</Link>
+            <Link
+              href="/get-started"
+              className="px-6 py-3 rounded-lg bg-black text-white shadow-lg shadow-indigo-200/40 hover:scale-[1.02] transition-transform"
+            >
+              Get Started
+            </Link>
+            <Link
+              href="#screenshot"
+              className="px-6 py-3 rounded-lg border hover:bg-gray-50 transition-colors"
+            >
+              View Demo
+            </Link>
           </m.div>
         </LazyMotion>
       </div>
     </section>
-  )
+  );
 }
-
-

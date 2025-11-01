@@ -1,25 +1,49 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 const envSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(8).optional(),
+  BETTER_AUTH_SECRET: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   DATABASE_URL: z.string().url().optional(),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM: z.string().optional(),
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_QUICKSHIFT_URL: z.string().url().optional(),
-})
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_BUSINESS: z.string().optional(),
+  STRIPE_PRICE_ENTERPRISE: z.string().optional(),
+  STRIPE_PRODUCT_BUSINESS: z.string().optional(),
+  STRIPE_PRODUCT_ENTERPRISE: z.string().optional(),
+  NEXT_PUBLIC_PRICE_BUSINESS_CENTS: z.string().optional(),
+  NEXT_PUBLIC_PRICE_ENTERPRISE_CENTS: z.string().optional(),
+  ADMIN_TOKEN: z.string().optional(),
+  VERCEL_URL: z.string().optional(),
+  REPLIT_DEV_DOMAIN: z.string().optional(),
+});
 
 export const env = envSchema.parse({
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM: process.env.RESEND_FROM,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_QUICKSHIFT_URL: process.env.NEXT_PUBLIC_QUICKSHIFT_URL,
-})
-
-
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  STRIPE_PRICE_BUSINESS: process.env.STRIPE_PRICE_BUSINESS,
+  STRIPE_PRICE_ENTERPRISE: process.env.STRIPE_PRICE_ENTERPRISE,
+  STRIPE_PRODUCT_BUSINESS: process.env.STRIPE_PRODUCT_BUSINESS,
+  STRIPE_PRODUCT_ENTERPRISE: process.env.STRIPE_PRODUCT_ENTERPRISE,
+  NEXT_PUBLIC_PRICE_BUSINESS_CENTS: process.env.NEXT_PUBLIC_PRICE_BUSINESS_CENTS,
+  NEXT_PUBLIC_PRICE_ENTERPRISE_CENTS: process.env.NEXT_PUBLIC_PRICE_ENTERPRISE_CENTS,
+  ADMIN_TOKEN: process.env.ADMIN_TOKEN,
+  VERCEL_URL: process.env.VERCEL_URL,
+  REPLIT_DEV_DOMAIN: process.env.REPLIT_DEV_DOMAIN,
+});

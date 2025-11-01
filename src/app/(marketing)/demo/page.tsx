@@ -66,7 +66,5 @@ export default function DemoDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-

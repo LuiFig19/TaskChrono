@@ -1,4 +1,4 @@
-import DemoPreview from '@/components/marketing/DemoPreview'
+import DemoPreview from '@/components/marketing/DemoPreview';
 
 export default function DemoDashboardShowcase() {
   return (
@@ -6,7 +6,5 @@ export default function DemoDashboardShowcase() {
       {/* Full interactive demo mirrors actual dashboard; no locks */}
       <DemoPreview />
     </div>
-  )
+  );
 }
-
-

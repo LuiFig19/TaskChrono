@@ -1,14 +1,16 @@
-import { auth } from '@/lib/better-auth'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import BoardClient from './boardClient'
-import { prisma } from '@/lib/prisma'
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+
+import { auth } from '@/lib/better-auth';
+import { prisma } from '@/lib/prisma';
+
+import BoardClient from './boardClient';
 
 export default async function ProjectBoardPage({ params }: { params: { id: string } }) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) redirect('/login')
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) redirect('/login');
   // fetch basic project info for header
-  const project = await prisma.project.findUnique({ where: { id: params.id } })
+  const project = await prisma.project.findUnique({ where: { id: params.id } });
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-6">
       {project && (
@@ -19,7 +21,5 @@ export default async function ProjectBoardPage({ params }: { params: { id: strin
       )}
       <BoardClient projectId={params.id} />
     </div>
-  )
+  );
 }
-
-

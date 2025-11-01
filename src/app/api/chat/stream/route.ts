@@ -1,58 +1,72 @@
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-export const runtime = 'nodejs'
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/better-auth'
-import { ensureUserOrg } from '@/lib/org'
-import { addSubscriber, removeSubscriber } from '@/lib/chatStore'
-import { prisma } from '@/lib/prisma'
-import { headers } from 'next/headers'
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const runtime = 'nodejs';
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: Request) {
+import { auth } from '@/lib/better-auth';
+import { addSubscriber, removeSubscriber } from '@/lib/chatStore';
+import { getCurrentUserAndOrg } from '@/lib/org';
+import { prisma } from '@/lib/prisma';
+import { withErrorHandling } from '@/lib/route-helpers';
+
+export const GET = withErrorHandling(async (req: Request) => {
   const session = await auth.api.getSession({
     headers: await headers(),
-  })
-  if (!session) return new NextResponse('Unauthorized', { status: 401 })
-  const { organizationId } = await ensureUserOrg()
-  const { searchParams } = new URL(req.url)
-  const channelId = searchParams.get('c') || 'all'
+  });
+  if (!session) return new NextResponse('Unauthorized', { status: 401 });
+  const { organizationId } = await getCurrentUserAndOrg();
+  if (!organizationId) return new NextResponse('Unauthorized', { status: 401 });
+  const { searchParams } = new URL(req.url);
+  const channelId = searchParams.get('c') || 'all';
   // warmup: send recent history
-  let history: any[] = []
+  let history: any[] = [];
   try {
     history = await prisma.chatMessage.findMany({
-      where: { organizationId, channelId },
+      where: { organizationId: organizationId as string, channelId },
       orderBy: { ts: 'asc' },
       take: 100,
-    })
+    });
   } catch (e) {
     // If DB not reachable, keep streaming-only mode without history
   }
   const stream = new ReadableStream({
     start(controller) {
-      const encoder = new TextEncoder()
+      const encoder = new TextEncoder();
       const sub = {
         id: crypto.randomUUID(),
-        orgId: organizationId,
+        orgId: organizationId as string,
         channelId,
-        write(line: string) { controller.enqueue(encoder.encode(line)) },
-      }
-      addSubscriber(sub)
+        write(line: string) {
+          controller.enqueue(encoder.encode(line));
+        },
+      };
+      addSubscriber(sub);
       // send backlog immediately
       for (const m of history) {
-        const msg = { id: m.id, channelId, user: { id: m.userId, name: m.userName }, text: m.text, ts: m.ts.getTime() }
-        sub.write(`event: message\ndata: ${JSON.stringify(msg)}\n\n`)
+        const msg = {
+          id: m.id,
+          channelId,
+          user: { id: m.userId, name: m.userName },
+          text: m.text,
+          ts: m.ts.getTime(),
+        };
+        sub.write(`event: message\ndata: ${JSON.stringify(msg)}\n\n`);
       }
-      const ping = setInterval(()=> sub.write(`:\n\n`), 15000)
-      const close = () => { clearInterval(ping); removeSubscriber(sub); controller.close() }
-      ;(req as any).signal?.addEventListener?.('abort', close)
-    }
-  })
+      const ping = setInterval(() => sub.write(`:\n\n`), 15000);
+      const close = () => {
+        clearInterval(ping);
+        removeSubscriber(sub);
+        controller.close();
+      };
+      (req as any).signal?.addEventListener?.('abort', close);
+    },
+  });
   return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
-    }
-  })
-}
-
+    },
+  });
+});

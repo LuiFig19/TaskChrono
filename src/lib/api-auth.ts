@@ -1,6 +1,7 @@
-import { auth } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+
+import { auth } from '@/lib/better-auth';
 
 export async function getApiSession() {
   const session = await auth.api.getSession({ headers: await headers() });

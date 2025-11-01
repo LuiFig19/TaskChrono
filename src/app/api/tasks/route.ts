@@ -1,35 +1,49 @@
-import { NextResponse } from 'next/server'
-import { requireApiAuth } from '@/lib/api-auth'
-import { prisma } from '@/lib/prisma'
-import { broadcastActivity } from '@/lib/activity'
-import { recomputeProjectStatus } from '@/lib/projectStatus'
+import { NextResponse } from 'next/server';
+
+import { broadcastActivity } from '@/lib/activity';
+import { requireApiAuth } from '@/lib/api-auth';
+import { prisma } from '@/lib/prisma';
+import { recomputeProjectStatus } from '@/lib/projectStatus';
+import { withErrorHandling } from '@/lib/route-helpers';
 
 async function getActiveOrganizationId(userId: string) {
   const membership = await prisma.organizationMember.findFirst({
     where: { userId },
     include: { organization: true },
-  })
-  return membership?.organizationId ?? null
+  });
+  return membership?.organizationId ?? null;
 }
 
-export async function GET(request: Request) {
-  const { error, userId } = await requireApiAuth()
-  if (error) return error
+export const GET = withErrorHandling(async (request: Request) => {
+  const { error, userId } = await requireApiAuth();
+  if (error) return error;
 
-  
-  const organizationId = await getActiveOrganizationId(userId)
-  if (!organizationId) return NextResponse.json({ projects: [] })
-  const url = new URL(request.url)
-  const projectId = url.searchParams.get('projectId')
+  const organizationId = await getActiveOrganizationId(userId);
+  if (!organizationId) return NextResponse.json({ projects: [] });
+  const url = new URL(request.url);
+  const projectId = url.searchParams.get('projectId');
 
+  const where = projectId ? { organizationId, id: projectId } : { organizationId };
   const projects = await prisma.project.findMany({
-    where: { organizationId },
-    ...(projectId ? { where: { organizationId, id: projectId } } as any : {}),
+    where,
     orderBy: { updatedAt: 'desc' },
     include: {
-      tasks: { orderBy: { createdAt: 'desc' }, select: { id: true, title: true, description: true, status: true, priority: true, dueDate: true, createdAt: true, assigneeId: true, teamId: true } },
+      tasks: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          priority: true,
+          dueDate: true,
+          createdAt: true,
+          assigneeId: true,
+          teamId: true,
+        },
+      },
     },
-  })
+  });
 
   const payload = projects.map((p) => ({
     id: p.id,
@@ -45,32 +59,32 @@ export async function GET(request: Request) {
       assigneeId: t.assigneeId,
       teamId: (t as any).teamId || null,
     })),
-  }))
+  }));
 
-  return NextResponse.json({ projects: payload })
-}
+  return NextResponse.json({ projects: payload });
+});
 
-export async function POST(request: Request) {
-  const { error, userId } = await requireApiAuth()
-  if (error) return error
-  
-  const organizationId = await getActiveOrganizationId(userId)
-  if (!organizationId) return error
+export const POST = withErrorHandling(async (request: Request) => {
+  const { error, userId } = await requireApiAuth();
+  if (error) return error;
 
-  const body = await request.json().catch(() => ({})) as {
-    title?: string
-    description?: string
-    projectName?: string
-    priority?: number
-    dueDate?: string
-    teamId?: string | null
-  }
-  const { title, projectName, description, priority, dueDate, teamId } = body
-  if (!title || !projectName) return error
+  const organizationId = await getActiveOrganizationId(userId);
+  if (!organizationId) return error;
 
-  let project = await prisma.project.findFirst({ where: { organizationId, name: projectName } })
+  const body = (await request.json().catch(() => ({}))) as {
+    title?: string;
+    description?: string;
+    projectName?: string;
+    priority?: number;
+    dueDate?: string;
+    teamId?: string | null;
+  };
+  const { title, projectName, description, priority, dueDate, teamId } = body;
+  if (!title || !projectName) return error;
+
+  let project = await prisma.project.findFirst({ where: { organizationId, name: projectName } });
   if (!project) {
-    project = await prisma.project.create({ data: { organizationId, name: projectName } })
+    project = await prisma.project.create({ data: { organizationId, name: projectName } });
   }
 
   const task = await prisma.task.create({
@@ -84,11 +98,17 @@ export async function POST(request: Request) {
       assigneeId: userId,
       teamId: teamId || null,
     },
-  })
+  });
   // If project was PLANNING or COMPLETED, adding a task should make it ACTIVE
-  try { await recomputeProjectStatus(project.id) } catch {}
-  try { broadcastActivity({ type: 'task.created', message: `Task added: ${task.title}`, meta: { projectId: project.id, taskId: task.id } }) } catch {}
-  return NextResponse.json({ ok: true, taskId: task.id })
-}
-
-
+  try {
+    await recomputeProjectStatus(project.id);
+  } catch {}
+  try {
+    broadcastActivity({
+      type: 'task.created',
+      message: `Task added: ${task.title}`,
+      meta: { projectId: project.id, taskId: task.id },
+    });
+  } catch {}
+  return NextResponse.json({ ok: true, taskId: task.id });
+});

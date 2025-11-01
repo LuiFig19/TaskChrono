@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+
 import { authClient } from '@/lib/better-auth-client';
 
 export default function LogoutPage() {
