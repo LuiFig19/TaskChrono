@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { requireApiAuth } from '@/lib/api-auth';
+import { makeKey, withCache } from '@/lib/cache';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, rateLimitIdentifierFromRequest, tooManyResponse } from '@/lib/rate-limit';
 import { withErrorHandling } from '@/lib/route-helpers';
 
 import { buildOrderBy, parseInventoryQuery } from './_query';
@@ -46,25 +48,43 @@ export const GET = withErrorHandling(async (request: Request) => {
   const take = q.pageSize!;
 
   // Count without status filter first, then adjust if status used by computing in memory
-  const baseTotal = await prisma.inventoryItem.count({ where });
-  const baseItems = await prisma.inventoryItem.findMany({
-    where,
-    orderBy,
-    skip,
-    take: take * 2, // over-fetch for potential status filtering shrink
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      quantity: true,
-      minQuantity: true,
-      costCents: true,
-      priceCents: true,
-      barcode: true,
-      updatedAt: true,
-      category: { select: { name: true } },
-      supplier: { select: { name: true } },
-    },
+  const rl = await rateLimit(rateLimitIdentifierFromRequest(request), 120, 60);
+  if (!rl.allowed) return tooManyResponse();
+
+  const keyItems = makeKey([
+    'inv:list',
+    organizationId,
+    q.q || '-',
+    q.category || '-',
+    q.supplier || '-',
+    q.status || '-',
+    q.page!,
+    q.pageSize!,
+    JSON.stringify(orderBy),
+  ]);
+
+  const [baseTotal, baseItems] = await withCache(keyItems, 10, async () => {
+    const total = await prisma.inventoryItem.count({ where });
+    const items = await prisma.inventoryItem.findMany({
+      where,
+      orderBy,
+      skip,
+      take: take * 2,
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        quantity: true,
+        minQuantity: true,
+        costCents: true,
+        priceCents: true,
+        barcode: true,
+        updatedAt: true,
+        category: { select: { name: true } },
+        supplier: { select: { name: true } },
+      },
+    });
+    return [total, items] as const;
   });
 
   const mapped = baseItems.map((i) => ({
@@ -93,18 +113,23 @@ export const GET = withErrorHandling(async (request: Request) => {
   let total = q.status ? statusFiltered.length + skip : baseTotal;
 
   // Distinct category/supplier options for dropdowns
-  const [categoryNames, supplierNames] = await Promise.all([
-    prisma.inventoryCategory.findMany({
-      where: { organizationId },
-      select: { name: true },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.supplier.findMany({
-      where: { organizationId },
-      select: { name: true },
-      orderBy: { name: 'asc' },
-    }),
-  ]);
+  const [categoryNames, supplierNames] = await withCache(
+    makeKey(['inv:meta', organizationId]),
+    60,
+    async () =>
+      Promise.all([
+        prisma.inventoryCategory.findMany({
+          where: { organizationId },
+          select: { name: true },
+          orderBy: { name: 'asc' },
+        }),
+        prisma.supplier.findMany({
+          where: { organizationId },
+          select: { name: true },
+          orderBy: { name: 'asc' },
+        }),
+      ]),
+  );
 
   // Summary
   let totalItems = total;
@@ -134,7 +159,7 @@ export const GET = withErrorHandling(async (request: Request) => {
     if (q.status) total = totalItems;
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     items: paged,
     meta: {
       total,
@@ -145,6 +170,8 @@ export const GET = withErrorHandling(async (request: Request) => {
       summary: q.includeTotals ? { totalItems, inventoryValueCents, lowStockCount } : undefined,
     },
   });
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.headers.set(k, v));
+  return res;
 });
 
 export const POST = withErrorHandling(async (request: Request) => {

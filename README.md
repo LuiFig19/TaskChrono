@@ -63,6 +63,34 @@ Deployment
 - Vercel recommended. Ensure env vars are set. Stripe webhook URL must be configured.
 - Database: Neon or Supabase Postgres.
 
+Performance & Scalability
+
+- ISR (Incremental Static Regeneration): marketing pages use `revalidate = 3600` by default. Adjust per page if needed.
+- Client fetch deduping: SWR is configured globally (credentials included, dedupingInterval=2s) in `src/components/theme/ClientProviders.tsx`.
+- Server-side caching: Hot GET routes cache short-lived results in Redis (Upstash) with in-memory fallback.
+  - Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable production cache/limits.
+- Rate limiting: `@upstash/ratelimit` provides a sliding-window limiter; falls back to in-memory counter during local dev.
+- Database pooling: When deployed on Vercel with Neon, connection pooling is managed automatically (no PgBouncer setup required). Use a pooled connection string and you may include `connection_limit=10` in `DATABASE_URL` if needed for your plan.
+
+Bundle Analysis
+
+- Run analyzer: `npm run analyze` (uses `@next/bundle-analyzer`).
+- Suggestions:
+  - Prefer dynamic imports for heavy components.
+  - Use `modularizeImports` (already configured for `lucide-react`).
+  - Avoid large optional dependencies in the server/runtime path.
+
+Environment
+
+Required for production features:
+
+```
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+DATABASE_URL=postgresql://... (pooled Neon URL)
+```
+
+
 Contributing
 
 - Branch from main, use conventional commits (feat:, fix:, chore:)

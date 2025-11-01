@@ -8,9 +8,12 @@ import { auth } from '@/lib/better-auth';
 import { addSubscriber, removeSubscriber } from '@/lib/chatStore';
 import { getCurrentUserAndOrg } from '@/lib/org';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, rateLimitIdentifierFromRequest, tooManyResponse } from '@/lib/rate-limit';
 import { withErrorHandling } from '@/lib/route-helpers';
 
 export const GET = withErrorHandling(async (req: Request) => {
+  const rl = await rateLimit(rateLimitIdentifierFromRequest(req), 10, 60);
+  if (!rl.allowed) return tooManyResponse();
   const session = await auth.api.getSession({
     headers: await headers(),
   });

@@ -1,3 +1,4 @@
+export const revalidate = 3600;
 export default function DemoDashboard() {
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-12">

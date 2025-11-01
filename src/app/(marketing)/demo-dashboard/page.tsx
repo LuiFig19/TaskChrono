@@ -1,3 +1,4 @@
+export const revalidate = 3600;
 import DemoPreview from '@/components/marketing/DemoPreview';
 
 export default function DemoDashboardShowcase() {

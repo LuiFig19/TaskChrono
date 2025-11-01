@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 
 import { broadcastActivity } from '@/lib/activity';
 import { requireApiAuth } from '@/lib/api-auth';
+import { makeKey, withCache } from '@/lib/cache';
 import { prisma } from '@/lib/prisma';
 import { recomputeProjectStatus } from '@/lib/projectStatus';
+import { rateLimit, rateLimitIdentifierFromRequest, tooManyResponse } from '@/lib/rate-limit';
 import { withErrorHandling } from '@/lib/route-helpers';
 
 async function getActiveOrganizationId(userId: string) {
@@ -24,26 +26,32 @@ export const GET = withErrorHandling(async (request: Request) => {
   const projectId = url.searchParams.get('projectId');
 
   const where = projectId ? { organizationId, id: projectId } : { organizationId };
-  const projects = await prisma.project.findMany({
-    where,
-    orderBy: { updatedAt: 'desc' },
-    include: {
-      tasks: {
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          status: true,
-          priority: true,
-          dueDate: true,
-          createdAt: true,
-          assigneeId: true,
-          teamId: true,
+  const rl = await rateLimit(rateLimitIdentifierFromRequest(request), 120, 60);
+  if (!rl.allowed) return tooManyResponse();
+
+  const key = makeKey(['tasks', organizationId, projectId || 'all']);
+  const projects = await withCache(key, 5, async () =>
+    prisma.project.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        tasks: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            priority: true,
+            dueDate: true,
+            createdAt: true,
+            assigneeId: true,
+            teamId: true,
+          },
         },
       },
-    },
-  });
+    }),
+  );
 
   const payload = projects.map((p) => ({
     id: p.id,
@@ -61,7 +69,9 @@ export const GET = withErrorHandling(async (request: Request) => {
     })),
   }));
 
-  return NextResponse.json({ projects: payload });
+  const res = NextResponse.json({ projects: payload });
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.headers.set(k, v));
+  return res;
 });
 
 export const POST = withErrorHandling(async (request: Request) => {

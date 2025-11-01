@@ -128,6 +128,8 @@ model OrganizationMember {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
 }
 
 model Project {
@@ -147,6 +149,8 @@ model Project {
   files                ProjectFile[]
   members              ProjectMember[]
   tasks                Task[]
+
+  @@index([organizationId, updatedAt])
 }
 
 model Task {
@@ -169,6 +173,11 @@ model Task {
   timeEntries    TimeEntry[]
 
   @@index([teamId])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model TimeEntry {
@@ -223,6 +232,8 @@ model CalendarEvent {
   allDay         Boolean      @default(false)
   createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, startsAt])
 }
 
 model ChatMessage {
@@ -300,6 +311,7 @@ model InventoryItem {
 
   @@unique([organizationId, sku])
   @@unique([organizationId, barcode])
+  @@index([organizationId, updatedAt])
 }
 
 model InventoryCategory {
@@ -343,6 +355,8 @@ model InventoryActivity {
   item           InventoryItem         @relation(fields: [itemId], references: [id], onDelete: Cascade)
   organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User?                 @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
 }
 
 model Expense {

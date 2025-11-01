@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 
 import { requireApiAuth } from '@/lib/api-auth';
+import { makeKey, withCache } from '@/lib/cache';
 import { ensureUserOrg, getCurrentUserAndOrg } from '@/lib/org';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, rateLimitIdentifierFromRequest, tooManyResponse } from '@/lib/rate-limit';
 import { withErrorHandling } from '@/lib/route-helpers';
 
 export const GET = withErrorHandling(async (request: Request) => {
@@ -19,12 +21,19 @@ export const GET = withErrorHandling(async (request: Request) => {
   const end = endStr
     ? new Date(endStr)
     : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
-  const events = await prisma.calendarEvent.findMany({
-    where: { organizationId, startsAt: { gte: start, lt: end } },
-    orderBy: { startsAt: 'asc' },
-    select: { id: true, title: true, startsAt: true, description: true },
-  });
-  return NextResponse.json({ events });
+  const rl = await rateLimit(rateLimitIdentifierFromRequest(request), 60, 60);
+  if (!rl.allowed) return tooManyResponse();
+  const key = makeKey(['cal', organizationId, start.toISOString(), end.toISOString()]);
+  const events = await withCache(key, 30, async () =>
+    prisma.calendarEvent.findMany({
+      where: { organizationId, startsAt: { gte: start, lt: end } },
+      orderBy: { startsAt: 'asc' },
+      select: { id: true, title: true, startsAt: true, description: true },
+    }),
+  );
+  const res = NextResponse.json({ events });
+  Object.entries(rl.headers || {}).forEach(([k, v]) => res.headers.set(k, v));
+  return res;
 });
 
 export const POST = withErrorHandling(async (request: Request) => {

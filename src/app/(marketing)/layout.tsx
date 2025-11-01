@@ -1,3 +1,4 @@
+export const revalidate = 3600; // ISR default for marketing segment
 import '@/app/globals.css';
 // Minimal layout to avoid client refs during build
 import { headers } from 'next/headers';
