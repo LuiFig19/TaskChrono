@@ -24,6 +24,3 @@ export const GET = withErrorHandling(async () => {
 
 
 
-export const GET = withErrorHandling(async () => {
-  return NextResponse.json({ status: 'ok', app: 'taskchrono' });
-});
