@@ -81,11 +81,21 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
     if (loading) return;
     setLoading(true);
     try {
-      await redirectToGoogle('sign-up');
-      // If we are still here, the redirect did not occur; reset loading
-      setTimeout(() => setLoading(false), 600);
+      const abs = typeof window !== 'undefined' && callbackUrl && !/^https?:/i.test(callbackUrl)
+        ? `${window.location.origin}${callbackUrl}`
+        : callbackUrl;
+      // Direct, robust redirect to Better Auth provider route
+      const url = new URL('/api/auth/sign-up/google', window.location.origin);
+      if (abs) url.searchParams.set('callbackURL', abs);
+      url.searchParams.set('prompt', 'select_account');
+      url.searchParams.set('include_granted_scopes', 'true');
+      window.location.href = url.toString();
     } catch {
-      setLoading(false);
+      // Fallback to SDK path if constructing URL fails for any reason
+      try {
+        await redirectToGoogle('sign-up');
+      } catch {}
+      setTimeout(() => setLoading(false), 1000);
     }
   };
 
@@ -97,6 +107,7 @@ export function SignUpWithGoogle({ callbackUrl }: { callbackUrl: string }) {
 function GoogleButton({ onClick, loading, labelLoading, labelDefault }: { onClick: () => void; loading: boolean; labelLoading: string; labelDefault?: string }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={loading}
       className="w-full px-5 py-3 rounded-md border text-sm font-semibold border-slate-300/60 bg-white text-slate-900 hover:bg-white/90 disabled:opacity-60 shadow-sm flex items-center justify-center gap-3 transition-colors dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
